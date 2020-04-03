@@ -21,7 +21,6 @@
 
         public void OnOnlinePlayButtonPress()
         {
-            Debug.Log("Joined Game");
             SceneManager.LoadScene("GameLobby");
         }
     }
