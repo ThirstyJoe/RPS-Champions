@@ -1,4 +1,4 @@
-namespace ThirtyJoe.GalaxyBound
+namespace ThirtyJoe.RPSChampions
 {
     using UnityEngine;
     using PlayFab;
@@ -347,7 +347,7 @@ namespace ThirtyJoe.GalaxyBound
         private void DisconnectFromGame()
         {
             PhotonNetwork.Disconnect();
-            SceneManager.LoadScene("Login");
+            SceneManager.LoadScene("GameLobby");
         }
 
         #endregion

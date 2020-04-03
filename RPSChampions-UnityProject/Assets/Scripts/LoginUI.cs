@@ -1,5 +1,5 @@
 
-namespace ThirstyJoe.GalaxyBound
+namespace ThirstyJoe.RPSChampions
 {
     using UnityEngine;
 

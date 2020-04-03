@@ -1,4 +1,4 @@
-namespace ThirstyJoe.GalaxyBound
+namespace ThirstyJoe.RPSChampions
 {
     using UnityEngine;
     using Photon.Pun;
@@ -8,6 +8,7 @@ namespace ThirstyJoe.GalaxyBound
     using UnityEngine.UI;
     using PlayFab;
     using PlayFab.ClientModels;
+    using UnityEngine.SceneManagement;
 
     public class LoginController : MonoBehaviourPunCallbacks
     {
@@ -28,8 +29,7 @@ namespace ThirstyJoe.GalaxyBound
 
         public override void OnJoinedRoom()
         {
-            Debug.Log("Joined Game");
-            Application.LoadLevel("TestGame");
+            SceneManager.LoadScene("TestGame");
         }
 
         public override void OnJoinRoomFailed(short returnCode, string message)

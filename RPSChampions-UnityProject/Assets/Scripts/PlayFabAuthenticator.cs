@@ -1,4 +1,4 @@
-namespace ThirstyJoe.GalaxyBound
+namespace ThirstyJoe.ThirtyJoe.RPSChampions
 {
     using PlayFab;
     using PlayFab.ClientModels;
