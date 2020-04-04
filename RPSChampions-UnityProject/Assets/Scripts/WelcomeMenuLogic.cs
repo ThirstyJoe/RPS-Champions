@@ -6,22 +6,21 @@
 
     public class WelcomeMenuLogic : MonoBehaviour
     {
-
-        // Start is called before the first frame update
-        void Start()
+        public void OnOuickMatchButtonPress()
         {
-
+            SceneManager.LoadScene("EnterQuickMatch");
         }
-
-        // Update is called once per frame
-        void Update()
+        public void OnLeaguePlayerButtonPress()
         {
-
+            SceneManager.LoadScene("LeaguePlayDashboard");
         }
-
-        public void OnOnlinePlayButtonPress()
+        public void OnPracticeButtonPress()
         {
-            SceneManager.LoadScene("GameLobby");
+            SceneManager.LoadScene("PracticeGame");
+        }
+        public void OnLogInButtonPress()
+        {
+            SceneManager.LoadScene("LogIn");
         }
     }
 }

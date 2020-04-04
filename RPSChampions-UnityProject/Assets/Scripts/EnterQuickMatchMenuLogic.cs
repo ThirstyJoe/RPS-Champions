@@ -10,7 +10,7 @@ namespace ThirstyJoe.RPSChampions
     using PlayFab.ClientModels;
     using UnityEngine.SceneManagement;
 
-    public class LoginController : MonoBehaviourPunCallbacks
+    public class EnterQuickMatchMenuLogic : MonoBehaviourPunCallbacks
     {
         #region PRIVATE VARS
 
@@ -29,7 +29,7 @@ namespace ThirstyJoe.RPSChampions
 
         public override void OnJoinedRoom()
         {
-            SceneManager.LoadScene("TestGame");
+            SceneManager.LoadScene("QuickMatch");
         }
 
         public override void OnJoinRoomFailed(short returnCode, string message)

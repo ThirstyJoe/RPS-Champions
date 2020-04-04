@@ -347,7 +347,7 @@ namespace ThirtyJoe.RPSChampions
         private void DisconnectFromGame()
         {
             PhotonNetwork.Disconnect();
-            SceneManager.LoadScene("GameLobby");
+            SceneManager.LoadScene("MainMenu");
         }
 
         #endregion

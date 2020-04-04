@@ -6,12 +6,33 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/Welcome.unity
+    path: Assets/Scenes/MainMenu.unity
     guid: 47048130e74c9e745859f089c2d95b29
   - enabled: 1
-    path: Assets/Scenes/GameLobby.unity
+    path: Assets/Scenes/EnterQuickMatch.unity
     guid: 234c1c6dcd9f5e54ea76ecd88efa2053
   - enabled: 1
-    path: Assets/Scenes/TestGame.unity
+    path: Assets/Scenes/QuickMatch.unity
     guid: b76e3d3dfae11a448b0df1f40a3e9771
+  - enabled: 1
+    path: Assets/Scenes/LogIn.unity
+    guid: fa7da72e18686d640b55d03804de12a9
+  - enabled: 1
+    path: Assets/Scenes/CreateAccount.unity
+    guid: 37782be0763b05648aaad8eb51d28ced
+  - enabled: 1
+    path: Assets/Scenes/PasswordResetConfirmation.unity
+    guid: de3fa052cb9a6ba43a0e5c53c66897de
+  - enabled: 1
+    path: Assets/Scenes/PasswordChangeConfirmation.unity
+    guid: 3fe03327b7f5e52458747acdac491723
+  - enabled: 1
+    path: Assets/Scenes/PasswordChange.unity
+    guid: b2e717632fca6544e8af37a5b05a35b0
+  - enabled: 1
+    path: Assets/Scenes/DeleteAccountConfirmation.unity
+    guid: 2c6a58471b20aee48ac231f9fb927661
+  - enabled: 1
+    path: Assets/Scenes/Account.unity
+    guid: 6dc0989ffad80994db305d5d11d5083b
   m_configObjects: {}
