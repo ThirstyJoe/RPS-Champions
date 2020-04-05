@@ -6,6 +6,10 @@
 
     public class MainMenu : MonoBehaviour
     {
+
+        [SerializeField]
+        private GameObject errorPanel;
+
         public void OnOuickMatchButtonPress()
         {
             SceneManager.LoadScene("EnterQuickMatch");
@@ -19,6 +23,10 @@
             SceneManager.LoadScene("PracticeGame");
         }
         public void OnLogInButtonPress()
+        {
+            SceneManager.LoadScene("LogIn");
+        }
+        public void OnConfirmErrorButtonPress()
         {
             SceneManager.LoadScene("LogIn");
         }

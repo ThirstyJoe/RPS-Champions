@@ -4,27 +4,28 @@ namespace ThirtyJoe.RPSChampions
     using UnityEngine.SceneManagement;
     using UnityEngine;
     using TMPro;
+
     public class ChangePasswordMenu : MonoBehaviour
     {
         [SerializeField]
-        private GameObject SuccessPanel;
+        private GameObject errorPanel;
         [SerializeField]
-        private TextMeshProUGUI ErrorTitleText;
+        private TextMeshProUGUI errorTitleText;
         [SerializeField]
-        private TextMeshProUGUI ErrorMessageText;
+        private TextMeshProUGUI errorMessageText;
 
         public void OnConfirmErrorButtonPress()
         {
-            SuccessPanel.SetActive(false);
+            errorPanel.SetActive(false);
         }
         public void OnChangePasswordButtonPress()
         {
             // check if fields are valid
 
             // if invalid
-            SuccessPanel.SetActive(true);
-            ErrorTitleText.text = "Password change error";
-            ErrorMessageText.text = "OMG! you got the password change done all wrong.";
+            errorPanel.SetActive(true);
+            errorTitleText.text = "Password change error";
+            errorMessageText.text = "OMG! you got the password change done all wrong.";
 
             // if valid...
             // SceneManager.LoadScene("Account");
