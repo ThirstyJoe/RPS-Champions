@@ -4,7 +4,7 @@ namespace ThirtyJoe.RPSChampions
     using UnityEngine.SceneManagement;
     using UnityEngine;
 
-    public class LogInMenuLogic : MonoBehaviour
+    public class LogInMenu : MonoBehaviour
     {
         public void OnCreateAccountButtonPress()
         {

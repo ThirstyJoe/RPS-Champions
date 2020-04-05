@@ -10,10 +10,17 @@ namespace ThirstyJoe.RPSChampions
     using PlayFab.ClientModels;
     using UnityEngine.SceneManagement;
 
-    public class EnterQuickMatchMenuLogic : MonoBehaviourPunCallbacks
+    public class EnterQuickMatchMenu : MonoBehaviourPunCallbacks
     {
         #region PRIVATE VARS
 
+        [Tooltip("The UI Panel to let the user enter name, connect and play")]
+        [SerializeField]
+        private GameObject loginPanel;
+
+        [Tooltip("The UI Panel to inform the user that the connection is in progress")]
+        [SerializeField]
+        private GameObject progressPanel;
 
         [SerializeField]
         private InputField nameInputField;
@@ -34,7 +41,10 @@ namespace ThirstyJoe.RPSChampions
 
         public override void OnJoinRoomFailed(short returnCode, string message)
         {
-            LoginUI.EnterAttemptingLoginState();
+            // UI State
+            loginPanel.SetActive(true);
+            progressPanel.SetActive(false);
+
             Debug.Log("Join Game Failed: " + message);
         }
 
@@ -74,7 +84,8 @@ namespace ThirstyJoe.RPSChampions
             PhotonNetwork.ConnectUsingSettings();
 
             // UI State change
-            LoginUI.EnterAttemptingLoginState();
+            loginPanel.SetActive(false);
+            progressPanel.SetActive(true);
         }
 
         #endregion

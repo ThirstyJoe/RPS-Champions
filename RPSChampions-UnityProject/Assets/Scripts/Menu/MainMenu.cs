@@ -4,7 +4,7 @@
     using UnityEngine.SceneManagement;
     using UnityEngine;
 
-    public class WelcomeMenuLogic : MonoBehaviour
+    public class MainMenu : MonoBehaviour
     {
         public void OnOuickMatchButtonPress()
         {

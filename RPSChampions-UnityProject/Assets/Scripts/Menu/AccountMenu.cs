@@ -3,7 +3,7 @@ namespace ThirtyJoe.RPSChampions
 {
     using UnityEngine.SceneManagement;
     using UnityEngine;
-    public class AccountMenuLogic : MonoBehaviour
+    public class AccountMenu : MonoBehaviour
     {
         public void OnLogOutButtonPress()
         {

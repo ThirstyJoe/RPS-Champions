@@ -3,7 +3,7 @@ namespace ThirtyJoe.RPSChampions
 {
     using UnityEngine.SceneManagement;
     using UnityEngine;
-    public class CreateAccountMenuLogic : MonoBehaviour
+    public class CreateAccountMenu : MonoBehaviour
     {
         public void OnCancelButtonPress()
         {
