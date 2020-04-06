@@ -1,5 +1,5 @@
 ﻿
-namespace ThirtyJoe.RPSChampions
+namespace ThirstyJoe.RPSChampions
 {
     using UnityEngine.SceneManagement;
     using UnityEngine;

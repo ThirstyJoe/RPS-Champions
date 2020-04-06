@@ -1,24 +1,26 @@
-namespace ThirstyJoe.ThirtyJoe.RPSChampions
+namespace ThirstyJoe.RPSChampions
 {
     using PlayFab;
     using PlayFab.ClientModels;
     using UnityEngine;
     using Photon.Pun;
-    using ExitGames.Client.Photon;
     using Photon.Realtime;
-    using System.Collections.Generic;
+    using UnityEngine.Events;
 
-    public class PlayFabAuthenticator : MonoBehaviour
+    public class PlayFabAuthenticator : Singleton<PlayFabAuthenticator>
     {
+        private static string playFabId;
+        public static string screenName;
+        public static bool authenticated = false;
 
-        private string _playFabPlayerIdCache;
 
+        // Prevent non-singleton constructor use.
+        protected PlayFabAuthenticator() { }
 
         //Run the entire thing on awake
-        public void Awake()
+        public void Start()
         {
             AuthenticateWithPlayFab();
-            DontDestroyOnLoad(gameObject);
         }
 
         /*
@@ -30,7 +32,7 @@ namespace ThirstyJoe.ThirtyJoe.RPSChampions
          * We pass RequestPhotonToken as a callback to be our next step, if
          * authentication was successful.
          */
-        private void AuthenticateWithPlayFab()
+        public static void AuthenticateWithPlayFab()
         {
             Debug.Log("PlayFab authenticating using Custom ID...");
 
@@ -40,16 +42,53 @@ namespace ThirstyJoe.ThirtyJoe.RPSChampions
             {
                 CreateAccount = true,
                 AndroidDeviceId = PlayFabSettings.DeviceUniqueIdentifier
-            }, RequestPhotonToken, OnPlayFabError);
+            }, Authenticated, OnPlayFabError);
 #else
             // development authentication
             PlayFabClientAPI.LoginWithCustomID(new LoginWithCustomIDRequest()
             {
                 CreateAccount = true,
                 CustomId = PlayFabSettings.DeviceUniqueIdentifier
-            }, RequestPhotonToken, OnPlayFabError);
+            }, Authenticated, OnPlayFabError);
 #endif
 
+        }
+
+        public static void LogOut()
+        {
+            PlayFabClientAPI.ForgetAllCredentials();
+            screenName = null;
+            playFabId = null;
+        }
+
+        public static void Authenticated(LoginResult loginResult)
+        {
+            Debug.Log("PlayFab authenticated. Requesting photon token...");
+
+            // flag that we have done this
+            authenticated = true;
+
+            // Save the player PlayFabId. This will come in handy during next step
+            playFabId = loginResult.PlayFabId;
+
+            // move onto Photon Authentication
+            RequestPhotonToken();
+
+            // player profile
+            PlayFabClientAPI.GetPlayerProfile(new GetPlayerProfileRequest()
+            {
+                PlayFabId = playFabId,
+            }, PlayerProfileReceived, OnPlayFabError);
+        }
+
+        private static void PlayerProfileReceived(GetPlayerProfileResult result)
+        {
+            screenName = result.PlayerProfile.DisplayName;
+
+            Debug.Log("Player profile received... screenName saved: " + screenName);
+
+            // send event
+            EventManager.TriggerEvent("PlayerProfileReceived");
         }
 
         /*
@@ -63,12 +102,8 @@ namespace ThirstyJoe.ThirtyJoe.RPSChampions
         * We pass in AuthenticateWithPhoton as a callback to be our next step, if
         * we have acquired token successfully
         */
-        private void RequestPhotonToken(LoginResult obj)
+        private static void RequestPhotonToken()
         {
-            Debug.Log("PlayFab authenticated. Requesting photon token...");
-            // Save the player PlayFabId. This will come in handy during next step
-            _playFabPlayerIdCache = obj.PlayFabId;
-
             PlayFabClientAPI.GetPhotonAuthenticationToken(new GetPhotonAuthenticationTokenRequest()
             {
                 PhotonApplicationId = PhotonNetwork.PhotonServerSettings.AppSettings.AppIdRealtime
@@ -80,14 +115,14 @@ namespace ThirstyJoe.ThirtyJoe.RPSChampions
          * This is the final and the simplest step. We create new AuthenticationValues instance.
          * This class describes how to authenticate a player inside Photon environment.
          */
-        private void AuthenticateWithPhoton(GetPhotonAuthenticationTokenResult obj)
+        private static void AuthenticateWithPhoton(GetPhotonAuthenticationTokenResult obj)
         {
             Debug.Log("Photon token acquired: " + obj.PhotonCustomAuthenticationToken + "  Authentication complete.");
 
             //We set AuthType to custom, meaning we bring our own, PlayFab authentication procedure.
             var customAuth = new AuthenticationValues { AuthType = CustomAuthenticationType.Custom };
             //We add "username" parameter. Do not let it confuse you: PlayFab is expecting this parameter to contain player PlayFab ID (!) and not username.
-            customAuth.AddAuthParameter("username", _playFabPlayerIdCache);    // expected by PlayFab custom auth service
+            customAuth.AddAuthParameter("username", playFabId);    // expected by PlayFab custom auth service
 
             //We add "token" parameter. PlayFab expects it to contain Photon Authentication Token issues to your during previous step.
             customAuth.AddAuthParameter("token", obj.PhotonCustomAuthenticationToken);
@@ -96,36 +131,9 @@ namespace ThirstyJoe.ThirtyJoe.RPSChampions
             PhotonNetwork.AuthValues = customAuth;
         }
 
-        private void OnPlayFabError(PlayFabError obj)
+        public static void OnPlayFabError(PlayFabError obj)
         {
             Debug.Log(obj.ErrorMessage);
-        }
-
-        // Add small button to launch our example code
-        // public void OnGUI()
-        // {
-        //     if (GUILayout.Button("Execute Example")) ExecuteExample();
-        // }
-
-
-        // Example code which raises custom room event, then sets custom room property
-        private void ExecuteExample()
-        {
-            // Raise custom room event
-            var data = new Dictionary<string, object>() { { "Hello", "World" } };
-            var flags = new WebFlags(WebFlags.HttpForwardConst);
-            var result = PhotonNetwork.RaiseEvent(
-                15, data,
-                new RaiseEventOptions() { Flags = flags },
-                new SendOptions()
-            );
-            Debug.Log("New Room Event Post: " + result);
-
-            // Set custom room property
-            var properties = new ExitGames.Client.Photon.Hashtable() { { "CustomProperty", "It's Value" } };
-            var expectedProperties = new ExitGames.Client.Photon.Hashtable();
-            PhotonNetwork.CurrentRoom.SetCustomProperties(properties, expectedProperties, flags);
-            Debug.Log("New Room Properties Set");
         }
     }
 }

@@ -392,6 +392,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f8dacc0d2bbb44eac150cb69ab1388, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  logInButton: {fileID: 1201478941}
+  accountButton: {fileID: 393031539}
 --- !u!4 &256998612
 Transform:
   m_ObjectHideFlags: 0
@@ -820,7 +822,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 256998611}
-        m_MethodName: OnLogInButtonPress
+        m_MethodName: OnAccountButtonPress
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1532,7 +1534,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1201478942
 RectTransform:
   m_ObjectHideFlags: 0

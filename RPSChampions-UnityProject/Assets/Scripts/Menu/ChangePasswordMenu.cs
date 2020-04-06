@@ -1,5 +1,5 @@
 ﻿
-namespace ThirtyJoe.RPSChampions
+namespace ThirstyJoe.RPSChampions
 {
     using UnityEngine.SceneManagement;
     using UnityEngine;
@@ -28,8 +28,8 @@ namespace ThirtyJoe.RPSChampions
             errorMessageText.text = "OMG! you got the password change done all wrong.";
 
             // if valid...
+            // SceneManager.LoadScene("PasswordChangeConfirmation", LoadSceneMode.Additive);
             // SceneManager.LoadScene("Account");
-            // SceneManager.LoadScene("PasswordChangeConfirmation", LoadSceneMode.Single);
         }
         public void OnCancelButtonPress()
         {

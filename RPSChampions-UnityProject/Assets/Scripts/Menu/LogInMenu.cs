@@ -1,5 +1,5 @@
 ﻿
-namespace ThirtyJoe.RPSChampions
+namespace ThirstyJoe.RPSChampions
 {
     using UnityEngine.SceneManagement;
     using UnityEngine;
@@ -7,12 +7,21 @@ namespace ThirtyJoe.RPSChampions
 
     public class LogInMenu : MonoBehaviour
     {
+        // Error message obj refs
         [SerializeField]
         private GameObject errorPanel;
         [SerializeField]
         private TextMeshProUGUI errorTitleText;
         [SerializeField]
         private TextMeshProUGUI errorMessageText;
+
+        // Input field obj refs
+        [SerializeField]
+        private TMP_InputField screenName;
+        [SerializeField]
+        private TMP_InputField password;
+
+
 
         public void OnConfirmErrorButtonPress()
         {
@@ -25,6 +34,8 @@ namespace ThirtyJoe.RPSChampions
         public void OnLogInButtonPress()
         {
             // attempt to log in and return to main menu or error notification
+
+
             SceneManager.LoadScene("MainMenu");
 
             // on sign up error...

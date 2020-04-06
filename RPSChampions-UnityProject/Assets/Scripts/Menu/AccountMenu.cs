@@ -1,12 +1,25 @@
 ﻿
-namespace ThirtyJoe.RPSChampions
+namespace ThirstyJoe.RPSChampions
 {
     using UnityEngine.SceneManagement;
     using UnityEngine;
+    using TMPro;
+    using PlayFab;
+
     public class AccountMenu : MonoBehaviour
     {
+        [SerializeField]
+        private TextMeshProUGUI screenName;
+
+
+        private void Start()
+        {
+            screenName.text = PlayFabAuthenticator.screenName;
+        }
+
         public void OnLogOutButtonPress()
         {
+            PlayFabAuthenticator.LogOut();
             SceneManager.LoadScene("MainMenu");
         }
         public void OnChangePasswordButtonPress()
@@ -15,7 +28,7 @@ namespace ThirtyJoe.RPSChampions
         }
         public void OnDeleteAcountButtonPress()
         {
-            SceneManager.LoadScene("DeleteAccountConfirmation", LoadSceneMode.Single);
+            SceneManager.LoadSceneAsync("DeleteAccountConfirmation", LoadSceneMode.Additive);
         }
         public void OnMainMenuButtonPress()
         {

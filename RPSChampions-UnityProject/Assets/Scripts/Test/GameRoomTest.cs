@@ -1,4 +1,4 @@
-namespace ThirtyJoe.RPSChampions
+namespace ThirstyJoe.RPSChampions
 {
     using UnityEngine;
     using PlayFab;
