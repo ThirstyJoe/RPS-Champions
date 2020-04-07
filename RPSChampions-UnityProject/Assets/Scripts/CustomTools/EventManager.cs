@@ -7,10 +7,6 @@
     {
         private static Dictionary<string, Action> eventDictionary = new Dictionary<string, Action>();
 
-
-        // Prevent non-singleton constructor use.
-        protected EventManager() { }
-
         public static void StartListening(string eventName, Action listener)
         {
             Action thisEvent;

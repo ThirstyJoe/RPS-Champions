@@ -13,40 +13,35 @@
         private GameObject accountButton;
 
 
-        void OnEnable()
-        {
-            EventManager.StartListening("PlayerProfileReceived", UpdateLogInButton);
-        }
-        void OnDisable()
-        {
-            EventManager.StopListening("PlayerProfileReceived", UpdateLogInButton);
-        }
-
         private void Start()
         {
-            if (PlayFabAuthenticator.authenticated)
+            if (PlayerPrefs.HasKey("playFabId"))
             {
-                UpdateLogInButton();
+                Debug.Log(PlayerPrefs.GetString("playFabId"));
             }
-            else
+            if (PlayerPrefs.HasKey("password"))
             {
-                PlayFabAuthenticator.AuthenticateWithPlayFab();
+                Debug.Log(PlayerPrefs.GetString("password"));
             }
-        }
+            if (PlayerPrefs.HasKey("screenName"))
+            {
+                Debug.Log(PlayerPrefs.GetString("screenName"));
+            }
 
-        private void UpdateLogInButton()
-        {
-            if (PlayFabAuthenticator.screenName == null)
-            {   // player is not fully logged in
-                logInButton.SetActive(true);
-                accountButton.SetActive(false);
-            }
-            else
-            {   // player is logged in
+            if (PlayerPrefs.HasKey("screenName"))
+            {
+                // player is logged in
                 TextMeshProUGUI buttonText = accountButton.GetComponentInChildren<TextMeshProUGUI>();
-                buttonText.text = PlayFabAuthenticator.screenName;
+                buttonText.text = PlayerPrefs.GetString("screenName");
                 logInButton.SetActive(false);
                 accountButton.SetActive(true);
+            }
+            else
+            {
+                // player is not fully logged in
+                logInButton.SetActive(true);
+                accountButton.SetActive(false);
+                PlayFabAuthenticator.AuthenticateWithPlayFab(); // get a default device login
             }
         }
 

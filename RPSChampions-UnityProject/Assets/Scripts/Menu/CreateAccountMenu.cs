@@ -39,7 +39,7 @@ namespace ThirstyJoe.RPSChampions
             }
             else
             {
-                CreateErrorPopUp("Password Mismatch", "Please make sure 'Password' and Confirm password' are exactly the same.");
+                CreateErrorPopUp("Password Mismatch", "Please retype your passwords to make sure they match.");
             }
         }
 
@@ -87,6 +87,10 @@ namespace ThirstyJoe.RPSChampions
                 PlayFabAuthenticator.Authenticated,
                 PlayFabAuthenticator.OnPlayFabError
             );
+
+            // save previous login in prefs
+            PlayerPrefs.SetString("password", password);
+            PlayerPrefs.SetString("screenName", username);
 
             SceneManager.LoadScene("MainMenu");
         }
@@ -138,6 +142,24 @@ namespace ThirstyJoe.RPSChampions
                     CreateErrorPopUp(
                      "Screen name unavailable",
                      "Screen names must be unique. That one is taken already."
+                    );
+                    break;
+                case PlayFabErrorCode.InvalidUsernameOrPassword:
+                    CreateErrorPopUp(
+                     "Invalid Screen Name or Password",
+                     "Screen name or Password is invalid."
+                    );
+                    break;
+                case PlayFabErrorCode.InvalidParams:
+                    CreateErrorPopUp(
+                     "Invalid screen name",
+                     "screen name must be between 3-20 characters long"
+                    );
+                    break;
+                case PlayFabErrorCode.AccountAlreadyLinked:
+                    CreateErrorPopUp(
+                     "Account already registered",
+                     "That's odd. Try again!"
                     );
                     break;
                 default:

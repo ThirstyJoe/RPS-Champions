@@ -9,20 +9,6 @@ namespace ThirstyJoe.RPSChampions
 
     public class PlayFabAuthenticator : Singleton<PlayFabAuthenticator>
     {
-        private static string playFabId;
-        public static string screenName;
-        public static bool authenticated = false;
-
-
-        // Prevent non-singleton constructor use.
-        protected PlayFabAuthenticator() { }
-
-        //Run the entire thing on awake
-        public void Start()
-        {
-            AuthenticateWithPlayFab();
-        }
-
         /*
          * Step 1
          * We authenticate current PlayFab user normally.
@@ -36,59 +22,51 @@ namespace ThirstyJoe.RPSChampions
         {
             Debug.Log("PlayFab authenticating using Custom ID...");
 
+            if (PlayerPrefs.HasKey("playFabId"))
+            {  // was previously logged in
+                PlayFabClientAPI.LoginWithCustomID(new LoginWithCustomIDRequest()
+                {
+                    CreateAccount = true,
+                    CustomId = PlayerPrefs.GetString("playFabId")
+                }, Authenticated, OnPlayFabError);
+            }
+            else
+            {  // default log in
 #if UNITY_ANDROID
-            // android authentication
-            PlayFabClientAPI.LoginWithAndroidDeviceID(new LoginWithAndroidDeviceIDRequest()
-            {
-                CreateAccount = true,
-                AndroidDeviceId = PlayFabSettings.DeviceUniqueIdentifier
-            }, Authenticated, OnPlayFabError);
+                // android authentication
+                PlayFabClientAPI.LoginWithAndroidDeviceID(new LoginWithAndroidDeviceIDRequest()
+                {
+                    CreateAccount = true,
+                    AndroidDeviceId = PlayFabSettings.DeviceUniqueIdentifier
+                }, Authenticated, OnPlayFabError);
 #else
-            // development authentication
-            PlayFabClientAPI.LoginWithCustomID(new LoginWithCustomIDRequest()
-            {
-                CreateAccount = true,
-                CustomId = PlayFabSettings.DeviceUniqueIdentifier
-            }, Authenticated, OnPlayFabError);
+                // development authentication
+                PlayFabClientAPI.LoginWithCustomID(new LoginWithCustomIDRequest()
+                {
+                    CreateAccount = true,
+                    CustomId = PlayFabSettings.DeviceUniqueIdentifier
+                }, Authenticated, OnPlayFabError);
 #endif
-
+            }
         }
 
         public static void LogOut()
         {
             PlayFabClientAPI.ForgetAllCredentials();
-            screenName = null;
-            playFabId = null;
+
+            // delete all locally saved data associated with player
+            PlayerPrefs.DeleteAll();
         }
 
         public static void Authenticated(LoginResult loginResult)
         {
             Debug.Log("PlayFab authenticated. Requesting photon token...");
 
-            // flag that we have done this
-            authenticated = true;
-
             // Save the player PlayFabId. This will come in handy during next step
-            playFabId = loginResult.PlayFabId;
+            PlayerPrefs.SetString("playFabId", loginResult.PlayFabId);
 
             // move onto Photon Authentication
             RequestPhotonToken();
-
-            // player profile
-            PlayFabClientAPI.GetPlayerProfile(new GetPlayerProfileRequest()
-            {
-                PlayFabId = playFabId,
-            }, PlayerProfileReceived, OnPlayFabError);
-        }
-
-        private static void PlayerProfileReceived(GetPlayerProfileResult result)
-        {
-            screenName = result.PlayerProfile.DisplayName;
-
-            Debug.Log("Player profile received... screenName saved: " + screenName);
-
-            // send event
-            EventManager.TriggerEvent("PlayerProfileReceived");
         }
 
         /*
@@ -122,7 +100,7 @@ namespace ThirstyJoe.RPSChampions
             //We set AuthType to custom, meaning we bring our own, PlayFab authentication procedure.
             var customAuth = new AuthenticationValues { AuthType = CustomAuthenticationType.Custom };
             //We add "username" parameter. Do not let it confuse you: PlayFab is expecting this parameter to contain player PlayFab ID (!) and not username.
-            customAuth.AddAuthParameter("username", playFabId);    // expected by PlayFab custom auth service
+            customAuth.AddAuthParameter("username", PlayerPrefs.GetString("playFabId"));    // expected by PlayFab custom auth service
 
             //We add "token" parameter. PlayFab expects it to contain Photon Authentication Token issues to your during previous step.
             customAuth.AddAuthParameter("token", obj.PhotonCustomAuthenticationToken);

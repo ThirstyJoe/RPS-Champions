@@ -14,7 +14,7 @@ namespace ThirstyJoe.RPSChampions
 
         private void Start()
         {
-            screenName.text = PlayFabAuthenticator.screenName;
+            screenName.text = PlayerPrefs.GetString("screenName");
         }
 
         public void OnLogOutButtonPress()
