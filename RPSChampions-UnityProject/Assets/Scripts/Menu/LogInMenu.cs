@@ -48,7 +48,7 @@ namespace ThirstyJoe.RPSChampions
             // save login in prefs
             PlayerPrefs.SetString("password", password);
 
-            // lets server know we want account info returned so we can get screenName
+            // lets server know we want account info returned so we can get screenName/email
             var requestParams = new GetPlayerCombinedInfoRequestParams()
             {
                 GetUserAccountInfo = true
@@ -94,11 +94,10 @@ namespace ThirstyJoe.RPSChampions
 
         public void SuccessfulLogin(LoginResult result)
         {
-            if (!PlayerPrefs.HasKey("screenName"))
-            {
-                // save login in prefs
-                PlayerPrefs.SetString("screenName", result.InfoResultPayload.AccountInfo.Username);
-            }
+            // save login in prefs
+            PlayerPrefs.SetString("screenName", result.InfoResultPayload.AccountInfo.Username);
+            PlayerPrefs.SetString("email", result.InfoResultPayload.AccountInfo.PrivateInfo.Email);
+
 
             SceneManager.LoadScene("MainMenu");
             PlayFabAuthenticator.Authenticated(result);
@@ -106,10 +105,7 @@ namespace ThirstyJoe.RPSChampions
 
         public void OnForgetPassButtonPress()
         {
-            // pop up confirmation:
-            // "Are you sure you want to reset your password? 
-            // A password reset link will be emailed to you."
-            // [NO] [YES]
+            PlayerPrefs.SetString("screenNameInputField", screenNameInputField.text);
             SceneManager.LoadScene("PasswordResetConfirmation", LoadSceneMode.Additive);
         }
 

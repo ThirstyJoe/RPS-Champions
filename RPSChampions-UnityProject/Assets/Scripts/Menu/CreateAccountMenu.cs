@@ -67,11 +67,11 @@ namespace ThirstyJoe.RPSChampions
             PlayFabClientAPI.RegisterPlayFabUser(request, success =>
                 {
                     Debug.Log("Successfully registered " + username);
-                    SuccessfullyCreatedAccount(username, password);
+                    SuccessfullyCreatedAccount(username, password, email);
                 }, FailureCallback);
         }
 
-        private void SuccessfullyCreatedAccount(string username, string password)
+        private void SuccessfullyCreatedAccount(string username, string password, string email)
         {
             // return to main menu after successful account creation
 
@@ -89,6 +89,7 @@ namespace ThirstyJoe.RPSChampions
             );
 
             // save previous login in prefs
+            PlayerPrefs.SetString("email", email);
             PlayerPrefs.SetString("password", password);
             PlayerPrefs.SetString("screenName", username);
 
