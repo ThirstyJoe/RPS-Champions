@@ -15,19 +15,6 @@
 
         private void Start()
         {
-            if (PlayerPrefs.HasKey("playFabId"))
-            {
-                Debug.Log(PlayerPrefs.GetString("playFabId"));
-            }
-            if (PlayerPrefs.HasKey("password"))
-            {
-                Debug.Log(PlayerPrefs.GetString("password"));
-            }
-            if (PlayerPrefs.HasKey("screenName"))
-            {
-                Debug.Log(PlayerPrefs.GetString("screenName"));
-            }
-
             if (PlayerPrefs.HasKey("screenName"))
             {
                 // player is logged in
