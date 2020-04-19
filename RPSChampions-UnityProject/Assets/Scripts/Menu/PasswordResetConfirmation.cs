@@ -5,12 +5,15 @@ namespace ThirstyJoe.RPSChampions
     using UnityEngine;
     using PlayFab;
     using PlayFab.ClientModels;
+    using PlayFab.Json;
+    using System;
 
     public class PasswordResetConfirmation : MonoBehaviour
     {
         [SerializeField]
         private GameObject PasswordResetSuccessPanel;
         [SerializeField]
+        private GameObject PasswordResetFailurePanel;
 
         public void OnCancelButtonPress()
         {
@@ -26,16 +29,11 @@ namespace ThirstyJoe.RPSChampions
             }
             else
             {
-                AccountInfoRequest(screenName);
+                SendRecoveryEmailFromScreenName(screenName);
             }
         }
 
-        public void OnSuccessButtonPress()
-        {
-            SceneManager.UnloadSceneAsync("PasswordResetConfirmation");
-        }
-
-        void AccountInfoRequest(string screenName)
+        public void GetPlayFabIdFromScreenNameToSendRecoveryEmail(string screenName)
         {
             var request = new GetAccountInfoRequest
             {
@@ -44,14 +42,62 @@ namespace ThirstyJoe.RPSChampions
 
             PlayFabClientAPI.GetAccountInfo(request, res =>
             {
-                SendRecoveryEmail(res.AccountInfo.PrivateInfo.Email);
+                string playFabId = res.AccountInfo.PlayFabId;
+                Debug.Log("play fab id retireved: " + playFabId);
+                SendRecoveryEmailFromScreenName(playFabId);
             }, FailureCallback);
+        }
+
+        public void SendRecoveryEmailFromScreenName(string username)
+        {
+            Debug.Log("attempting to send email for: " + username);
+            PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
+            {
+                FunctionName = "UsernameResetPassword",
+                FunctionParameter = new
+                {
+                    Username = username
+                },
+                GeneratePlayStreamEvent = true,
+            }, SendRecoveryEmailResult, FailureCallback);
+        }
+
+        public void SendRecoveryEmailResult(ExecuteCloudScriptResult result)
+        {
+            Debug.Log("SendRecoveryEmailResult result received");
+            JsonObject jsonResult = (JsonObject)result.FunctionResult;
+            Debug.Log(jsonResult);
+            object messageOut;
+            jsonResult.TryGetValue("message", out messageOut);
+            Debug.Log(messageOut);
+            string message = (string)messageOut;
+
+            if (message == "") // no error
+            {
+                PasswordResetSuccessPanel.SetActive(true);
+                Debug.Log("An account recovery email has been sent to the player's email address.");
+            }
+            else
+            {
+                Debug.Log("Username not found, recovery email not sent.");
+                PasswordResetFailurePanel.SetActive(true);
+            }
+
+        }
+
+        public void OnSuccessButtonPress()
+        {
+            SceneManager.UnloadSceneAsync("PasswordResetConfirmation");
+        }
+
+        public void OnFailureButtonPress()
+        {
+            SceneManager.UnloadSceneAsync("PasswordResetConfirmation");
         }
 
         void SendRecoveryEmail(string email)
         {
             Debug.Log("attempting password recovery at: " + email);
-            PasswordResetSuccessPanel.SetActive(true);
             var request = new SendAccountRecoveryEmailRequest
             {
                 Email = email,
@@ -61,12 +107,14 @@ namespace ThirstyJoe.RPSChampions
 
             PlayFabClientAPI.SendAccountRecoveryEmail(request, res =>
             {
+                PasswordResetSuccessPanel.SetActive(true);
                 Debug.Log("An account recovery email has been sent to the player's email address.");
             }, FailureCallback);
         }
 
         void FailureCallback(PlayFabError error)
         {
+            PasswordResetFailurePanel.SetActive(true);
             Debug.LogWarning("Something went wrong with your API call. Here's some debug information:");
             Debug.LogError(error.GenerateErrorReport());
         }

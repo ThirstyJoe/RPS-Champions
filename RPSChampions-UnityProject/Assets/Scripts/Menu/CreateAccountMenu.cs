@@ -73,8 +73,19 @@ namespace ThirstyJoe.RPSChampions
 
         private void SuccessfullyCreatedAccount(string username, string password, string email)
         {
-            // return to main menu after successful account creation
+            // add contact email
+            var emailRequest = new AddOrUpdateContactEmailRequest
+            {
+                EmailAddress = email
+            };
 
+            PlayFabClientAPI.AddOrUpdateContactEmail(
+                emailRequest,
+                success => { Debug.Log("successfully set contact email address"); },
+                PlayFabAuthenticator.OnPlayFabError
+            );
+
+            // return to main menu after successful account creation
             var request = new LoginWithPlayFabRequest
             {
                 Username = username,
