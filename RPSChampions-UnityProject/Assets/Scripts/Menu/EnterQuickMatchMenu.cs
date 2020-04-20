@@ -16,6 +16,8 @@ namespace ThirstyJoe.RPSChampions
         [SerializeField]
         private TextMeshProUGUI progressText;
 
+        private int CreateRoomAttempts = 0;
+        private int MaxCreateRoomAttemps = 3;
 
         #endregion
 
@@ -32,19 +34,32 @@ namespace ThirstyJoe.RPSChampions
 
         public override void OnConnectedToMaster()
         {
-            JoinRoom();
+            Debug.Log("connected to master");
+            AttemptToJoinRoom();
+        }
+
+
+        public override void OnCreatedRoom()
+        {
+            Debug.Log("Game Created");
         }
 
         public override void OnJoinedRoom()
         {
+            Debug.Log("Join Game Successful");
             SceneManager.LoadScene("QuickMatch");
+        }
+
+        public override void OnCreateRoomFailed(short returnCode, string message)
+        {
+            Debug.Log("Create Game Failed: " + message);
+            CreateRoom();
         }
 
         public override void OnJoinRoomFailed(short returnCode, string message)
         {
-            SceneManager.LoadScene("MainMenu");
-            // TODO: alert player to reason they are returned to Main Menu
             Debug.Log("Join Game Failed: " + message);
+            CreateRoom();
         }
 
         #endregion
@@ -62,11 +77,28 @@ namespace ThirstyJoe.RPSChampions
 
         #region CUSTOM PRIVATE
 
-        private void JoinRoom()
+        private void AttemptToJoinRoom()
         {
-            // Create room
-            RoomOptions options = new RoomOptions { MaxPlayers = 2 };
-            PhotonNetwork.JoinOrCreateRoom("Test Game", options, null);
+            Debug.Log("attempting to join random room");
+            PhotonNetwork.JoinRandomRoom(); //(null, 2);
+        }
+
+        private void CreateRoom()
+        {
+            if (CreateRoomAttempts < MaxCreateRoomAttemps) // only attempt to create a room 3 times
+            {
+                // Create room
+                RoomOptions options = new RoomOptions { MaxPlayers = 2 };
+                string roomName = "quickmatch:" + PlayerPrefs.GetString("screenName");
+                Debug.Log("attempting to create room named: " + roomName);
+                PhotonNetwork.CreateRoom(roomName, options);
+                ++CreateRoomAttempts;
+            }
+            else
+            {
+                Debug.Log(MaxCreateRoomAttemps.ToString() + " failures to create game, returning to Main Menu");
+                SceneManager.LoadScene("MainMenu");
+            }
         }
 
         #endregion

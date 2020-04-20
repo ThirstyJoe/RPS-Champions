@@ -25,39 +25,15 @@
                 logInButton.SetActive(false);
                 accountButton.SetActive(true);
 
-                // log in
-                var request = new LoginWithPlayFabRequest
-                {
-                    Username = PlayerPrefs.GetString("screenName"),
-                    Password = PlayerPrefs.GetString("password"),
-                    TitleId = PlayFabSettings.TitleId
-                };
-                PlayFabClientAPI.LoginWithPlayFab(
-                    request,
-                    OnSuccess =>
-                    {
-                        Debug.Log("successfully logged into: " + PlayerPrefs.GetString("screenName"));
-                    },
-                    errorCallback =>
-                    {
-                        Debug.Log("Logging out due to error: " + errorCallback.ErrorMessage);
-                        PlayFabAuthenticator.LogOut();
-                        DefaultLogIn();
-                    }
-                );
+                PlayFabAuthenticator.AuthenticateWithPlayFab(); // get a default device login
             }
             else
             {
-                DefaultLogIn();
+                // player is not fully logged in
+                logInButton.SetActive(true);
+                accountButton.SetActive(false);
+                PlayFabAuthenticator.AuthenticateWithPlayFab(); // get a default device login
             }
-        }
-
-        public void DefaultLogIn()
-        {
-            // player is not fully logged in
-            logInButton.SetActive(true);
-            accountButton.SetActive(false);
-            PlayFabAuthenticator.AuthenticateWithPlayFab(); // get a default device login
         }
 
         public void OnOuickMatchButtonPress()

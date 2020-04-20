@@ -20,10 +20,11 @@ namespace ThirstyJoe.RPSChampions
          */
         public static void AuthenticateWithPlayFab()
         {
-            Debug.Log("PlayFab authenticating using Custom ID...");
+
 
             if (PlayerPrefs.HasKey("playFabId"))
             {  // was previously logged in
+                Debug.Log("PlayFab authenticating using Previous Log In...");
                 PlayFabClientAPI.LoginWithCustomID(new LoginWithCustomIDRequest()
                 {
                     CreateAccount = true,
@@ -32,6 +33,7 @@ namespace ThirstyJoe.RPSChampions
             }
             else
             {  // default log in
+                Debug.Log("PlayFab authenticating using Device ID...");
 #if UNITY_ANDROID
                 // android authentication
                 PlayFabClientAPI.LoginWithAndroidDeviceID(new LoginWithAndroidDeviceIDRequest()

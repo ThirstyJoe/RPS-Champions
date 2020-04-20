@@ -213,7 +213,7 @@ namespace ThirstyJoe.RPSChampions
                 FunctionName = "GetGameState",
                 FunctionParameter = new
                 {
-                    sharedGroupId = "GB",
+                    sharedGroupId = "RPS",
                 },
                 GeneratePlayStreamEvent = true,
             }, OnGetGameState, OnErrorShared);
@@ -277,7 +277,7 @@ namespace ThirstyJoe.RPSChampions
                 FunctionName = "InitializeGameStartState",
                 FunctionParameter = new
                 {
-                    sharedGroupId = "GB",
+                    sharedGroupId = "RPS",
                     gameSettings = gameSettings.ToJSON()
                 },
                 GeneratePlayStreamEvent = true,
@@ -309,7 +309,7 @@ namespace ThirstyJoe.RPSChampions
                 FunctionName = "UpdateTurnData",
                 FunctionParameter = new
                 {
-                    sharedGroupId = "GB",
+                    sharedGroupId = "RPS",
                     turnData = localTurnData.ToJSON(),
                 },
                 GeneratePlayStreamEvent = true,
