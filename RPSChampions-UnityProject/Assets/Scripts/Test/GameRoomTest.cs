@@ -164,18 +164,21 @@ namespace ThirstyJoe.RPSChampions
 
         private void InitializeRoomData()
         {
-            PlayFabClientAPI.CreateSharedGroup(new CreateSharedGroupRequest
-            { SharedGroupId = "GB" },
+            string groupId = "RPS";
+            var request = new CreateSharedGroupRequest { SharedGroupId = groupId };
+            PlayFabClientAPI.CreateSharedGroup(
+                request,
                 OnSuccess =>
                 {
-                    Debug.Log("Shared group created named: GB");
+                    Debug.Log("Shared group created named: " + groupId);
                     InitializeGameStartState();
                 },
                 errorCallback =>
                 {
                     Debug.Log(errorCallback.ErrorMessage + "group data already exists");
                     UpdateGameStateFromServer();
-                });
+                }
+            );
         }
 
 

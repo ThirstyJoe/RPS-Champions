@@ -2,10 +2,10 @@ namespace ThirstyJoe.RPSChampions
 {
     using UnityEngine;
     using Photon.Pun;
+    using TMPro;
     using ExitGames.Client.Photon;
     using Photon.Realtime;
     using System.Collections.Generic;
-    using UnityEngine.UI;
     using PlayFab;
     using PlayFab.ClientModels;
     using UnityEngine.SceneManagement;
@@ -13,17 +13,18 @@ namespace ThirstyJoe.RPSChampions
     public class EnterQuickMatchMenu : MonoBehaviourPunCallbacks
     {
         #region PRIVATE VARS
-
-        [Tooltip("The UI Panel to let the user enter name, connect and play")]
         [SerializeField]
-        private GameObject loginPanel;
+        private TextMeshProUGUI progressText;
 
-        [Tooltip("The UI Panel to inform the user that the connection is in progress")]
-        [SerializeField]
-        private GameObject progressPanel;
 
-        [SerializeField]
-        private InputField nameInputField;
+        #endregion
+
+        #region UNITY
+
+        private void Start()
+        {
+            ConnectToPhoton();
+        }
 
         #endregion
 
@@ -41,51 +42,20 @@ namespace ThirstyJoe.RPSChampions
 
         public override void OnJoinRoomFailed(short returnCode, string message)
         {
-            // UI State
-            loginPanel.SetActive(true);
-            progressPanel.SetActive(false);
-
+            SceneManager.LoadScene("MainMenu");
+            // TODO: alert player to reason they are returned to Main Menu
             Debug.Log("Join Game Failed: " + message);
         }
 
         #endregion
 
-        #region PLAYFAB
-
-
-        #endregion
         #region CUSTOM PUBLIC
 
-        public void OnEnterGameButtonPressed()
+        public void ConnectToPhoton()
         {
-            // retrieve desired nickname from input field
-            var nickname = nameInputField.text;
-            if (nickname == "")
-            {
-                // some default name to use for easier testing
-                nickname = "Mr. Nothington";
-            }
-
-            // filter nickname through a PlayFab displayName request
-            PlayFabClientAPI.UpdateUserTitleDisplayName(new UpdateUserTitleDisplayNameRequest
-            { DisplayName = nickname },
-            OnDisplayName =>
-            {
-                Debug.Log(OnDisplayName.DisplayName + " is your display name");
-                nickname = OnDisplayName.DisplayName;
-            },
-            errorCallback =>
-            {
-                Debug.Log(errorCallback.ErrorMessage + " error with display name, possibly in use");
-            });
-
             // use nickname to connect to Photon
-            PhotonNetwork.LocalPlayer.NickName = nickname;
+            PhotonNetwork.LocalPlayer.NickName = PlayerPrefs.GetString("screenName");
             PhotonNetwork.ConnectUsingSettings();
-
-            // UI State change
-            loginPanel.SetActive(false);
-            progressPanel.SetActive(true);
         }
 
         #endregion
@@ -95,7 +65,7 @@ namespace ThirstyJoe.RPSChampions
         private void JoinRoom()
         {
             // Create room
-            RoomOptions options = new RoomOptions { MaxPlayers = 8 };
+            RoomOptions options = new RoomOptions { MaxPlayers = 2 };
             PhotonNetwork.JoinOrCreateRoom("Test Game", options, null);
         }
 
