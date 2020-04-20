@@ -62,6 +62,12 @@ namespace ThirstyJoe.RPSChampions
             CreateRoom();
         }
 
+        public override void OnJoinRandomFailed(short returnCode, string message)
+        {
+            Debug.Log("Join Random Game Failed: " + message);
+            CreateRoom();
+        }
+
         #endregion
 
         #region CUSTOM PUBLIC

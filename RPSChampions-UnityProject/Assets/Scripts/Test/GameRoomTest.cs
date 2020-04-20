@@ -86,6 +86,8 @@ namespace ThirstyJoe.RPSChampions
         private GameState localGameState = new GameState();
         private TurnData localTurnData = new TurnData();
 
+        private string groupId;
+
         #endregion
 
         #region UNITY 
@@ -97,6 +99,7 @@ namespace ThirstyJoe.RPSChampions
 
         private void Start()
         {
+            groupId = "quickmatch:" + PhotonNetwork.CurrentRoom.Name;
             UpdateUserListUI();
             InitializeRoomData(); // expected to fail if room is already create
         }
@@ -164,7 +167,6 @@ namespace ThirstyJoe.RPSChampions
 
         private void InitializeRoomData()
         {
-            string groupId = "RPS";
             var request = new CreateSharedGroupRequest { SharedGroupId = groupId };
             PlayFabClientAPI.CreateSharedGroup(
                 request,
@@ -213,7 +215,7 @@ namespace ThirstyJoe.RPSChampions
                 FunctionName = "GetGameState",
                 FunctionParameter = new
                 {
-                    sharedGroupId = "RPS",
+                    sharedGroupId = groupId,
                 },
                 GeneratePlayStreamEvent = true,
             }, OnGetGameState, OnErrorShared);
@@ -277,7 +279,7 @@ namespace ThirstyJoe.RPSChampions
                 FunctionName = "InitializeGameStartState",
                 FunctionParameter = new
                 {
-                    sharedGroupId = "RPS",
+                    sharedGroupId = groupId,
                     gameSettings = gameSettings.ToJSON()
                 },
                 GeneratePlayStreamEvent = true,
@@ -309,7 +311,7 @@ namespace ThirstyJoe.RPSChampions
                 FunctionName = "UpdateTurnData",
                 FunctionParameter = new
                 {
-                    sharedGroupId = "RPS",
+                    sharedGroupId = groupId,
                     turnData = localTurnData.ToJSON(),
                 },
                 GeneratePlayStreamEvent = true,
