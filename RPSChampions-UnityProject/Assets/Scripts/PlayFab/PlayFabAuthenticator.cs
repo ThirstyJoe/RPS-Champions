@@ -9,6 +9,8 @@ namespace ThirstyJoe.RPSChampions
 
     public class PlayFabAuthenticator : Singleton<PlayFabAuthenticator>
     {
+        public static PlayerStats playerStats = new PlayerStats();
+
         /*
          * Step 1
          * We authenticate current PlayFab user normally.
