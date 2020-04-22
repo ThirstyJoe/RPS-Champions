@@ -183,6 +183,9 @@ namespace ThirstyJoe.RPSChampions
         public void RequestCancelled(string opponentName)
         {
             Debug.Log("match request cancelled, event sent");
+            var button = buttonArray[userButtonMap[opponentName]];
+            button.RequestCancelled();
+
             var data = new object[] {
                 PhotonNetwork.NickName,
                 opponentName,

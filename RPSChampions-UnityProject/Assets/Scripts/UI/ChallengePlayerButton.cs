@@ -48,9 +48,9 @@ namespace ThirstyJoe.RPSChampions
         public void OnButtonPressed()
         {
             if (requested)
-                RequestCancelled();
+                OnRequestCancelled();
             else
-                Requested();
+                OnRequested();
 
             EventSystem.current.SetSelectedGameObject(null);
         }
@@ -61,7 +61,7 @@ namespace ThirstyJoe.RPSChampions
             UpdateButton();
         }
 
-        public void Requested()
+        public void OnRequested()
         {
             requested = true;
             UpdateButton();
@@ -74,11 +74,17 @@ namespace ThirstyJoe.RPSChampions
             UpdateButton();
         }
 
+        public void OnRequestCancelled()
+        {
+            RequestCancelled();
+            menu.RequestedMatch(playerName);
+            UpdateButton();
+        }
+
         public void RequestCancelled()
         {
             requested = false;
             UpdateButton();
-            menu.RequestCancelled(playerName);
         }
 
         public void UpdateButton()
