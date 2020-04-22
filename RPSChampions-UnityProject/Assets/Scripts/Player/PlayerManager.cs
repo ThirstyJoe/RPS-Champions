@@ -3,8 +3,10 @@ namespace ThirstyJoe.RPSChampions
     using UnityEngine;
     public class PlayerManager : Singleton<PlayerManager>
     {
-        private static PlayerStats playerStats;
+        public static string Room; // name of the room player is in
+        public static string OpponentName; // name of the opponent // TODO: save in game data
 
+        private static PlayerStats playerStats;
         public static PlayerStats PlayerStats
         {
             get
@@ -18,5 +20,6 @@ namespace ThirstyJoe.RPSChampions
                 return playerStats;
             }
         }
+
     }
 }

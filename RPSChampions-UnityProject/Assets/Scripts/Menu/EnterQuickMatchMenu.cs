@@ -10,9 +10,17 @@ namespace ThirstyJoe.RPSChampions
     using PlayFab.ClientModels;
     using UnityEngine.SceneManagement;
     using System.Text;
+    using System;
 
     public class EnterQuickMatchMenu : MonoBehaviourPunCallbacks
     {
+        #region EVENT DEFS
+
+        private const byte REQUEST_MATCH_EVENT = 0;
+        private const byte CANCEL_MATCH_EVENT = 1;
+
+        #endregion
+
         #region PRIVATE VARS
         [SerializeField]
         private GameObject connectingLabel;
@@ -33,23 +41,35 @@ namespace ThirstyJoe.RPSChampions
         private TextMeshProUGUI playerStatsText;
 
         [SerializeField]
-        private ChallengePlayerButton[] userArray;
+        private ChallengePlayerButton[] buttonArray;
 
         private int CreateRoomAttempts = 0;
         private int MaxCreateRoomAttemps = 3;
-        private int requestedIndex = -1;
-        private int challengedIndex = -1;
+        private string requestedName = "";
+        private HashSet<string> challenges = new HashSet<string>();
+        private Dictionary<string, int> userButtonMap = new Dictionary<string, int>();
         private int totalOpponents = 0;
         private bool connected = false;
+
         #endregion
 
         #region UNITY
 
+        private void Awake()
+        {
+            PhotonNetwork.NetworkingClient.EventReceived += ReceiveCustomPUNEvents;
+        }
+
+        private void OnDestroy()
+        {
+            PhotonNetwork.NetworkingClient.EventReceived -= ReceiveCustomPUNEvents;
+        }
+
         private void Start()
         {
+            ConnectToPhoton();
             UpdatePlayerUI();
             UpdateUserListUI();
-            ConnectToPhoton();
         }
 
         #endregion
@@ -74,7 +94,6 @@ namespace ThirstyJoe.RPSChampions
             Debug.Log("connected to master");
             AttemptToJoinRoom();
         }
-
 
         public override void OnCreatedRoom()
         {
@@ -127,19 +146,124 @@ namespace ThirstyJoe.RPSChampions
             }
             else
             {
-                PhotonNetwork.LocalPlayer.NickName = "Newbie"; // TODO: select from random name list
+                PhotonNetwork.LocalPlayer.NickName = PlayerManager.PlayerStats.PlayerName;
             }
 
             PhotonNetwork.ConnectUsingSettings();
         }
 
+        public void RequestedMatch(string opponentName)
+        {
+            Debug.Log("match requested, event sent");
+            var data = new object[] {
+                PhotonNetwork.NickName,
+                opponentName,
+            };
+
+            // if request exists, cancel first
+            if (requestedName != "")
+                RequestCancelled(requestedName);
+
+            requestedName = opponentName;
+
+            PhotonNetwork.RaiseEvent(
+                REQUEST_MATCH_EVENT,        // .Code
+                data,                       // .CustomData
+                RaiseEventOptions.Default,
+                SendOptions.SendReliable);
+
+            if (challenges.Contains(opponentName))
+            {
+                StartMatch(opponentName);
+                return;
+            }
+
+            UpdateUserListUI();
+        }
+        public void RequestCancelled(string opponentName)
+        {
+            Debug.Log("match request cancelled, event sent");
+            var data = new object[] {
+                PhotonNetwork.NickName,
+                opponentName,
+            };
+
+            PhotonNetwork.RaiseEvent(
+                CANCEL_MATCH_EVENT,         // .Code
+                data,                       // .CustomData
+                RaiseEventOptions.Default,
+                SendOptions.SendReliable);
+
+            requestedName = ""; // reset to null value
+
+            UpdateUserListUI(); // UI update
+        }
+
+
         #endregion
 
         #region CUSTOM PRIVATE
 
+        private void StartMatch(string opponentName)
+        {
+            string[] nameArray = { opponentName, PhotonNetwork.NickName };
+            PlayerManager.OpponentName = opponentName;
+            Array.Sort(nameArray);
+            PlayerManager.Room = "quickmatch:" + nameArray[0] + "_" + nameArray[1];
+            Debug.Log("entering game with room name: " + PlayerManager.Room);
+            //PhotonNetwork.Disconnect();
+            SceneManager.LoadScene("QuickMatch");
+        }
+
+        private void ReceiveCustomPUNEvents(EventData obj)
+        {
+            // get data from event
+            object[] data = (object[])obj.CustomData;
+            if (data == null) return; // invalid data 
+            string receiverName = (string)data[1];
+            string senderName = (string)data[0];
+
+            // check if you are the receiver for this event
+            if (PhotonNetwork.NickName != receiverName) return;
+
+            // switch to correct function
+            switch (obj.Code)
+            {
+                case REQUEST_MATCH_EVENT:
+                    IncomingChallenge(senderName);
+                    break;
+                case CANCEL_MATCH_EVENT:
+                    ChallengeCancelled(senderName);
+                    break;
+            }
+        }
+
+        private void IncomingChallenge(string opponentName)
+        {
+            challenges.Add(opponentName);
+            var button = buttonArray[userButtonMap[opponentName]];
+            button.Challenged();
+
+            if (requestedName == opponentName)
+            {
+                StartMatch(opponentName);
+                return;
+            }
+
+            UpdateUserListUI();
+        }
+        private void ChallengeCancelled(string opponentName)
+        {
+            challenges.Remove(opponentName);
+            var button = buttonArray[userButtonMap[opponentName]];
+            button.ChallengeCancelled();
+            UpdateUserListUI();
+        }
+
         private void UpdatePlayerUI()
         {
             var stats = PlayerManager.PlayerStats;
+            stats.PlayerName = PhotonNetwork.NickName;
             playerNameText.text = stats.PlayerName;
             playerStatsText.text =
                 "Wins\t" + stats.Wins.ToString() +
@@ -152,36 +276,39 @@ namespace ThirstyJoe.RPSChampions
         {
             if (connected)
             {
-                var playerList = new StringBuilder();
+                userButtonMap.Clear();
 
                 int i = 0;
                 foreach (var player in PhotonNetwork.PlayerList)
                 {
                     // skip self
-                    // if (player == PhotonNetwork.LocalPlayer)
-                    //     continue;
+                    if (player == PhotonNetwork.LocalPlayer)
+                        continue;
 
-                    userArray[i].gameObject.SetActive(true);
+                    var button = buttonArray[i];
                     var stats = new PlayerStats(player.NickName);
-                    userArray[i].SetButtonText(stats); // TODO: get real user stats
+
+                    button.gameObject.SetActive(true);  // Switch button on
+                    button.SetButtonText(stats);        // TODO: get real user stats
+                    userButtonMap[player.NickName] = i; // map name to index for retrieval later on
 
                     // iterate until the capacity of userArray is reached
-                    if (++i == userArray.Length)
+                    if (++i == buttonArray.Length)
                         break;
                 }
 
                 totalOpponents = i;
 
                 // disable unused buttons
-                for (; i < userArray.Length; i++)
+                for (; i < buttonArray.Length; i++)
                 {
-                    userArray[i].gameObject.SetActive(false);
+                    buttonArray[i].gameObject.SetActive(false);
                 }
             }
             else
             {
                 // hide buttons 
-                foreach (var user in userArray)
+                foreach (var user in buttonArray)
                     user.gameObject.SetActive(false);
             }
 
@@ -226,13 +353,13 @@ namespace ThirstyJoe.RPSChampions
                 return;
             }
 
-            if (requestedIndex != -1)
+            if (requestedName != "")
             {
                 SelectUserListLabel(requestedLabel);
                 return;
             }
 
-            if (challengedIndex != -1)
+            if (challenges.Count > 0)
             {
                 SelectUserListLabel(challengeLabel);
                 return;

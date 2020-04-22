@@ -30,9 +30,6 @@ EditorBuildSettings:
     path: Assets/Scenes/PasswordChange.unity
     guid: b2e717632fca6544e8af37a5b05a35b0
   - enabled: 1
-    path: Assets/Scenes/DeleteAccountConfirmation.unity
-    guid: 2c6a58471b20aee48ac231f9fb927661
-  - enabled: 1
     path: Assets/Scenes/Account.unity
     guid: 6dc0989ffad80994db305d5d11d5083b
   m_configObjects: {}

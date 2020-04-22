@@ -5,12 +5,11 @@ namespace ThirstyJoe.RPSChampions
     using PlayFab.ClientModels;
     using UnityEngine.SceneManagement;
     using UnityEngine.UI;
-    using Photon.Pun;
-    using Photon.Realtime;
     using System.Text;
     using System.Collections;
     using PlayFab.Json;
     using System;
+    using Photon.Pun;
 
     #region GAME DATA CLASSES 
 
@@ -66,7 +65,7 @@ namespace ThirstyJoe.RPSChampions
 
     #endregion
 
-    public class GameRoomTest : MonoBehaviourPunCallbacks
+    public class GameRoomTest : MonoBehaviour
     {
         #region UNITY OBJ REFS
 
@@ -99,7 +98,7 @@ namespace ThirstyJoe.RPSChampions
 
         private void Start()
         {
-            groupId = "quickmatch:" + PhotonNetwork.CurrentRoom.Name;
+            groupId = PlayerManager.Room;
             UpdateUserListUI();
             InitializeRoomData(); // expected to fail if room is already create
         }
@@ -117,10 +116,8 @@ namespace ThirstyJoe.RPSChampions
         {
             var playerList = new StringBuilder();
 
-            foreach (var player in PhotonNetwork.PlayerList)
-            {
-                playerList.Append(player.NickName + "\n");
-            }
+            playerList.Append(PlayerManager.PlayerStats.PlayerName + "\n");
+            playerList.Append(PlayerManager.OpponentName);
 
             userListText.text = playerList.ToString();
         }
@@ -141,22 +138,6 @@ namespace ThirstyJoe.RPSChampions
 
         #endregion
 
-        #region PUN CALLBACKS
-
-        public override void OnPlayerEnteredRoom(Player other)
-        {
-            Debug.LogFormat("OnPlayerEnteredRoom() {0}", other.NickName);
-            UpdateUserListUI();
-        }
-
-
-        public override void OnPlayerLeftRoom(Player other)
-        {
-            Debug.LogFormat("OnPlayerLeftRoom() {0}", other.NickName);
-            UpdateUserListUI();
-        }
-
-        #endregion
 
         #region SHARED GROUP DATA TEST
 
@@ -337,7 +318,7 @@ namespace ThirstyJoe.RPSChampions
                 FunctionName = "CleanUpGameRoom",
                 FunctionParameter = new
                 {
-                    sharedGroupId = "GB",
+                    sharedGroupId = groupId,
                 },
                 GeneratePlayStreamEvent = true,
             }, OnEndGame, OnErrorShared);

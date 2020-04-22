@@ -25,9 +25,12 @@ namespace ThirstyJoe.RPSChampions
     public class PlayerStats
     {
         private PlayerStatsData data = new PlayerStatsData();
-        private string playerName = "Guest";
+        private string playerName;
 
-        public PlayerStats() { }
+        public PlayerStats()
+        {
+            playerName = RandomGuestName();
+        }
         public PlayerStats(string name)
         {
             playerName = name;
@@ -73,6 +76,14 @@ namespace ThirstyJoe.RPSChampions
             {
                 return data.totalGames - data.wins;
             }
+        }
+
+
+        private string RandomGuestName()
+        {
+            var v = Enum.GetValues(typeof(GuestName));
+            var name = (GuestName)v.GetValue(new Random().Next(v.Length));
+            return name.ToString();
         }
     }
 }
