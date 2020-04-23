@@ -18,6 +18,7 @@ namespace ThirstyJoe.RPSChampions
 
         private const byte REQUEST_MATCH_EVENT = 0;
         private const byte CANCEL_MATCH_EVENT = 1;
+        private const byte CREATED_MATCH_EVENT = 2;
 
         #endregion
 
@@ -154,28 +155,40 @@ namespace ThirstyJoe.RPSChampions
 
         public void RequestedMatch(string opponentName)
         {
-            Debug.Log("match requested, event sent");
-            var data = new object[] {
-                PhotonNetwork.NickName,
-                opponentName,
-            };
-
-            // if request exists, cancel first
-            if (requestedName != "")
-                RequestCancelled(requestedName);
-
-            requestedName = opponentName;
-
-            PhotonNetwork.RaiseEvent(
-                REQUEST_MATCH_EVENT,        // .Code
-                data,                       // .CustomData
-                RaiseEventOptions.Default,
-                SendOptions.SendReliable);
 
             if (challenges.Contains(opponentName))
-            {
-                StartMatch(opponentName);
+            { // has already been challenged... start match
+                StartMatch(opponentName, true);
                 return;
+            }
+            else
+            {  // has not yet been challenged, send event
+                Debug.Log("match requested, event sent");
+                var data = new object[] {
+                PhotonNetwork.NickName,
+                opponentName,
+                };
+
+                // 2nd press on same request means cancel without issueing a new request
+                if (requestedName == opponentName)
+                {
+                    RequestCancelled(requestedName);
+                    return;
+                }
+
+                // if request exists, cancel first
+                if (requestedName != "")
+                {
+                    RequestCancelled(requestedName);
+                }
+
+                requestedName = opponentName;
+
+                PhotonNetwork.RaiseEvent(
+                    REQUEST_MATCH_EVENT,        // .Code
+                    data,                       // .CustomData
+                    RaiseEventOptions.Default,
+                    SendOptions.SendReliable);
             }
 
             UpdateUserListUI();
@@ -207,15 +220,56 @@ namespace ThirstyJoe.RPSChampions
 
         #region CUSTOM PRIVATE
 
-        private void StartMatch(string opponentName)
+        // player to send final request in match making is labeled as the "HOST"
+        private void StartMatch(string opponentName, bool isHost)
         {
+            // generate quick match Id and save it for later
             string[] nameArray = { opponentName, PhotonNetwork.NickName };
             PlayerManager.OpponentName = opponentName;
             Array.Sort(nameArray);
-            PlayerManager.Room = "quickmatch:" + nameArray[0] + "_" + nameArray[1];
-            Debug.Log("entering game with room name: " + PlayerManager.Room);
-            //PhotonNetwork.Disconnect();
-            SceneManager.LoadScene("QuickMatch");
+            PlayerManager.QuickMatchId = "quickmatch:" + nameArray[0] + "_" + nameArray[1];
+
+            Debug.Log("attempting to enter quickmatch with id: " + PlayerManager.QuickMatchId);
+
+            PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
+            {
+                FunctionName = "JoinQuickMatch",
+                FunctionParameter = new
+                {
+                    IsHost = isHost,
+                    QuickMatchId = PlayerManager.QuickMatchId,
+                },
+                GeneratePlayStreamEvent = true,
+            },
+                success =>
+                {
+                    if (isHost)
+                    {
+                        // send match created event
+                        var data = new object[] {
+                            PhotonNetwork.NickName,
+                            opponentName,
+                        };
+                        PhotonNetwork.RaiseEvent(
+                            CREATED_MATCH_EVENT,        // .Code
+                            data,                       // .CustomData
+                            RaiseEventOptions.Default,
+                            SendOptions.SendReliable);
+                    }
+
+                    // removes player from finding quickmatch player list
+                    PhotonNetwork.LeaveRoom();
+
+                    Debug.Log("successfully joined quickmatch with id: " + PlayerManager.QuickMatchId);
+
+                    // load match in client
+                    SceneManager.LoadScene("QuickMatch");
+                },
+                error =>
+                {
+                    Debug.Log(error.ErrorMessage + "error attempting to join game");
+                }
+            );
         }
 
         private void ReceiveCustomPUNEvents(EventData obj)
@@ -238,6 +292,9 @@ namespace ThirstyJoe.RPSChampions
                 case CANCEL_MATCH_EVENT:
                     ChallengeCancelled(senderName);
                     break;
+                case CREATED_MATCH_EVENT:
+                    StartMatch(senderName, false);
+                    break;
             }
         }
 
@@ -247,11 +304,9 @@ namespace ThirstyJoe.RPSChampions
             var button = buttonArray[userButtonMap[opponentName]];
             button.Challenged();
 
+            // we dont update UI in this case because we expect a CREATED_MATCH_EVENT event to come shortly
             if (requestedName == opponentName)
-            {
-                StartMatch(opponentName);
                 return;
-            }
 
             UpdateUserListUI();
         }

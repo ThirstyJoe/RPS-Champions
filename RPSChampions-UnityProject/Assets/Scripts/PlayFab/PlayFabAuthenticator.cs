@@ -21,16 +21,22 @@ namespace ThirstyJoe.RPSChampions
          */
         public static void AuthenticateWithPlayFab()
         {
-
-
-            if (PlayerPrefs.HasKey("playFabId"))
+            if (PlayerPrefs.HasKey("screenName") && PlayerPrefs.HasKey("password"))
             {  // was previously logged in
                 Debug.Log("PlayFab authenticating using Previous Log In...");
-                PlayFabClientAPI.LoginWithCustomID(new LoginWithCustomIDRequest()
+
+                var request = new LoginWithPlayFabRequest
                 {
-                    CreateAccount = true,
-                    CustomId = PlayerPrefs.GetString("playFabId")
-                }, Authenticated, OnPlayFabError);
+                    Username = PlayerPrefs.GetString("screenName"),
+                    Password = PlayerPrefs.GetString("password"),
+                    TitleId = PlayFabSettings.TitleId
+                };
+
+                PlayFabClientAPI.LoginWithPlayFab(
+                    request,
+                    Authenticated,
+                    OnPlayFabError
+                );
             }
             else
             {  // default log in
@@ -63,7 +69,7 @@ namespace ThirstyJoe.RPSChampions
 
         public static void Authenticated(LoginResult loginResult)
         {
-            Debug.Log("PlayFab authenticated. Requesting photon token...");
+            Debug.Log("PlayFab authenticated: " + loginResult.PlayFabId + " Requesting photon token...");
 
             // Save the player PlayFabId. This will come in handy during next step
             PlayerPrefs.SetString("playFabId", loginResult.PlayFabId);

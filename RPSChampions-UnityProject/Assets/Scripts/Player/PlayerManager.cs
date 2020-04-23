@@ -3,7 +3,7 @@ namespace ThirstyJoe.RPSChampions
     using UnityEngine;
     public class PlayerManager : Singleton<PlayerManager>
     {
-        public static string Room; // name of the room player is in
+        public static string QuickMatchId; // name of the room player is in
         public static string OpponentName; // name of the opponent // TODO: save in game data
 
         private static PlayerStats playerStats;

@@ -98,9 +98,9 @@ namespace ThirstyJoe.RPSChampions
 
         private void Start()
         {
-            groupId = PlayerManager.Room;
+            groupId = PlayerManager.QuickMatchId;
             UpdateUserListUI();
-            InitializeRoomData(); // expected to fail if room is already create
+            InitializeGameStartState();
         }
 
         #endregion
@@ -145,25 +145,6 @@ namespace ThirstyJoe.RPSChampions
         {
             Debug.Log(error.GenerateErrorReport());
         }
-
-        private void InitializeRoomData()
-        {
-            var request = new CreateSharedGroupRequest { SharedGroupId = groupId };
-            PlayFabClientAPI.CreateSharedGroup(
-                request,
-                OnSuccess =>
-                {
-                    Debug.Log("Shared group created named: " + groupId);
-                    InitializeGameStartState();
-                },
-                errorCallback =>
-                {
-                    Debug.Log(errorCallback.ErrorMessage + "group data already exists");
-                    UpdateGameStateFromServer();
-                }
-            );
-        }
-
 
         private IEnumerator TurnTimer(int timeLeft)
         {

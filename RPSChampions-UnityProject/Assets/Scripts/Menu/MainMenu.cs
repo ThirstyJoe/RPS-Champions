@@ -17,7 +17,8 @@
 
         private void Start()
         {
-            if (PlayerPrefs.HasKey("screenName"))
+            // TODO: maybe wait to see if player actually logs in?
+            if (PlayerPrefs.HasKey("screenName") && PlayerPrefs.HasKey("password"))
             {
                 // player was logged in previously
                 TextMeshProUGUI buttonText = accountButton.GetComponentInChildren<TextMeshProUGUI>();
