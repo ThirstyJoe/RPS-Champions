@@ -4,19 +4,25 @@ namespace ThirstyJoe.RPSChampions
     using PlayFab;
     using PlayFab.ClientModels;
     using UnityEngine.SceneManagement;
-    using UnityEngine.UI;
-    using System.Text;
+    using TMPro;
     using System.Collections;
     using PlayFab.Json;
     using System;
     using Photon.Pun;
 
     #region GAME DATA CLASSES 
-
+    [Serializable]
+    public enum GameResult
+    {
+        Win,
+        Lose,
+        Draw,
+        None,
+    }
     [Serializable]
     public class TurnData
     {
-        public int addToGameState;
+        public Weapon weaponChoice = Weapon.None;
 
         public string ToJSON()
         {
@@ -29,28 +35,29 @@ namespace ThirstyJoe.RPSChampions
     }
 
     [Serializable]
-    public class GameState
+    public class ClientGameState
     {
-        public int sum = 0;
-        public int turnCount = -1;
-        public int turnCompletionTime = -1;
-
+        public Weapon weaponChoice = Weapon.None;
+        public bool opponentReady = false;
+        public GameResult result = GameResult.None;
+        public int turnCount;
 
         public string ToJSON()
         {
             return JsonUtility.ToJson(this);
         }
 
-        public static GameState CreateFromJSON(string jsonString)
+        public static ClientGameState CreateFromJSON(string jsonString)
         {
-            return JsonUtility.FromJson<GameState>(jsonString);
+            return JsonUtility.FromJson<ClientGameState>(jsonString);
         }
     }
 
     [Serializable]
     public class GameSettings
     {
-        public int turnDuration = 60 * 60 * 24;
+        public int turnDuration = 10;
+        public int bestOf = 1; // how many matches to choose a victor
 
         public string ToJSON()
         {
@@ -65,27 +72,67 @@ namespace ThirstyJoe.RPSChampions
 
     #endregion
 
-    public class GameRoomTest : MonoBehaviour
+    public enum QuickMatchState
+    {
+        Setup,
+        StartIntro,
+        Choosing,
+        ChoiceMade,
+        WaitingForResult,
+        ResultWin,
+        ResultLose,
+        ResultDraw,
+        NextTurnIntro,
+        DrawReIntro,
+        Exiting,
+        GameAbandoned,
+    }
+
+    public class QuickMatch : MonoBehaviour
     {
         #region UNITY OBJ REFS
 
         [SerializeField]
-        private Text userListText;
+        private TextMeshProUGUI opponentNameText;
+
         [SerializeField]
-        private InputField addToGameStateInputField;
+        private TextMeshProUGUI userNameText;
         [SerializeField]
-        private Text gameStateSumText;
+        private TextMeshProUGUI winText;
         [SerializeField]
-        private Text turnTimerText;
+        private TextMeshProUGUI loseText;
+        [SerializeField]
+        private TextMeshProUGUI drawText;
+        [SerializeField]
+        private TextMeshProUGUI countdownText;
+        [SerializeField]
+        private TextMeshProUGUI gameStatusText; // "select Rock Paper or Scissors", "Waiting for opponent...",
+        [SerializeField]
+        private GameObject winPanel;
+        [SerializeField]
+        private GameObject losePanel;
+        [SerializeField]
+        private GameObject drawPanel;
+        [SerializeField]
+        private GameObject chooseWeaponPanel;
+        [SerializeField]
+        private GameObject showWeaponPanel;
+        [SerializeField]
+        private GameObject[] opponentWeaponChoice; // Reveal: rock, paper, scissors
+        [SerializeField]
+        private GameObject[] myWeaponChoice; // Reveal: rock, paper, scissors
+
 
         #endregion
 
         #region PRIVATE VARS
         private bool waitingForGameStateUpdate = false;
-        private GameState localGameState = new GameState();
+        private GameSettings gameSettings = new GameSettings();
+        private ClientGameState localGameState = new ClientGameState();
         private TurnData localTurnData = new TurnData();
-
+        private int turnCount = 0;
         private string groupId;
+        private QuickMatchState matchState = QuickMatchState.Setup;
 
         #endregion
 
@@ -93,13 +140,11 @@ namespace ThirstyJoe.RPSChampions
 
         private void Awake()
         {
-            ResetUI();
         }
 
         private void Start()
         {
             groupId = PlayerManager.QuickMatchId;
-            UpdateUserListUI();
             InitializeGameStartState();
         }
 
@@ -107,37 +152,33 @@ namespace ThirstyJoe.RPSChampions
 
         #region UI 
 
-        private void ResetUI()
+        public void OnSelectRock()
         {
-            userListText.text = ""; // clear list
+            localTurnData.weaponChoice = Weapon.Rock;
+            SendLocalTurnDataToServer();
+        }
+        public void OnSelectPaper()
+        {
+            localTurnData.weaponChoice = Weapon.Paper;
+            SendLocalTurnDataToServer();
+        }
+        public void OnSelectScissors()
+        {
+            localTurnData.weaponChoice = Weapon.Scissors;
+            SendLocalTurnDataToServer();
         }
 
-        private void UpdateUserListUI()
+        public void OnSelectOptionsMenu()
         {
-            var playerList = new StringBuilder();
-
-            playerList.Append(PlayerManager.PlayerStats.PlayerName + "\n");
-            playerList.Append(PlayerManager.OpponentName);
-
-            userListText.text = playerList.ToString();
-        }
-        private void UpdateGameStateUI(GameState gs)
-        {
-            gameStateSumText.text = gs.sum.ToString();
-        }
-
-        private void UpdateTurnDataUI(TurnData td)
-        {
-            addToGameStateInputField.text = td.addToGameState.ToString();
+            // TODO: async load options menu
         }
 
         private void UpdateTurnTimerUI(int timeLeft)
         {
-            turnTimerText.text = timeLeft.ToString();
+            countdownText.text = timeLeft.ToString();
         }
 
         #endregion
-
 
         #region SHARED GROUP DATA TEST
 
@@ -201,7 +242,7 @@ namespace ThirstyJoe.RPSChampions
             // interpret gameState
             object gameStateValue;
             jsonResult.TryGetValue("gameState", out gameStateValue);
-            GameState serverGameState = GameState.CreateFromJSON((string)gameStateValue);
+            ClientGameState serverGameState = ClientGameState.CreateFromJSON((string)gameStateValue);
 
             // interpret turnData
             object turnDataValue;
@@ -217,18 +258,14 @@ namespace ThirstyJoe.RPSChampions
 
                 // update game state
                 localGameState = serverGameState;
-                UpdateGameStateUI(localGameState);
 
                 // get current epoch time in seconds
                 TimeSpan t = DateTime.UtcNow - new DateTime(1970, 1, 1);
                 int time = (int)t.TotalSeconds;
 
                 // subtract to get 
-                StartCoroutine(TurnTimer(localGameState.turnCompletionTime - time));
+                StartCoroutine(TurnTimer(gameSettings.turnDuration - time));
             }
-
-            // update client according to match what turnData the server has
-            UpdateTurnDataUI(turnData);
         }
 
         private void InitializeGameStartState()
@@ -259,13 +296,7 @@ namespace ThirstyJoe.RPSChampions
             );
         }
 
-        public void SetAddToGameState(string addToGameState)
-        {
-            localTurnData.addToGameState = int.Parse(addToGameState);
-            SendTurnDataToServer();
-        }
-
-        public void SendTurnDataToServer()
+        public void SendLocalTurnDataToServer()
         {
             // send turn data to cloud script
             PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()

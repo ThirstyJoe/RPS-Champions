@@ -2,6 +2,8 @@ namespace ThirstyJoe.RPSChampions
 {
     using System.Linq;
     using System;
+
+    [Serializable]
     public enum Weapon
     {
         Rock,
