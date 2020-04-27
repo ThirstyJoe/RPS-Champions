@@ -11,18 +11,24 @@ namespace ThirstyJoe.RPSChampions
     using Photon.Pun;
 
     #region GAME DATA CLASSES 
-    [Serializable]
-    public enum GameResult
-    {
-        Win,
-        Lose,
-        Draw,
-        None,
-    }
+
     [Serializable]
     public class TurnData
     {
-        public Weapon weaponChoice = Weapon.None;
+        private string _weaponChoice = Weapon.None.ToString();
+
+
+        public Weapon weaponChoice
+        {
+            get
+            {
+                return (Weapon)Enum.ToObject(typeof(Weapon), _weaponChoice);
+            }
+            set
+            {
+                _weaponChoice = value.ToString();
+            }
+        }
 
         public string ToJSON()
         {
@@ -37,9 +43,8 @@ namespace ThirstyJoe.RPSChampions
     [Serializable]
     public class ClientGameState
     {
-        public Weapon weaponChoice = Weapon.None;
         public bool opponentReady = false;
-        public GameResult result = GameResult.None;
+        public string winner;
         public int turnCount;
 
         public string ToJSON()
