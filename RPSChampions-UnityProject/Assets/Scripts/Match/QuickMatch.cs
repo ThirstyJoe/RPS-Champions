@@ -27,24 +27,12 @@ namespace ThirstyJoe.RPSChampions
         }
     }
 
-    public class PlayerDataEntry
-    {
-        public string playerId;
-        public string playerName;
-
-        public string ToJSON()
-        {
-            return JsonUtility.ToJson(this);
-        }
-        public static PlayerDataEntry CreateFromJSON(string jsonString)
-        {
-            return JsonUtility.FromJson<PlayerDataEntry>(jsonString);
-        }
-    }
-
     public class PlayerData
     {
-        public PlayerDataEntry[] players;
+        public string hostId;
+        public string hostName;
+        public string opponentId;
+        public string opponentName;
 
         public string ToJSON()
         {
@@ -60,11 +48,11 @@ namespace ThirstyJoe.RPSChampions
     [Serializable]
     public class GameState
     {
-        public bool opponentReady = false;
         public string winner;
         public string p1Weapon;
         public string p2Weapon;
         public int turnCount;
+        public int turnCompletionTime;
 
         public string ToJSON()
         {
@@ -200,7 +188,6 @@ namespace ThirstyJoe.RPSChampions
 
         private void UpdateTurnTimerUI(int timeLeft)
         {
-            Debug.Log(timeLeft);
             countdownText.text = timeLeft.ToString();
         }
 
@@ -217,17 +204,17 @@ namespace ThirstyJoe.RPSChampions
 
         private void ProcessPlayerData(PlayerData playerData)
         {
-            string p1Id = playerData.players[0].playerId;
-            bool isP1 = (p1Id == PlayerPrefs.GetString("playFabId"));
-            if (isP1)
+
+            bool isHost = (playerData.hostId == PlayerPrefs.GetString("playFabId"));
+            if (isHost)
             {
-                PlayerManager.OpponentId = playerData.players[0].playerId;
-                PlayerManager.OpponentName = playerData.players[0].playerName;
+                PlayerManager.OpponentId = playerData.opponentId;
+                PlayerManager.OpponentName = playerData.opponentName;
             }
-            else
+            else // not host
             {
-                PlayerManager.OpponentId = playerData.players[1].playerId;
-                PlayerManager.OpponentName = playerData.players[1].playerName;
+                PlayerManager.OpponentId = playerData.hostId;
+                PlayerManager.OpponentName = playerData.hostName;
             }
         }
 
@@ -236,13 +223,13 @@ namespace ThirstyJoe.RPSChampions
             Debug.Log(error.GenerateErrorReport());
         }
 
-        private IEnumerator TurnTimer(int duration)
+        private IEnumerator TurnTimer(int completionTime)
         {
             // get current epoch time in seconds
             TimeSpan ts = DateTime.UtcNow - new DateTime(1970, 1, 1);
             int time = (int)ts.TotalSeconds;
 
-            int timeLeft = Math.Max(duration - time, 0);
+            int timeLeft = Math.Max(completionTime - time, 0);
             UpdateTurnTimerUI(timeLeft);
 
             // track turn time countdown locally
@@ -295,6 +282,7 @@ namespace ThirstyJoe.RPSChampions
             // interpret data in appropriate classes:
             TurnData turnData = TurnData.CreateFromJSON(InterpretCloudScriptData(jsonResult, "turnData"));
             GameState gameState = GameState.CreateFromJSON(InterpretCloudScriptData(jsonResult, "gameState"));
+            PlayerData playerData = PlayerData.CreateFromJSON(InterpretCloudScriptData(jsonResult, "playerData"));
             GameSettings gameSettings = GameSettings.CreateFromJSON(InterpretCloudScriptData(jsonResult, "gameSettings"));
 
             // just started game
@@ -302,16 +290,13 @@ namespace ThirstyJoe.RPSChampions
             {
                 // in case player data is missing... such as a game client rejoining a running game
                 if (PlayerManager.OpponentName == null)
-                {
-                    PlayerData playerData = PlayerData.CreateFromJSON(InterpretCloudScriptData(jsonResult, "playerData"));
                     ProcessPlayerData(playerData);
-                }
 
                 // update player names
                 UpdatePlayerUI();
 
                 // start timer
-                StartCoroutine(TurnTimer(gameSettings.turnDuration));
+                StartCoroutine(TurnTimer(gameState.turnCompletionTime));
 
                 // update local turn data
                 localTurnData = turnData;
@@ -327,30 +312,76 @@ namespace ThirstyJoe.RPSChampions
                 // update game state
                 localGameState = gameState;
 
-                showWeaponPanel.SetActive(true);
-                chooseWeaponPanel.SetActive(false);
-                losePanel.SetActive(false);
-                winPanel.SetActive(false);
-                drawPanel.SetActive(false);
-                foreach (var icon in opponentWeaponChoice)
-                    icon.SetActive(false);
-                foreach (var icon in myWeaponChoice)
-                    icon.SetActive(false);
-
-                if (localGameState.winner == PlayerPrefs.GetString("playFabId"))
+                // assign weapon to correct player
+                bool isHost = (playerData.hostId == PlayerPrefs.GetString("playFabId"));
+                Weapon myWeapon, opponentWeapon;
+                if (isHost)
                 {
-                    winPanel.SetActive(true);
+                    myWeapon = ParseWeapon(gameState.p1Weapon);
+                    opponentWeapon = ParseWeapon(gameState.p2Weapon);
+                }
+                else
+                {
+                    myWeapon = ParseWeapon(gameState.p2Weapon);
+                    opponentWeapon = ParseWeapon(gameState.p1Weapon);
+                }
+
+                // ui call based on result
+                if (localGameState.winner == PlayerPrefs.GetString("playFabId"))
+                {   // win
+                    SetUpGameOverUI(ShowWinUI, myWeapon, opponentWeapon);
                 }
                 else if (localGameState.winner == PlayerManager.OpponentId)
-                {
-                    losePanel.SetActive(true);
+                {   // lose
+                    SetUpGameOverUI(ShowLoseUI, myWeapon, opponentWeapon);
                 }
-                else // draw 
-                {
-                    drawPanel.SetActive(true);
+                else
+                {   // draw 
+                    SetUpGameOverUI(ShowDrawUI, myWeapon, opponentWeapon);
                     // TODO: repeat match after draw result
                 }
             }
+        }
+
+        private Weapon ParseWeapon(string weaponName)
+        {
+            return (Weapon)Enum.Parse(typeof(Weapon), weaponName);
+        }
+
+        private void SetUpGameOverUI(Action resultUI, Weapon myWeapon, Weapon opponentWeapon)
+        {
+            HideAllGameOverUI();
+            resultUI();
+            opponentWeaponChoice[(int)myWeapon].SetActive(true);
+            myWeaponChoice[(int)opponentWeapon].SetActive(true);
+        }
+
+        private void HideAllGameOverUI()
+        {
+            showWeaponPanel.SetActive(true);
+            chooseWeaponPanel.SetActive(false);
+            losePanel.SetActive(false);
+            winPanel.SetActive(false);
+            drawPanel.SetActive(false);
+            foreach (var icon in opponentWeaponChoice)
+                icon.SetActive(false);
+            foreach (var icon in myWeaponChoice)
+                icon.SetActive(false);
+        }
+
+        private void ShowWinUI()
+        {
+            winPanel.SetActive(true);
+        }
+
+        private void ShowLoseUI()
+        {
+            losePanel.SetActive(true);
+        }
+
+        private void ShowDrawUI()
+        {
+            drawPanel.SetActive(true);
         }
 
 
