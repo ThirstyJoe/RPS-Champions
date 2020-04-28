@@ -47,7 +47,7 @@ namespace ThirstyJoe.RPSChampions
         private int CreateRoomAttempts = 0;
         private int MaxCreateRoomAttemps = 3;
         private string requestedName = "";
-        private HashSet<string> challenges = new HashSet<string>();
+        private Dictionary<string, string> challenges = new Dictionary<string, string>();
         private Dictionary<string, int> userButtonMap = new Dictionary<string, int>();
         private int totalOpponents = 0;
         private bool connected = false;
@@ -156,8 +156,10 @@ namespace ThirstyJoe.RPSChampions
         public void RequestedMatch(string opponentName)
         {
 
-            if (challenges.Contains(opponentName))
+            if (challenges.ContainsKey(opponentName))
             { // has already been challenged... start match
+                PlayerManager.OpponentName = opponentName;
+                PlayerManager.OpponentId = challenges[opponentName];
                 StartMatch(opponentName, true);
                 return;
             }
@@ -165,8 +167,9 @@ namespace ThirstyJoe.RPSChampions
             {  // has not yet been challenged, send event
                 Debug.Log("match requested, event sent");
                 var data = new object[] {
-                PhotonNetwork.NickName,
-                opponentName,
+                    PhotonNetwork.NickName,
+                    opponentName,
+                    PlayerPrefs.GetString("playFabId")
                 };
 
                 // 2nd press on same request means cancel without issueing a new request
@@ -212,7 +215,7 @@ namespace ThirstyJoe.RPSChampions
 
             requestedName = ""; // reset to null value
 
-            UpdateUserListUI(); // UI update
+            UpdateUserListUI();
         }
 
 
@@ -244,32 +247,67 @@ namespace ThirstyJoe.RPSChampions
                 success =>
                 {
                     if (isHost)
-                    {
-                        // send match created event
-                        var data = new object[] {
-                            PhotonNetwork.NickName,
-                            opponentName,
-                        };
-                        PhotonNetwork.RaiseEvent(
-                            CREATED_MATCH_EVENT,        // .Code
-                            data,                       // .CustomData
-                            RaiseEventOptions.Default,
-                            SendOptions.SendReliable);
-                    }
-
-                    // removes player from finding quickmatch player list
-                    PhotonNetwork.LeaveRoom();
-
-                    Debug.Log("successfully joined quickmatch with id: " + PlayerManager.QuickMatchId);
-
-                    // load match in client
-                    SceneManager.LoadScene("QuickMatch");
+                        InitializeGameStartState();
+                    else
+                        EnterMatch();
                 },
                 error =>
                 {
                     Debug.Log(error.ErrorMessage + "error attempting to join game");
                 }
             );
+        }
+
+        private void InitializeGameStartState()
+        {
+            GameSettings gameSettings = new GameSettings();
+            PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
+            {
+                FunctionName = "InitializeGameStartState",
+                FunctionParameter = new
+                {
+                    sharedGroupId = PlayerManager.QuickMatchId,
+                    gameSettings = gameSettings.ToJSON(),
+                    opponentId = PlayerManager.OpponentId,
+                    opponentName = PlayerManager.OpponentName,
+                    hostName = PlayerManager.PlayerStats.PlayerName
+                },
+                GeneratePlayStreamEvent = true,
+            },
+            OnSuccess =>
+            {
+                // send match created event
+                var data = new object[] {
+                        PhotonNetwork.NickName,
+                        PlayerManager.OpponentName,
+                        PlayerPrefs.GetString("playFabId")
+                    };
+                PhotonNetwork.RaiseEvent(
+                    CREATED_MATCH_EVENT,        // .Code
+                    data,                       // .CustomData
+                    RaiseEventOptions.Default,
+                    SendOptions.SendReliable
+                );
+
+                Debug.Log("new game room created, new game states initialized");
+                EnterMatch();
+            },
+            errorCallback =>
+            {
+                Debug.Log(errorCallback.ErrorMessage + "error attempting to initialize game state.");
+            }
+            );
+        }
+
+        private void EnterMatch()
+        {
+            // removes player from finding quickmatch player list
+            PhotonNetwork.LeaveRoom();
+
+            Debug.Log("successfully joined quickmatch with id: " + PlayerManager.QuickMatchId);
+
+            // load match in client
+            SceneManager.LoadScene("QuickMatch");
         }
 
         private void ReceiveCustomPUNEvents(EventData obj)
@@ -287,20 +325,22 @@ namespace ThirstyJoe.RPSChampions
             switch (obj.Code)
             {
                 case REQUEST_MATCH_EVENT:
-                    IncomingChallenge(senderName);
+                    string senderId = (string)data[2];
+                    IncomingChallenge(senderName, senderId);
                     break;
                 case CANCEL_MATCH_EVENT:
                     ChallengeCancelled(senderName);
                     break;
                 case CREATED_MATCH_EVENT:
+                    PlayerManager.OpponentId = (string)data[2];
                     StartMatch(senderName, false);
                     break;
             }
         }
 
-        private void IncomingChallenge(string opponentName)
+        private void IncomingChallenge(string opponentName, string opponentId)
         {
-            challenges.Add(opponentName);
+            challenges.Add(opponentName, opponentId);
             var button = buttonArray[userButtonMap[opponentName]];
             button.Challenged();
 
@@ -315,6 +355,7 @@ namespace ThirstyJoe.RPSChampions
             challenges.Remove(opponentName);
             var button = buttonArray[userButtonMap[opponentName]];
             button.ChallengeCancelled();
+
             UpdateUserListUI();
         }
 
@@ -396,6 +437,7 @@ namespace ThirstyJoe.RPSChampions
                 SceneManager.LoadScene("MainMenu");
             }
         }
+
 
         private void UpdateUserListLabel()
         {

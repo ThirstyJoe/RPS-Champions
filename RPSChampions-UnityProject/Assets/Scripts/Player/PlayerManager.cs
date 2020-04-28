@@ -5,6 +5,7 @@ namespace ThirstyJoe.RPSChampions
     {
         public static string QuickMatchId; // name of the room player is in
         public static string OpponentName; // name of the opponent // TODO: save in game data
+        public static string OpponentId; // playfab ID of the opponent // TODO: save in game data
 
         private static PlayerStats playerStats;
         public static PlayerStats PlayerStats

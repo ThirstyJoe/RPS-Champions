@@ -15,20 +15,7 @@ namespace ThirstyJoe.RPSChampions
     [Serializable]
     public class TurnData
     {
-        private string _weaponChoice = Weapon.None.ToString();
-
-
-        public Weapon weaponChoice
-        {
-            get
-            {
-                return (Weapon)Enum.ToObject(typeof(Weapon), _weaponChoice);
-            }
-            set
-            {
-                _weaponChoice = value.ToString();
-            }
-        }
+        public string weaponChoice = Weapon.None.ToString();
 
         public string ToJSON()
         {
@@ -40,11 +27,43 @@ namespace ThirstyJoe.RPSChampions
         }
     }
 
+    public class PlayerDataEntry
+    {
+        public string playerId;
+        public string playerName;
+
+        public string ToJSON()
+        {
+            return JsonUtility.ToJson(this);
+        }
+        public static PlayerDataEntry CreateFromJSON(string jsonString)
+        {
+            return JsonUtility.FromJson<PlayerDataEntry>(jsonString);
+        }
+    }
+
+    public class PlayerData
+    {
+        public PlayerDataEntry[] players;
+
+        public string ToJSON()
+        {
+            return JsonUtility.ToJson(this);
+        }
+        public static PlayerData CreateFromJSON(string jsonString)
+        {
+            return JsonUtility.FromJson<PlayerData>(jsonString);
+        }
+    }
+
+
     [Serializable]
-    public class ClientGameState
+    public class GameState
     {
         public bool opponentReady = false;
         public string winner;
+        public string p1Weapon;
+        public string p2Weapon;
         public int turnCount;
 
         public string ToJSON()
@@ -52,9 +71,9 @@ namespace ThirstyJoe.RPSChampions
             return JsonUtility.ToJson(this);
         }
 
-        public static ClientGameState CreateFromJSON(string jsonString)
+        public static GameState CreateFromJSON(string jsonString)
         {
-            return JsonUtility.FromJson<ClientGameState>(jsonString);
+            return JsonUtility.FromJson<GameState>(jsonString);
         }
     }
 
@@ -132,8 +151,7 @@ namespace ThirstyJoe.RPSChampions
 
         #region PRIVATE VARS
         private bool waitingForGameStateUpdate = false;
-        private GameSettings gameSettings = new GameSettings();
-        private ClientGameState localGameState = new ClientGameState();
+        private GameState localGameState;
         private TurnData localTurnData = new TurnData();
         private int turnCount = 0;
         private string groupId;
@@ -150,7 +168,8 @@ namespace ThirstyJoe.RPSChampions
         private void Start()
         {
             groupId = PlayerManager.QuickMatchId;
-            InitializeGameStartState();
+            UpdateGameStateFromServer();
+
         }
 
         #endregion
@@ -159,42 +178,71 @@ namespace ThirstyJoe.RPSChampions
 
         public void OnSelectRock()
         {
-            localTurnData.weaponChoice = Weapon.Rock;
+            localTurnData.weaponChoice = Weapon.Rock.ToString();
             SendLocalTurnDataToServer();
         }
         public void OnSelectPaper()
         {
-            localTurnData.weaponChoice = Weapon.Paper;
+            localTurnData.weaponChoice = Weapon.Paper.ToString();
             SendLocalTurnDataToServer();
         }
         public void OnSelectScissors()
         {
-            localTurnData.weaponChoice = Weapon.Scissors;
+            localTurnData.weaponChoice = Weapon.Scissors.ToString();
             SendLocalTurnDataToServer();
         }
 
         public void OnSelectOptionsMenu()
         {
+
             // TODO: async load options menu
         }
 
         private void UpdateTurnTimerUI(int timeLeft)
         {
+            Debug.Log(timeLeft);
             countdownText.text = timeLeft.ToString();
         }
+
+        private void UpdatePlayerUI()
+        {
+            userNameText.text = PlayerManager.PlayerStats.PlayerName;
+            opponentNameText.text = PlayerManager.OpponentName;
+        }
+
 
         #endregion
 
         #region SHARED GROUP DATA TEST
+
+        private void ProcessPlayerData(PlayerData playerData)
+        {
+            string p1Id = playerData.players[0].playerId;
+            bool isP1 = (p1Id == PlayerPrefs.GetString("playFabId"));
+            if (isP1)
+            {
+                PlayerManager.OpponentId = playerData.players[0].playerId;
+                PlayerManager.OpponentName = playerData.players[0].playerName;
+            }
+            else
+            {
+                PlayerManager.OpponentId = playerData.players[1].playerId;
+                PlayerManager.OpponentName = playerData.players[1].playerName;
+            }
+        }
 
         private static void OnErrorShared(PlayFabError error)
         {
             Debug.Log(error.GenerateErrorReport());
         }
 
-        private IEnumerator TurnTimer(int timeLeft)
+        private IEnumerator TurnTimer(int duration)
         {
-            timeLeft = Math.Max(timeLeft, 0);
+            // get current epoch time in seconds
+            TimeSpan ts = DateTime.UtcNow - new DateTime(1970, 1, 1);
+            int time = (int)ts.TotalSeconds;
+
+            int timeLeft = Math.Max(duration - time, 0);
             UpdateTurnTimerUI(timeLeft);
 
             // track turn time countdown locally
@@ -224,6 +272,7 @@ namespace ThirstyJoe.RPSChampions
                 FunctionParameter = new
                 {
                     sharedGroupId = groupId,
+                    opponentId = PlayerManager.OpponentId
                 },
                 GeneratePlayStreamEvent = true,
             }, OnGetGameState, OnErrorShared);
@@ -237,68 +286,80 @@ namespace ThirstyJoe.RPSChampions
             // check if data exists
             if (jsonResult == null)
             {
-                Debug.Log("Game has been deleted, disconneting...");
+                Debug.Log("Game data is missing, disconneting...");
                 DisconnectFromGame();
                 return;
             }
 
             // data successfully received 
+            // interpret data in appropriate classes:
+            TurnData turnData = TurnData.CreateFromJSON(InterpretCloudScriptData(jsonResult, "turnData"));
+            GameState gameState = GameState.CreateFromJSON(InterpretCloudScriptData(jsonResult, "gameState"));
+            GameSettings gameSettings = GameSettings.CreateFromJSON(InterpretCloudScriptData(jsonResult, "gameSettings"));
 
-            // interpret gameState
-            object gameStateValue;
-            jsonResult.TryGetValue("gameState", out gameStateValue);
-            ClientGameState serverGameState = ClientGameState.CreateFromJSON((string)gameStateValue);
+            // just started game
+            if (localGameState == null)
+            {
+                // in case player data is missing... such as a game client rejoining a running game
+                if (PlayerManager.OpponentName == null)
+                {
+                    PlayerData playerData = PlayerData.CreateFromJSON(InterpretCloudScriptData(jsonResult, "playerData"));
+                    ProcessPlayerData(playerData);
+                }
 
-            // interpret turnData
-            object turnDataValue;
-            jsonResult.TryGetValue("turnData", out turnDataValue);
-            TurnData turnData = TurnData.CreateFromJSON((string)turnDataValue);
+                // update player names
+                UpdatePlayerUI();
 
-            // update game state if we dont have a localGameState
-            // *OR* server turnCount is ahead of localGameState
-            if (localGameState == null || serverGameState.turnCount > localGameState.turnCount)
+                // start timer
+                StartCoroutine(TurnTimer(gameSettings.turnDuration));
+
+                // update local turn data
+                localTurnData = turnData;
+
+                // update game state
+                localGameState = gameState;
+            }
+            else if (gameState.turnCount > localGameState.turnCount) // turn finished
             {
                 // set flag so client game loop can continue into next turn
                 waitingForGameStateUpdate = false;
 
                 // update game state
-                localGameState = serverGameState;
+                localGameState = gameState;
 
-                // get current epoch time in seconds
-                TimeSpan t = DateTime.UtcNow - new DateTime(1970, 1, 1);
-                int time = (int)t.TotalSeconds;
+                showWeaponPanel.SetActive(true);
+                chooseWeaponPanel.SetActive(false);
+                losePanel.SetActive(false);
+                winPanel.SetActive(false);
+                drawPanel.SetActive(false);
+                foreach (var icon in opponentWeaponChoice)
+                    icon.SetActive(false);
+                foreach (var icon in myWeaponChoice)
+                    icon.SetActive(false);
 
-                // subtract to get 
-                StartCoroutine(TurnTimer(gameSettings.turnDuration - time));
+                if (localGameState.winner == PlayerPrefs.GetString("playFabId"))
+                {
+                    winPanel.SetActive(true);
+                }
+                else if (localGameState.winner == PlayerManager.OpponentId)
+                {
+                    losePanel.SetActive(true);
+                }
+                else // draw 
+                {
+                    drawPanel.SetActive(true);
+                    // TODO: repeat match after draw result
+                }
             }
         }
 
-        private void InitializeGameStartState()
-        {
-            GameSettings gameSettings = new GameSettings();
-            gameSettings.turnDuration = 10;
 
-            PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
-            {
-                FunctionName = "InitializeGameStartState",
-                FunctionParameter = new
-                {
-                    sharedGroupId = groupId,
-                    gameSettings = gameSettings.ToJSON()
-                },
-                GeneratePlayStreamEvent = true,
-            },
-                OnSuccess =>
-                {
-                    Debug.Log("new game room created, new game states initialized");
-                    UpdateGameStateFromServer();
-                },
-                errorCallback =>
-                {
-                    Debug.Log(errorCallback.ErrorMessage + "error attempting to initialize game state.");
-                    UpdateGameStateFromServer();
-                }
-            );
+        private string InterpretCloudScriptData(JsonObject jsonResult, string dataName)
+        {
+            // interpret playerData
+            object objValue;
+            jsonResult.TryGetValue(dataName, out objValue);
+            return (string)objValue;
         }
 
         public void SendLocalTurnDataToServer()
