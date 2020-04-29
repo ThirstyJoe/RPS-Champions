@@ -68,6 +68,7 @@ namespace ThirstyJoe.RPSChampions
     [Serializable]
     public class GameSettings
     {
+        public int nextRoundDuration = 5;
         public int turnDuration = 10;
         public int bestOf = 1; // how many matches to choose a victor
 
@@ -82,23 +83,29 @@ namespace ThirstyJoe.RPSChampions
         }
     }
 
+    public class WinLoseDrawStats
+    {
+        public int wins = 0;
+        public int losses = 0;
+        public int draws = 0;
+
+        public string GetReadout(bool addKey = true)
+        {
+            const string seperation = " - ";
+            string toRet = wins + seperation + losses + seperation + draws;
+            if (addKey)
+                toRet += "    Wins Losses Draws";
+            return toRet;
+        }
+
+        public int addWin() { return ++wins; }
+        public int addLoss() { return ++losses; }
+        public int addDraw() { return ++draws; }
+    }
+
     #endregion
 
-    public enum QuickMatchState
-    {
-        Setup,
-        StartIntro,
-        Choosing,
-        ChoiceMade,
-        WaitingForResult,
-        ResultWin,
-        ResultLose,
-        ResultDraw,
-        NextTurnIntro,
-        DrawReIntro,
-        Exiting,
-        GameAbandoned,
-    }
+
 
     public class QuickMatch : MonoBehaviour
     {
@@ -110,6 +117,8 @@ namespace ThirstyJoe.RPSChampions
         [SerializeField]
         private TextMeshProUGUI userNameText;
         [SerializeField]
+        private TextMeshProUGUI seriesRecordText;
+        [SerializeField]
         private TextMeshProUGUI winText;
         [SerializeField]
         private TextMeshProUGUI loseText;
@@ -119,6 +128,10 @@ namespace ThirstyJoe.RPSChampions
         private TextMeshProUGUI countdownText;
         [SerializeField]
         private TextMeshProUGUI gameStatusText; // "select Rock Paper or Scissors", "Waiting for opponent...",
+        [SerializeField]
+        private TextMeshProUGUI nextRoundCountdownText;
+        [SerializeField]
+        private GameObject nextRoundPanel;
         [SerializeField]
         private GameObject winPanel;
         [SerializeField]
@@ -138,12 +151,13 @@ namespace ThirstyJoe.RPSChampions
         #endregion
 
         #region PRIVATE VARS
+        private WinLoseDrawStats wldStats = new WinLoseDrawStats();
         private bool waitingForGameStateUpdate = false;
         private GameState localGameState;
+        private GameSettings gameSettings;
         private TurnData localTurnData = new TurnData();
-        private int turnCount = 0;
         private string groupId;
-        private QuickMatchState matchState = QuickMatchState.Setup;
+        private bool isHost = false;
 
         #endregion
 
@@ -157,7 +171,7 @@ namespace ThirstyJoe.RPSChampions
         {
             groupId = PlayerManager.QuickMatchId;
             UpdateGameStateFromServer();
-
+            seriesRecordText.text = wldStats.GetReadout();
         }
 
         #endregion
@@ -191,6 +205,11 @@ namespace ThirstyJoe.RPSChampions
             countdownText.text = timeLeft.ToString();
         }
 
+        private void UpdateNextRoundTimerUI(int timeLeft)
+        {
+            nextRoundCountdownText.text = timeLeft.ToString();
+        }
+
         private void UpdatePlayerUI()
         {
             userNameText.text = PlayerManager.PlayerStats.PlayerName;
@@ -204,8 +223,7 @@ namespace ThirstyJoe.RPSChampions
 
         private void ProcessPlayerData(PlayerData playerData)
         {
-
-            bool isHost = (playerData.hostId == PlayerPrefs.GetString("playFabId"));
+            isHost = (playerData.hostId == PlayerPrefs.GetString("playFabId"));
             if (isHost)
             {
                 PlayerManager.OpponentId = playerData.opponentId;
@@ -251,6 +269,40 @@ namespace ThirstyJoe.RPSChampions
             }
         }
 
+        private IEnumerator NextRoundTimer(int nextRoundTimerDuration)
+        {
+            // get current epoch time in seconds
+            TimeSpan ts = DateTime.UtcNow - new DateTime(1970, 1, 1);
+            int time = (int)ts.TotalSeconds;
+            int completionTime = time + nextRoundTimerDuration;
+
+            nextRoundPanel.SetActive(false);
+            yield return new WaitForSeconds(2F);
+            nextRoundPanel.SetActive(true);
+
+            int timeLeft = Math.Max(completionTime - time, 0);
+            UpdateNextRoundTimerUI(timeLeft);
+
+            while (timeLeft > 0)
+            {
+                yield return new WaitForSeconds(1.0F);
+                UpdateNextRoundTimerUI(--timeLeft);
+            }
+
+            StartNextRound();
+        }
+
+        private void StartNextRound()
+        {
+            localGameState.turnCount++;
+            nextRoundPanel.SetActive(false);
+            showWeaponPanel.SetActive(false);
+            chooseWeaponPanel.SetActive(true);
+
+            // start timer
+            StartCoroutine(TurnTimer(localGameState.turnCompletionTime));
+        }
+
         private void UpdateGameStateFromServer()
         {
             PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
@@ -283,7 +335,7 @@ namespace ThirstyJoe.RPSChampions
             TurnData turnData = TurnData.CreateFromJSON(InterpretCloudScriptData(jsonResult, "turnData"));
             GameState gameState = GameState.CreateFromJSON(InterpretCloudScriptData(jsonResult, "gameState"));
             PlayerData playerData = PlayerData.CreateFromJSON(InterpretCloudScriptData(jsonResult, "playerData"));
-            GameSettings gameSettings = GameSettings.CreateFromJSON(InterpretCloudScriptData(jsonResult, "gameSettings"));
+            gameSettings = GameSettings.CreateFromJSON(InterpretCloudScriptData(jsonResult, "gameSettings"));
 
             // just started game
             if (localGameState == null)
@@ -313,7 +365,7 @@ namespace ThirstyJoe.RPSChampions
                 localGameState = gameState;
 
                 // assign weapon to correct player
-                bool isHost = (playerData.hostId == PlayerPrefs.GetString("playFabId"));
+                isHost = (playerData.hostId == PlayerPrefs.GetString("playFabId"));
                 Weapon myWeapon, opponentWeapon;
                 if (isHost)
                 {
@@ -326,25 +378,41 @@ namespace ThirstyJoe.RPSChampions
                     opponentWeapon = ParseWeapon(gameState.p1Weapon);
                 }
 
+                if (myWeapon == Weapon.None || opponentWeapon == Weapon.None)
+                {
+                    Debug.Log("user or opponent failed to submit move, disconneting...");
+
+                    // todo: better handling of this case
+                    DisconnectFromGame();
+                    return;
+                }
+
                 // ui call based on result
                 if (localGameState.winner == PlayerPrefs.GetString("playFabId"))
                 {   // win
+                    wldStats.addWin();
                     SetUpGameOverUI(ShowWinUI, myWeapon, opponentWeapon);
                 }
                 else if (localGameState.winner == PlayerManager.OpponentId)
                 {   // lose
+                    wldStats.addLoss();
                     SetUpGameOverUI(ShowLoseUI, myWeapon, opponentWeapon);
                 }
                 else
                 {   // draw 
+                    wldStats.addDraw();
                     SetUpGameOverUI(ShowDrawUI, myWeapon, opponentWeapon);
-                    // TODO: repeat match after draw result
                 }
+
+                StartCoroutine(NextRoundTimer(gameSettings.nextRoundDuration));
             }
         }
 
         private Weapon ParseWeapon(string weaponName)
         {
+            if (weaponName == null)
+                return Weapon.None;
+
             return (Weapon)Enum.Parse(typeof(Weapon), weaponName);
         }
 
@@ -354,6 +422,7 @@ namespace ThirstyJoe.RPSChampions
             resultUI();
             opponentWeaponChoice[(int)myWeapon].SetActive(true);
             myWeaponChoice[(int)opponentWeapon].SetActive(true);
+            seriesRecordText.text = wldStats.GetReadout();
         }
 
         private void HideAllGameOverUI()
