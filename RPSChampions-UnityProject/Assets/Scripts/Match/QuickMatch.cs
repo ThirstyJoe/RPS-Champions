@@ -9,6 +9,7 @@ namespace ThirstyJoe.RPSChampions
     using PlayFab.Json;
     using System;
     using Photon.Pun;
+    using UnityEngine.UIElements;
 
     #region GAME DATA CLASSES 
 
@@ -146,6 +147,8 @@ namespace ThirstyJoe.RPSChampions
         private GameObject[] opponentWeaponChoice; // Reveal: rock, paper, scissors
         [SerializeField]
         private GameObject[] myWeaponChoice; // Reveal: rock, paper, scissors
+        [SerializeField]
+        private GameObject[] weaponToggles;
 
 
         #endregion
@@ -181,17 +184,14 @@ namespace ThirstyJoe.RPSChampions
         public void OnSelectRock()
         {
             localTurnData.weaponChoice = Weapon.Rock.ToString();
-            SendLocalTurnDataToServer();
         }
         public void OnSelectPaper()
         {
             localTurnData.weaponChoice = Weapon.Paper.ToString();
-            SendLocalTurnDataToServer();
         }
         public void OnSelectScissors()
         {
             localTurnData.weaponChoice = Weapon.Scissors.ToString();
-            SendLocalTurnDataToServer();
         }
 
         public void OnSelectOptionsMenu()
@@ -260,11 +260,13 @@ namespace ThirstyJoe.RPSChampions
 
             // wait for game state update from server to come in
             waitingForGameStateUpdate = true;
+            SendLocalTurnDataToServer();
+
             while (waitingForGameStateUpdate)
             {
                 // repeatably attempts to get next game state from server
                 // this ensures we still get a response even if our own local counter gets ahead somehow
-                yield return new WaitForSeconds(0.5F);
+                yield return new WaitForSeconds(1.0F);
                 UpdateGameStateFromServer();
             }
         }
@@ -294,6 +296,10 @@ namespace ThirstyJoe.RPSChampions
 
         private void StartNextRound()
         {
+            gameStatusText.text = "Select Rock, Paper, or Scissors";
+            foreach (var toggle in weaponToggles)
+                toggle.SetActive(true);
+
             nextRoundPanel.SetActive(false);
             showWeaponPanel.SetActive(false);
             chooseWeaponPanel.SetActive(true);
@@ -335,8 +341,7 @@ namespace ThirstyJoe.RPSChampions
             GameState gameState = GameState.CreateFromJSON(InterpretCloudScriptData(jsonResult, "gameState"));
             PlayerData playerData = PlayerData.CreateFromJSON(InterpretCloudScriptData(jsonResult, "playerData"));
             gameSettings = GameSettings.CreateFromJSON(InterpretCloudScriptData(jsonResult, "gameSettings"));
-            if (localGameState != null)
-                Debug.Log("server turn count: " + gameState.turnCount.ToString() + "   local turn count: " + localGameState.turnCount.ToString());
+
             // just started game
             if (localGameState == null)
             {
@@ -464,6 +469,8 @@ namespace ThirstyJoe.RPSChampions
 
         public void SendLocalTurnDataToServer()
         {
+            DisableWeaponSelect();
+
             // send turn data to cloud script
             PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
             {
@@ -475,6 +482,17 @@ namespace ThirstyJoe.RPSChampions
                 },
                 GeneratePlayStreamEvent = true,
             }, OnTurnDataRecieved, OnErrorShared);
+        }
+
+        private void DisableWeaponSelect()
+        {
+            gameStatusText.text = "You selected " + localTurnData.weaponChoice;
+            var weaponChoice = ParseWeapon(localTurnData.weaponChoice);
+            foreach (var toggle in weaponToggles)
+                toggle.SetActive(false);
+
+            if (weaponChoice != Weapon.None)
+                weaponToggles[(int)weaponChoice].SetActive(true);
         }
 
         private void OnTurnDataRecieved(ExecuteCloudScriptResult result)
