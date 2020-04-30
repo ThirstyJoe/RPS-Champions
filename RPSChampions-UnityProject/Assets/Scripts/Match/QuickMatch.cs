@@ -277,8 +277,6 @@ namespace ThirstyJoe.RPSChampions
             int completionTime = time + nextRoundTimerDuration;
 
             nextRoundPanel.SetActive(false);
-            yield return new WaitForSeconds(2F);
-            nextRoundPanel.SetActive(true);
 
             int timeLeft = Math.Max(completionTime - time, 0);
             UpdateNextRoundTimerUI(timeLeft);
@@ -287,6 +285,8 @@ namespace ThirstyJoe.RPSChampions
             {
                 yield return new WaitForSeconds(1.0F);
                 UpdateNextRoundTimerUI(--timeLeft);
+                if (timeLeft <= 3)
+                    nextRoundPanel.SetActive(true);
             }
 
             StartNextRound();
@@ -294,7 +294,6 @@ namespace ThirstyJoe.RPSChampions
 
         private void StartNextRound()
         {
-            localGameState.turnCount++;
             nextRoundPanel.SetActive(false);
             showWeaponPanel.SetActive(false);
             chooseWeaponPanel.SetActive(true);
@@ -336,7 +335,8 @@ namespace ThirstyJoe.RPSChampions
             GameState gameState = GameState.CreateFromJSON(InterpretCloudScriptData(jsonResult, "gameState"));
             PlayerData playerData = PlayerData.CreateFromJSON(InterpretCloudScriptData(jsonResult, "playerData"));
             gameSettings = GameSettings.CreateFromJSON(InterpretCloudScriptData(jsonResult, "gameSettings"));
-
+            if (localGameState != null)
+                Debug.Log("server turn count: " + gameState.turnCount.ToString() + "   local turn count: " + localGameState.turnCount.ToString());
             // just started game
             if (localGameState == null)
             {
@@ -420,8 +420,8 @@ namespace ThirstyJoe.RPSChampions
         {
             HideAllGameOverUI();
             resultUI();
-            opponentWeaponChoice[(int)myWeapon].SetActive(true);
-            myWeaponChoice[(int)opponentWeapon].SetActive(true);
+            myWeaponChoice[(int)myWeapon].SetActive(true);
+            opponentWeaponChoice[(int)opponentWeapon].SetActive(true);
             seriesRecordText.text = wldStats.GetReadout();
         }
 
