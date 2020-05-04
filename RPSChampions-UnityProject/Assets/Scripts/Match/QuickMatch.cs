@@ -11,6 +11,7 @@ namespace ThirstyJoe.RPSChampions
     using Photon.Pun;
     using Photon.Realtime;
     using UnityEngine.UIElements;
+    using System.Collections.Generic;
     using ExitGames.Client.Photon;
 
     #region GAME DATA CLASSES 
@@ -382,7 +383,7 @@ namespace ThirstyJoe.RPSChampions
         private void SetupStartGameUI()
         {
             // manage UI
-            if (localGameState.turnCount == 0)
+            if (localGameState?.turnCount == 0)
                 gameStatusText.text = "First round ending...";
             else
                 gameStatusText.text = "Select Rock, Paper, or Scissors";
