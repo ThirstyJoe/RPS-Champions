@@ -71,8 +71,8 @@ namespace ThirstyJoe.RPSChampions
     [Serializable]
     public class GameSettings
     {
-        public int turnDuration = 10;
-        public int bestOf = 1; // how many matches to choose a victor
+        public int turnDuration = 5;
+        public int bestOf = 1; // how many wins to choose a victor
 
         public string ToJSON()
         {
@@ -114,6 +114,7 @@ namespace ThirstyJoe.RPSChampions
         #region EVENT DEFS
         private const byte REQUEST_REMATCH_EVENT = 0;
         private const byte ACCEPT_REMATCH_EVENT = 1;
+        private const byte WEAPON_CHOSEN_EVENT = 2;
 
         #endregion
 
@@ -121,7 +122,6 @@ namespace ThirstyJoe.RPSChampions
 
         [SerializeField]
         private TextMeshProUGUI opponentNameText;
-
         [SerializeField]
         private TextMeshProUGUI userNameText;
         [SerializeField]
@@ -161,14 +161,26 @@ namespace ThirstyJoe.RPSChampions
         #endregion
 
         #region PRIVATE VARS
+
+        // flags for when a rematch has been requested
         private bool opponentRequestedRematch = false;
         private bool selfRequestedRematch = false;
+
+        // flags for when each player has made their initial weapon choice
+        private bool opponentFirstChoiceMade = false;
+        private bool selfFirstChoiceMade = false;
+
+        // client tracking some game stats to display
         private WinLoseDrawStats wldStats = new WinLoseDrawStats();
         private bool waitingForGameStateUpdate = false;
+
+        // local game data
         private GameState localGameState;
         private GameSettings gameSettings;
         private TurnData localTurnData = new TurnData();
         private string groupId;
+
+        // flag used to figure out whose data is whose from the server
         private bool isHost = false;
 
         #endregion
@@ -207,16 +219,49 @@ namespace ThirstyJoe.RPSChampions
 
         public void OnSelectRock()
         {
-            localTurnData.weaponChoice = Weapon.Rock.ToString();
+            ChooseWeapon(Weapon.Rock);
         }
         public void OnSelectPaper()
         {
-            localTurnData.weaponChoice = Weapon.Paper.ToString();
+            ChooseWeapon(Weapon.Paper);
         }
         public void OnSelectScissors()
         {
-            localTurnData.weaponChoice = Weapon.Scissors.ToString();
+            ChooseWeapon(Weapon.Scissors);
         }
+
+        private void ChooseWeapon(Weapon weapon)
+        {
+            localTurnData.weaponChoice = weapon.ToString();
+
+            // first time a weapon has been choise (first round)
+            if (!selfFirstChoiceMade)
+            {
+                selfFirstChoiceMade = true;
+                PhotonNetwork.RaiseEvent(
+                       WEAPON_CHOSEN_EVENT,        // .Code
+                       null,                       // .CustomData
+                       RaiseEventOptions.Default,
+                       SendOptions.SendReliable);
+            }
+
+            if (opponentFirstChoiceMade)
+            {
+                RequestGameStateForNextRound();
+            }
+            else
+            {
+                gameStatusText.text = "Waiting for opponent...";
+            }
+        }
+
+        private void OpponentSelectedFirstWeapon()
+        {
+            opponentFirstChoiceMade = true;
+            if (selfFirstChoiceMade)
+                RequestGameStateForNextRound();
+        }
+
 
         public void OnSelectOptionsMenu()
         {
@@ -299,7 +344,7 @@ namespace ThirstyJoe.RPSChampions
             // get game state before moving on
             PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
             {
-                FunctionName = "StartNextRoundOfQuickmatch",
+                FunctionName = "StartRoundOfQuickmatch",
                 FunctionParameter = new
                 {
                     sharedGroupId = groupId,
@@ -337,7 +382,10 @@ namespace ThirstyJoe.RPSChampions
         private void SetupStartGameUI()
         {
             // manage UI
-            gameStatusText.text = "Select Rock, Paper, or Scissors";
+            if (localGameState.turnCount == 0)
+                gameStatusText.text = "First round ending...";
+            else
+                gameStatusText.text = "Select Rock, Paper, or Scissors";
             foreach (var toggle in weaponToggles)
                 toggle.SetActive(true);
             rematchButton.SetActive(true);
@@ -398,9 +446,6 @@ namespace ThirstyJoe.RPSChampions
 
                 // update player names
                 UpdatePlayerUI();
-
-                // start timer
-                StartCoroutine(TurnTimer(gameState.turnCompletionTime));
 
                 // update local turn data
                 localTurnData = turnData;
@@ -614,6 +659,9 @@ namespace ThirstyJoe.RPSChampions
                     break;
                 case ACCEPT_REMATCH_EVENT:
                     RequestGameStateForNextRound();
+                    break;
+                case WEAPON_CHOSEN_EVENT:
+                    OpponentSelectedFirstWeapon();
                     break;
             }
         }
