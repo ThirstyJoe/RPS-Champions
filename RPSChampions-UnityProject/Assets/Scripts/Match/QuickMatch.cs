@@ -243,15 +243,15 @@ namespace ThirstyJoe.RPSChampions
                        null,                       // .CustomData
                        RaiseEventOptions.Default,
                        SendOptions.SendReliable);
-            }
 
-            if (opponentFirstChoiceMade)
-            {
-                RequestGameStateForNextRound();
-            }
-            else
-            {
-                gameStatusText.text = "Waiting for opponent...";
+                if (opponentFirstChoiceMade)
+                {
+                    RequestGameStateForNextRound();
+                }
+                else
+                {
+                    gameStatusText.text = "Waiting for opponent...";
+                }
             }
         }
 
