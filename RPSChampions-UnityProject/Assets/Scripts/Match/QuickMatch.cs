@@ -9,7 +9,9 @@ namespace ThirstyJoe.RPSChampions
     using PlayFab.Json;
     using System;
     using Photon.Pun;
+    using Photon.Realtime;
     using UnityEngine.UIElements;
+    using ExitGames.Client.Photon;
 
     #region GAME DATA CLASSES 
 
@@ -69,7 +71,6 @@ namespace ThirstyJoe.RPSChampions
     [Serializable]
     public class GameSettings
     {
-        public int nextRoundDuration = 5;
         public int turnDuration = 10;
         public int bestOf = 1; // how many matches to choose a victor
 
@@ -108,8 +109,14 @@ namespace ThirstyJoe.RPSChampions
 
 
 
-    public class QuickMatch : MonoBehaviour
+    public class QuickMatch : MonoBehaviourPunCallbacks
     {
+        #region EVENT DEFS
+        private const byte REQUEST_REMATCH_EVENT = 0;
+        private const byte ACCEPT_REMATCH_EVENT = 1;
+
+        #endregion
+
         #region UNITY OBJ REFS
 
         [SerializeField]
@@ -130,8 +137,6 @@ namespace ThirstyJoe.RPSChampions
         [SerializeField]
         private TextMeshProUGUI gameStatusText; // "select Rock Paper or Scissors", "Waiting for opponent...",
         [SerializeField]
-        private TextMeshProUGUI nextRoundCountdownText;
-        [SerializeField]
         private GameObject nextRoundPanel;
         [SerializeField]
         private GameObject winPanel;
@@ -139,6 +144,8 @@ namespace ThirstyJoe.RPSChampions
         private GameObject losePanel;
         [SerializeField]
         private GameObject drawPanel;
+        [SerializeField]
+        private GameObject rematchButton;
         [SerializeField]
         private GameObject chooseWeaponPanel;
         [SerializeField]
@@ -154,6 +161,8 @@ namespace ThirstyJoe.RPSChampions
         #endregion
 
         #region PRIVATE VARS
+        private bool opponentRequestedRematch = false;
+        private bool selfRequestedRematch = false;
         private WinLoseDrawStats wldStats = new WinLoseDrawStats();
         private bool waitingForGameStateUpdate = false;
         private GameState localGameState;
@@ -168,6 +177,7 @@ namespace ThirstyJoe.RPSChampions
 
         private void Awake()
         {
+            PhotonNetwork.NetworkingClient.EventReceived += ReceiveCustomPUNEvents;
         }
 
         private void Start()
@@ -175,6 +185,20 @@ namespace ThirstyJoe.RPSChampions
             groupId = PlayerManager.QuickMatchId;
             UpdateGameStateFromServer();
             seriesRecordText.text = wldStats.GetReadout();
+        }
+
+        private void OnDestroy()
+        {
+            PhotonNetwork.NetworkingClient.EventReceived -= ReceiveCustomPUNEvents;
+        }
+
+        #endregion
+
+        #region PUN CALLBACKS
+        public override void OnPlayerLeftRoom(Player other)
+        {
+            Debug.LogFormat("OnPlayerLeftRoom() {0}", other.NickName);
+
         }
 
         #endregion
@@ -205,15 +229,10 @@ namespace ThirstyJoe.RPSChampions
             countdownText.text = timeLeft.ToString();
         }
 
-        private void UpdateNextRoundTimerUI(int timeLeft)
-        {
-            nextRoundCountdownText.text = timeLeft.ToString();
-        }
-
         private void UpdatePlayerUI()
         {
             userNameText.text = PlayerManager.PlayerStats.PlayerName;
-            opponentNameText.text = PlayerManager.OpponentName;
+            opponentNameText.text = "Opponent: " + PlayerManager.OpponentName;
         }
 
 
@@ -271,41 +290,60 @@ namespace ThirstyJoe.RPSChampions
             }
         }
 
-        private IEnumerator NextRoundTimer(int nextRoundTimerDuration)
+        private void RequestGameStateForNextRound()
         {
-            // get current epoch time in seconds
-            TimeSpan ts = DateTime.UtcNow - new DateTime(1970, 1, 1);
-            int time = (int)ts.TotalSeconds;
-            int completionTime = time + nextRoundTimerDuration;
+            // reset these flags
+            opponentRequestedRematch = false;
+            selfRequestedRematch = false;
 
-            nextRoundPanel.SetActive(false);
-
-            int timeLeft = Math.Max(completionTime - time, 0);
-            UpdateNextRoundTimerUI(timeLeft);
-
-            while (timeLeft > 0)
+            // get game state before moving on
+            PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
             {
-                yield return new WaitForSeconds(1.0F);
-                UpdateNextRoundTimerUI(--timeLeft);
-                if (timeLeft <= 3)
-                    nextRoundPanel.SetActive(true);
-            }
-
-            StartNextRound();
+                FunctionName = "StartNextRoundOfQuickmatch",
+                FunctionParameter = new
+                {
+                    sharedGroupId = groupId,
+                    opponentId = PlayerManager.OpponentId
+                },
+                GeneratePlayStreamEvent = true,
+            },
+            StartRematch,
+            OnErrorShared);
         }
 
-        private void StartNextRound()
+        private void StartRematch(ExecuteCloudScriptResult result)
         {
-            gameStatusText.text = "Select Rock, Paper, or Scissors";
-            foreach (var toggle in weaponToggles)
-                toggle.SetActive(true);
+            // get Json object representing the Game State out of FunctionResult
+            JsonObject jsonResult = (JsonObject)result.FunctionResult;
 
-            nextRoundPanel.SetActive(false);
-            showWeaponPanel.SetActive(false);
-            chooseWeaponPanel.SetActive(true);
+            // check if data exists
+            if (jsonResult == null)
+            {
+                Debug.Log("Game data is missing, disconneting...");
+                DisconnectFromGame();
+                return;
+            }
+
+            // get game state from server
+            localGameState = GameState.CreateFromJSON(InterpretCloudScriptData(jsonResult, "gameState"));
+
+            // UI
+            SetupStartGameUI();
 
             // start timer
             StartCoroutine(TurnTimer(localGameState.turnCompletionTime));
+        }
+
+        private void SetupStartGameUI()
+        {
+            // manage UI
+            gameStatusText.text = "Select Rock, Paper, or Scissors";
+            foreach (var toggle in weaponToggles)
+                toggle.SetActive(true);
+            rematchButton.SetActive(true);
+            nextRoundPanel.SetActive(false);
+            showWeaponPanel.SetActive(false);
+            chooseWeaponPanel.SetActive(true);
         }
 
         private void UpdateGameStateFromServer()
@@ -342,9 +380,18 @@ namespace ThirstyJoe.RPSChampions
             PlayerData playerData = PlayerData.CreateFromJSON(InterpretCloudScriptData(jsonResult, "playerData"));
             gameSettings = GameSettings.CreateFromJSON(InterpretCloudScriptData(jsonResult, "gameSettings"));
 
+
+            // turn counting debug
+            if (localGameState != null)
+                Debug.Log("server count: " + gameState.turnCount + "   local turn count: " + localGameState.turnCount);
+
+
             // just started game
             if (localGameState == null)
             {
+                // UI
+                SetupStartGameUI();
+
                 // in case player data is missing... such as a game client rejoining a running game
                 if (PlayerManager.OpponentName == null)
                     ProcessPlayerData(playerData);
@@ -409,7 +456,7 @@ namespace ThirstyJoe.RPSChampions
                     SetUpGameOverUI(ShowDrawUI, myWeapon, opponentWeapon);
                 }
 
-                StartCoroutine(NextRoundTimer(gameSettings.nextRoundDuration));
+                nextRoundPanel.SetActive(true);
             }
         }
 
@@ -499,6 +546,85 @@ namespace ThirstyJoe.RPSChampions
         {
             Debug.Log("server recieved updated turn data from player");
         }
+
+
+        public void OnRematchButtonPressed()
+        {
+            if (opponentRequestedRematch)
+            {
+                opponentRequestedRematch = false;
+
+                RequestRematchToServer();
+            }
+            else
+            {
+                selfRequestedRematch = true;
+                rematchButton.SetActive(false);
+
+                // has not yet been challenged, send event
+                Debug.Log("rematch requested, event sent");
+                PhotonNetwork.RaiseEvent(
+                    REQUEST_REMATCH_EVENT,        // .Code
+                    null,                         // .CustomData
+                    RaiseEventOptions.Default,
+                    SendOptions.SendReliable);
+            }
+        }
+
+        private void RequestRematchToServer()
+        {
+            PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
+            {
+                FunctionName = "StartNextRoundOfQuickmatch",
+                FunctionParameter = new
+                {
+                    sharedGroupId = PlayerManager.QuickMatchId,
+                },
+                GeneratePlayStreamEvent = true,
+            },
+            OnSuccess =>
+            {
+                // has not yet been challenged, send event
+                Debug.Log("rematch requested, event sent");
+                PhotonNetwork.RaiseEvent(
+                    ACCEPT_REMATCH_EVENT,        // .Code
+                    null,                        // .CustomData
+                    RaiseEventOptions.Default,
+                    SendOptions.SendReliable);
+
+                RequestGameStateForNextRound();
+                Debug.Log("rematch starting");
+            },
+            errorCallback =>
+            {
+                Debug.Log(errorCallback.ErrorMessage + "error attempting to start rematch.");
+            }
+            );
+        }
+
+        private void ReceiveCustomPUNEvents(EventData obj)
+        {
+            Debug.Log("event recieved " + obj.Code);
+
+            // switch to correct function
+            switch (obj.Code)
+            {
+                case REQUEST_REMATCH_EVENT:
+                    IncomingRematchRequest();
+                    break;
+                case ACCEPT_REMATCH_EVENT:
+                    RequestGameStateForNextRound();
+                    break;
+            }
+        }
+
+        private void IncomingRematchRequest()
+        {
+            opponentRequestedRematch = true;
+            if (selfRequestedRematch)
+                RequestRematchToServer();
+        }
+
 
 
         #endregion

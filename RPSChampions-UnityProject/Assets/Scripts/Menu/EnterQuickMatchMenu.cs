@@ -51,6 +51,7 @@ namespace ThirstyJoe.RPSChampions
         private Dictionary<string, int> userButtonMap = new Dictionary<string, int>();
         private int totalOpponents = 0;
         private bool connected = false;
+        private bool startingMatch = false;
 
         #endregion
 
@@ -93,12 +94,18 @@ namespace ThirstyJoe.RPSChampions
         public override void OnConnectedToMaster()
         {
             Debug.Log("connected to master");
-            AttemptToJoinRoom();
+            if (startingMatch)
+                PhotonNetwork.JoinOrCreateRoom(PlayerManager.QuickMatchId, null, null);
+            else
+                AttemptToJoinRoom();
         }
 
         public override void OnCreatedRoom()
         {
             Debug.Log("Game Created");
+
+            if (startingMatch)
+                EnterMatch();
         }
 
         public override void OnJoinedRoom()
@@ -106,8 +113,15 @@ namespace ThirstyJoe.RPSChampions
             Debug.Log("Join Game Successful");
             //SceneManager.LoadScene("QuickMatch");
 
+            if (startingMatch)
+            {
+                EnterMatch();
+                return;
+            }
+
             connected = true;
             UpdateUserListUI();
+
         }
 
         public override void OnCreateRoomFailed(short returnCode, string message)
@@ -249,7 +263,7 @@ namespace ThirstyJoe.RPSChampions
                     if (isHost)
                         InitializeGameStartState();
                     else
-                        EnterMatch();
+                        RequestEnterMatch();
                 },
                 error =>
                 {
@@ -290,7 +304,7 @@ namespace ThirstyJoe.RPSChampions
                 );
 
                 Debug.Log("new game room created, new game states initialized");
-                EnterMatch();
+                RequestEnterMatch();
             },
             errorCallback =>
             {
@@ -299,11 +313,15 @@ namespace ThirstyJoe.RPSChampions
             );
         }
 
-        private void EnterMatch()
+        private void RequestEnterMatch()
         {
             // removes player from finding quickmatch player list
+            startingMatch = true;
             PhotonNetwork.LeaveRoom();
+        }
 
+        private void EnterMatch()
+        {
             Debug.Log("successfully joined quickmatch with id: " + PlayerManager.QuickMatchId);
 
             // load match in client
