@@ -156,6 +156,8 @@ namespace ThirstyJoe.RPSChampions
         [SerializeField]
         private GameObject showWeaponPanel;
         [SerializeField]
+        private GameObject OpponentQuitPanel;
+        [SerializeField]
         private GameObject[] opponentWeaponChoice; // Reveal: rock, paper, scissors
         [SerializeField]
         private GameObject[] myWeaponChoice; // Reveal: rock, paper, scissors
@@ -211,30 +213,21 @@ namespace ThirstyJoe.RPSChampions
 
         #endregion
 
-        #region PUN CALLBACKS
+        #region PUN
         public override void OnPlayerLeftRoom(Player other)
         {
             Debug.LogFormat("OnPlayerLeftRoom() {0}", other.NickName);
 
-            SceneManager.LoadScene("MainMenu");
-
+            ShowOpponentQuitUI();
         }
 
         #endregion
 
         #region UI 
 
-        public void OnSelectRock()
+        private void ShowOpponentQuitUI()
         {
-            ChooseWeapon(Weapon.Rock);
-        }
-        public void OnSelectPaper()
-        {
-            ChooseWeapon(Weapon.Paper);
-        }
-        public void OnSelectScissors()
-        {
-            ChooseWeapon(Weapon.Scissors);
+            OpponentQuitPanel.SetActive(true);
         }
 
         private void UpdateTurnTimerUI(int timeLeft)
@@ -367,6 +360,18 @@ namespace ThirstyJoe.RPSChampions
         #endregion
 
         #region PLAYER ACTIONS
+        public void OnSelectRock()
+        {
+            ChooseWeapon(Weapon.Rock);
+        }
+        public void OnSelectPaper()
+        {
+            ChooseWeapon(Weapon.Paper);
+        }
+        public void OnSelectScissors()
+        {
+            ChooseWeapon(Weapon.Scissors);
+        }
 
         private Weapon ParseWeapon(string weaponName)
         {
@@ -466,7 +471,7 @@ namespace ThirstyJoe.RPSChampions
 
         #endregion
 
-        #region PLAYFAB REQUESTS
+        #region PLAYFAB
 
         private static void OnErrorShared(PlayFabError error)
         {
