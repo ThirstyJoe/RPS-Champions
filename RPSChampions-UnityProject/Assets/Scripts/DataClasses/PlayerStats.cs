@@ -12,16 +12,35 @@ namespace ThirstyJoe.RPSChampions
         None,
     }
 
+    [Serializable]
+    public class WinLoseDrawStats
+    {
+        public int Wins = 0;
+        public int Losses = 0;
+        public int Draws = 0;
+
+        public int Total { get { return Wins + Losses + Draws; } }
+
+        public string GetReadout(bool addKey = true)
+        {
+            const string seperation = " - ";
+            string toRet = Wins + seperation + Losses + seperation + Draws;
+            if (addKey)
+                toRet += "    Wins Losses Draws";
+            return toRet;
+        }
+
+        public int addWin() { return ++Wins; }
+        public int addLoss() { return ++Losses; }
+        public int addDraw() { return ++Draws; }
+    }
+
     public class PlayerStatsData
     {
-        public int wins = 0;
-        public int totalGames = 0;
-        public int totalRock = 0;
-        public int totalPaper = 0;
-        public int totalScissors = 0;
-        public int winsRock = 0;
-        public int winsPaper = 0;
-        public int winsScissors = 0;
+        public WinLoseDrawStats TotalWLD = new WinLoseDrawStats();
+        public WinLoseDrawStats RockWLD = new WinLoseDrawStats();
+        public WinLoseDrawStats PaperWLD = new WinLoseDrawStats();
+        public WinLoseDrawStats ScissorsWLD = new WinLoseDrawStats();
     }
 
     public class PlayerStats
@@ -54,11 +73,11 @@ namespace ThirstyJoe.RPSChampions
         {
             get
             {
-                if ((data.totalRock == data.totalPaper) && (data.totalPaper == data.totalScissors))
+                if ((data.RockWLD.Total == data.PaperWLD.Total) && (data.PaperWLD.Total == data.ScissorsWLD.Total))
                 {
                     return Weapon.None;
                 }
-                int[] weaponTotals = { data.totalRock, data.totalPaper, data.totalScissors };
+                int[] weaponTotals = { data.RockWLD.Total, data.PaperWLD.Total, data.ScissorsWLD.Total };
                 var max = weaponTotals.Select((n, i) => (Number: n, Index: i)).Max();
                 return (Weapon)Enum.ToObject(typeof(Weapon), max);
             }
@@ -68,7 +87,7 @@ namespace ThirstyJoe.RPSChampions
         {
             get
             {
-                return data.wins;
+                return data.TotalWLD.Wins;
             }
         }
 
@@ -76,7 +95,23 @@ namespace ThirstyJoe.RPSChampions
         {
             get
             {
-                return data.totalGames - data.wins;
+                return data.TotalWLD.Losses;
+            }
+        }
+
+        public int Draws
+        {
+            get
+            {
+                return data.TotalWLD.Draws;
+            }
+        }
+
+        public int TotalGames
+        {
+            get
+            {
+                return data.TotalWLD.Total;
             }
         }
 

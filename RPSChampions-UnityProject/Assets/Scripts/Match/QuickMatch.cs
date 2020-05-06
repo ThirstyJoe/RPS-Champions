@@ -91,27 +91,6 @@ namespace ThirstyJoe.RPSChampions
         }
     }
 
-    [Serializable]
-    public class WinLoseDrawStats
-    {
-        public int wins = 0;
-        public int losses = 0;
-        public int draws = 0;
-
-        public string GetReadout(bool addKey = true)
-        {
-            const string seperation = " - ";
-            string toRet = wins + seperation + losses + seperation + draws;
-            if (addKey)
-                toRet += "    Wins Losses Draws";
-            return toRet;
-        }
-
-        public int addWin() { return ++wins; }
-        public int addLoss() { return ++losses; }
-        public int addDraw() { return ++draws; }
-    }
-
     #endregion
 
     public class QuickMatch : MonoBehaviourPunCallbacks
@@ -491,7 +470,6 @@ namespace ThirstyJoe.RPSChampions
                 FunctionParameter = new
                 {
                     sharedGroupId = groupId,
-                    opponentId = PlayerManager.OpponentId
                 },
                 GeneratePlayStreamEvent = true,
             },
@@ -669,7 +647,7 @@ namespace ThirstyJoe.RPSChampions
         {
             PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
             {
-                FunctionName = "StartNextRoundOfQuickmatch",
+                FunctionName = "StartRoundOfQuickmatch",
                 FunctionParameter = new
                 {
                     sharedGroupId = PlayerManager.QuickMatchId,
