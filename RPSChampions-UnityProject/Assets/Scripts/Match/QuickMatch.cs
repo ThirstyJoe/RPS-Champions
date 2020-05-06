@@ -1,5 +1,7 @@
 namespace ThirstyJoe.RPSChampions
 {
+    #region IMPORTS 
+
     using UnityEngine;
     using PlayFab;
     using PlayFab.ClientModels;
@@ -13,6 +15,8 @@ namespace ThirstyJoe.RPSChampions
     using UnityEngine.UIElements;
     using System.Collections.Generic;
     using ExitGames.Client.Photon;
+
+    #endregion
 
     #region GAME DATA CLASSES 
 
@@ -31,6 +35,7 @@ namespace ThirstyJoe.RPSChampions
         }
     }
 
+    [Serializable]
     public class PlayerData
     {
         public string hostId;
@@ -86,6 +91,7 @@ namespace ThirstyJoe.RPSChampions
         }
     }
 
+    [Serializable]
     public class WinLoseDrawStats
     {
         public int wins = 0;
@@ -107,8 +113,6 @@ namespace ThirstyJoe.RPSChampions
     }
 
     #endregion
-
-
 
     public class QuickMatch : MonoBehaviourPunCallbacks
     {
@@ -212,6 +216,8 @@ namespace ThirstyJoe.RPSChampions
         {
             Debug.LogFormat("OnPlayerLeftRoom() {0}", other.NickName);
 
+            SceneManager.LoadScene("MainMenu");
+
         }
 
         #endregion
@@ -231,45 +237,6 @@ namespace ThirstyJoe.RPSChampions
             ChooseWeapon(Weapon.Scissors);
         }
 
-        private void ChooseWeapon(Weapon weapon)
-        {
-            localTurnData.weaponChoice = weapon.ToString();
-
-            // first time a weapon has been choise (first round)
-            if (!selfFirstChoiceMade)
-            {
-                selfFirstChoiceMade = true;
-                PhotonNetwork.RaiseEvent(
-                       WEAPON_CHOSEN_EVENT,        // .Code
-                       null,                       // .CustomData
-                       RaiseEventOptions.Default,
-                       SendOptions.SendReliable);
-
-                if (opponentFirstChoiceMade)
-                {
-                    RequestGameStateForNextRound();
-                }
-                else
-                {
-                    gameStatusText.text = "Waiting for opponent...";
-                }
-            }
-        }
-
-        private void OpponentSelectedFirstWeapon()
-        {
-            opponentFirstChoiceMade = true;
-            if (selfFirstChoiceMade)
-                RequestGameStateForNextRound();
-        }
-
-
-        public void OnSelectOptionsMenu()
-        {
-
-            // TODO: async load options menu
-        }
-
         private void UpdateTurnTimerUI(int timeLeft)
         {
             countdownText.text = timeLeft.ToString();
@@ -281,10 +248,72 @@ namespace ThirstyJoe.RPSChampions
             opponentNameText.text = "Opponent: " + PlayerManager.OpponentName;
         }
 
+        private void SetUpGameOverUI(Action resultUI, Weapon myWeapon, Weapon opponentWeapon)
+        {
+            HideAllGameOverUI();
+            resultUI();
+            myWeaponChoice[(int)myWeapon].SetActive(true);
+            opponentWeaponChoice[(int)opponentWeapon].SetActive(true);
+            seriesRecordText.text = wldStats.GetReadout();
+        }
+
+        private void HideAllGameOverUI()
+        {
+            showWeaponPanel.SetActive(true);
+            chooseWeaponPanel.SetActive(false);
+            losePanel.SetActive(false);
+            winPanel.SetActive(false);
+            drawPanel.SetActive(false);
+            foreach (var icon in opponentWeaponChoice)
+                icon.SetActive(false);
+            foreach (var icon in myWeaponChoice)
+                icon.SetActive(false);
+        }
+
+        private void ShowWinUI()
+        {
+            winPanel.SetActive(true);
+        }
+
+        private void ShowLoseUI()
+        {
+            losePanel.SetActive(true);
+        }
+
+        private void ShowDrawUI()
+        {
+            drawPanel.SetActive(true);
+        }
+
+        private void DisableWeaponSelectUI()
+        {
+            gameStatusText.text = "You selected " + localTurnData.weaponChoice;
+            var weaponChoice = ParseWeapon(localTurnData.weaponChoice);
+            foreach (var toggle in weaponToggles)
+                toggle.SetActive(false);
+
+            if (weaponChoice != Weapon.None)
+                weaponToggles[(int)weaponChoice].SetActive(true);
+        }
+
+        private void SetupStartGameUI()
+        {
+            // manage UI
+            if (localGameState?.turnCount == 0)
+                gameStatusText.text = "First round ending...";
+            else
+                gameStatusText.text = "Select Rock, Paper, or Scissors";
+            foreach (var toggle in weaponToggles)
+                toggle.SetActive(true);
+            rematchButton.SetActive(true);
+            nextRoundPanel.SetActive(false);
+            showWeaponPanel.SetActive(false);
+            chooseWeaponPanel.SetActive(true);
+        }
 
         #endregion
 
-        #region SHARED GROUP DATA TEST
+        #region GAME SETUP
 
         private void ProcessPlayerData(PlayerData playerData)
         {
@@ -301,10 +330,9 @@ namespace ThirstyJoe.RPSChampions
             }
         }
 
-        private static void OnErrorShared(PlayFabError error)
-        {
-            Debug.Log(error.GenerateErrorReport());
-        }
+        #endregion
+
+        #region GAME LOOP
 
         private IEnumerator TurnTimer(int completionTime)
         {
@@ -334,6 +362,115 @@ namespace ThirstyJoe.RPSChampions
                 yield return new WaitForSeconds(1.0F);
                 UpdateGameStateFromServer();
             }
+        }
+
+        #endregion
+
+        #region PLAYER ACTIONS
+
+        private Weapon ParseWeapon(string weaponName)
+        {
+            if (weaponName == null)
+                return Weapon.None;
+
+            return (Weapon)Enum.Parse(typeof(Weapon), weaponName);
+        }
+
+        private void ChooseWeapon(Weapon weapon)
+        {
+            localTurnData.weaponChoice = weapon.ToString();
+
+            // first time a weapon has been choise (first round)
+            if (!selfFirstChoiceMade)
+            {
+                selfFirstChoiceMade = true;
+                PhotonNetwork.RaiseEvent(
+                       WEAPON_CHOSEN_EVENT,        // .Code
+                       null,                       // .CustomData
+                       RaiseEventOptions.Default,
+                       SendOptions.SendReliable);
+
+                if (opponentFirstChoiceMade)
+                {
+                    RequestGameStateForNextRound();
+                }
+                else
+                {
+                    gameStatusText.text = "Waiting for opponent...";
+                }
+            }
+        }
+
+
+        public void OnRematchButtonPressed()
+        {
+            if (opponentRequestedRematch)
+            {
+                opponentRequestedRematch = false;
+
+                RequestRematchToServer();
+            }
+            else
+            {
+                selfRequestedRematch = true;
+                rematchButton.SetActive(false);
+
+                // has not yet been challenged, send event
+                Debug.Log("rematch requested, event sent");
+                PhotonNetwork.RaiseEvent(
+                    REQUEST_REMATCH_EVENT,        // .Code
+                    null,                         // .CustomData
+                    RaiseEventOptions.Default,
+                    SendOptions.SendReliable);
+            }
+        }
+
+        #endregion
+
+        #region INCOMING EVENTS
+
+
+        private void ReceiveCustomPUNEvents(EventData obj)
+        {
+            Debug.Log("event recieved " + obj.Code);
+
+            // switch to correct function
+            switch (obj.Code)
+            {
+                case REQUEST_REMATCH_EVENT:
+                    IncomingRematchRequest();
+                    break;
+                case ACCEPT_REMATCH_EVENT:
+                    RequestGameStateForNextRound();
+                    break;
+                case WEAPON_CHOSEN_EVENT:
+                    OpponentSelectedFirstWeapon();
+                    break;
+            }
+        }
+
+        private void IncomingRematchRequest()
+        {
+            opponentRequestedRematch = true;
+            if (selfRequestedRematch)
+                RequestRematchToServer();
+        }
+
+
+        private void OpponentSelectedFirstWeapon()
+        {
+            opponentFirstChoiceMade = true;
+            if (selfFirstChoiceMade)
+                RequestGameStateForNextRound();
+        }
+
+        #endregion
+
+        #region PLAYFAB REQUESTS
+
+        private static void OnErrorShared(PlayFabError error)
+        {
+            Debug.Log(error.GenerateErrorReport());
         }
 
         private void RequestGameStateForNextRound()
@@ -378,21 +515,6 @@ namespace ThirstyJoe.RPSChampions
 
             // start timer
             StartCoroutine(TurnTimer(localGameState.turnCompletionTime));
-        }
-
-        private void SetupStartGameUI()
-        {
-            // manage UI
-            if (localGameState?.turnCount == 0)
-                gameStatusText.text = "First round ending...";
-            else
-                gameStatusText.text = "Select Rock, Paper, or Scissors";
-            foreach (var toggle in weaponToggles)
-                toggle.SetActive(true);
-            rematchButton.SetActive(true);
-            nextRoundPanel.SetActive(false);
-            showWeaponPanel.SetActive(false);
-            chooseWeaponPanel.SetActive(true);
         }
 
         private void UpdateGameStateFromServer()
@@ -506,51 +628,6 @@ namespace ThirstyJoe.RPSChampions
             }
         }
 
-        private Weapon ParseWeapon(string weaponName)
-        {
-            if (weaponName == null)
-                return Weapon.None;
-
-            return (Weapon)Enum.Parse(typeof(Weapon), weaponName);
-        }
-
-        private void SetUpGameOverUI(Action resultUI, Weapon myWeapon, Weapon opponentWeapon)
-        {
-            HideAllGameOverUI();
-            resultUI();
-            myWeaponChoice[(int)myWeapon].SetActive(true);
-            opponentWeaponChoice[(int)opponentWeapon].SetActive(true);
-            seriesRecordText.text = wldStats.GetReadout();
-        }
-
-        private void HideAllGameOverUI()
-        {
-            showWeaponPanel.SetActive(true);
-            chooseWeaponPanel.SetActive(false);
-            losePanel.SetActive(false);
-            winPanel.SetActive(false);
-            drawPanel.SetActive(false);
-            foreach (var icon in opponentWeaponChoice)
-                icon.SetActive(false);
-            foreach (var icon in myWeaponChoice)
-                icon.SetActive(false);
-        }
-
-        private void ShowWinUI()
-        {
-            winPanel.SetActive(true);
-        }
-
-        private void ShowLoseUI()
-        {
-            losePanel.SetActive(true);
-        }
-
-        private void ShowDrawUI()
-        {
-            drawPanel.SetActive(true);
-        }
-
 
         private string InterpretCloudScriptData(JsonObject jsonResult, string dataName)
         {
@@ -562,7 +639,7 @@ namespace ThirstyJoe.RPSChampions
 
         public void SendLocalTurnDataToServer()
         {
-            DisableWeaponSelect();
+            DisableWeaponSelectUI();
 
             // send turn data to cloud script
             PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
@@ -577,45 +654,11 @@ namespace ThirstyJoe.RPSChampions
             }, OnTurnDataRecieved, OnErrorShared);
         }
 
-        private void DisableWeaponSelect()
-        {
-            gameStatusText.text = "You selected " + localTurnData.weaponChoice;
-            var weaponChoice = ParseWeapon(localTurnData.weaponChoice);
-            foreach (var toggle in weaponToggles)
-                toggle.SetActive(false);
-
-            if (weaponChoice != Weapon.None)
-                weaponToggles[(int)weaponChoice].SetActive(true);
-        }
-
         private void OnTurnDataRecieved(ExecuteCloudScriptResult result)
         {
             Debug.Log("server recieved updated turn data from player");
         }
 
-
-        public void OnRematchButtonPressed()
-        {
-            if (opponentRequestedRematch)
-            {
-                opponentRequestedRematch = false;
-
-                RequestRematchToServer();
-            }
-            else
-            {
-                selfRequestedRematch = true;
-                rematchButton.SetActive(false);
-
-                // has not yet been challenged, send event
-                Debug.Log("rematch requested, event sent");
-                PhotonNetwork.RaiseEvent(
-                    REQUEST_REMATCH_EVENT,        // .Code
-                    null,                         // .CustomData
-                    RaiseEventOptions.Default,
-                    SendOptions.SendReliable);
-            }
-        }
 
         private void RequestRematchToServer()
         {
@@ -648,39 +691,11 @@ namespace ThirstyJoe.RPSChampions
             );
         }
 
-        private void ReceiveCustomPUNEvents(EventData obj)
-        {
-            Debug.Log("event recieved " + obj.Code);
-
-            // switch to correct function
-            switch (obj.Code)
-            {
-                case REQUEST_REMATCH_EVENT:
-                    IncomingRematchRequest();
-                    break;
-                case ACCEPT_REMATCH_EVENT:
-                    RequestGameStateForNextRound();
-                    break;
-                case WEAPON_CHOSEN_EVENT:
-                    OpponentSelectedFirstWeapon();
-                    break;
-            }
-        }
-
-        private void IncomingRematchRequest()
-        {
-            opponentRequestedRematch = true;
-            if (selfRequestedRematch)
-                RequestRematchToServer();
-        }
-
 
 
         #endregion
 
-
-        #region END GAME TEST 
-
+        #region END GAME 
 
         public void OnEndGameButtonPressed()
         {
