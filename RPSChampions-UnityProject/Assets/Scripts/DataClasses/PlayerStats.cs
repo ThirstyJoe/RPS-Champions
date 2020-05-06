@@ -45,7 +45,7 @@ namespace ThirstyJoe.RPSChampions
 
     public class PlayerStats
     {
-        private PlayerStatsData data = new PlayerStatsData();
+        public PlayerStatsData data = new PlayerStatsData();
         private string playerName;
 
         public PlayerStats()
@@ -79,7 +79,7 @@ namespace ThirstyJoe.RPSChampions
                 }
                 int[] weaponTotals = { data.RockWLD.Total, data.PaperWLD.Total, data.ScissorsWLD.Total };
                 var max = weaponTotals.Select((n, i) => (Number: n, Index: i)).Max();
-                return (Weapon)Enum.ToObject(typeof(Weapon), max);
+                return (Weapon)Enum.ToObject(typeof(Weapon), max.Index);
             }
         }
 
@@ -115,6 +115,16 @@ namespace ThirstyJoe.RPSChampions
             }
         }
 
+        public string GetReadout()
+        {
+            return
+                "Favors: " + "\t\t" + FavoriteWeapon + "\n\n" +
+                "W - L - D\n" +
+                "Totals: " + "\t\t" + PlayerManager.PlayerStats.data.TotalWLD.GetReadout(false) + "\n" +
+                "Rock: " + "\t\t" + PlayerManager.PlayerStats.data.RockWLD.GetReadout(false) + "\n" +
+                "Paper: " + "\t\t" + PlayerManager.PlayerStats.data.PaperWLD.GetReadout(false) + "\n" +
+                "Scissors: " + "\t" + PlayerManager.PlayerStats.data.ScissorsWLD.GetReadout(false);
+        }
 
         private string RandomGuestName()
         {

@@ -10,11 +10,14 @@ namespace ThirstyJoe.RPSChampions
     {
         [SerializeField]
         private TextMeshProUGUI screenName;
+        [SerializeField]
+        private TextMeshProUGUI statsText;
 
 
         private void Start()
         {
             screenName.text = PlayerPrefs.GetString("screenName");
+            statsText.text = PlayerManager.PlayerStats.GetReadout();
         }
 
         public void OnLogOutButtonPress()

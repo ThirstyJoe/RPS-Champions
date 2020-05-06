@@ -696,6 +696,7 @@ namespace ThirstyJoe.RPSChampions
         private void OnEndGame(ExecuteCloudScriptResult result)
         {
             Debug.Log("game ended, game data successfully deleted");
+            PlayerManager.UpdatePlayerStats(); // update stats
             DisconnectFromGame();
         }
 

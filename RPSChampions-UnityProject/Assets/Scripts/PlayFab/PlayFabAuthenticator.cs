@@ -76,6 +76,9 @@ namespace ThirstyJoe.RPSChampions
 
             // move onto Photon Authentication
             RequestPhotonToken();
+
+            // update statistics from playfab
+            PlayerManager.UpdatePlayerStats();
         }
 
         /*
