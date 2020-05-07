@@ -132,7 +132,7 @@ namespace ThirstyJoe.RPSChampions
             {
                 if (data.RockWLD.Total == 0)
                     return 0F;
-                return (float)data.RockWLD.Wins / (float)data.RockWLD.Total;
+                return (float)data.RockWLD.Wins / (float)(data.RockWLD.Total - data.RockWLD.Draws);
             }
         }
 
@@ -142,7 +142,7 @@ namespace ThirstyJoe.RPSChampions
             {
                 if (data.PaperWLD.Total == 0)
                     return 0F;
-                return (float)data.PaperWLD.Wins / (float)data.PaperWLD.Total;
+                return (float)data.PaperWLD.Wins / (float)(data.PaperWLD.Total - data.PaperWLD.Draws);
             }
         }
 
@@ -152,7 +152,7 @@ namespace ThirstyJoe.RPSChampions
             {
                 if (data.ScissorsWLD.Total == 0)
                     return 0F;
-                return (float)data.ScissorsWLD.Wins / (float)data.ScissorsWLD.Total;
+                return (float)data.ScissorsWLD.Wins / (float)(data.ScissorsWLD.Total - data.ScissorsWLD.Draws);
             }
         }
 
