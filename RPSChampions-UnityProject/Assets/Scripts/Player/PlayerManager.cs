@@ -43,29 +43,58 @@ namespace ThirstyJoe.RPSChampions
                 "Losses",
             };
 
+
             PlayFabClientAPI.GetPlayerStatistics(
                 new GetPlayerStatisticsRequest { StatisticNames = statNames },
                 result =>
                 {
+                    // for predictable ordering
+                    result.Statistics.Sort(new StatComparer());
+
                     // update stats data in client
                     PlayerStatsData stats = new PlayerStatsData();
-                    stats.ScissorsWLD.Wins = result.Statistics[0].Value;
-                    stats.ScissorsWLD.Draws = result.Statistics[1].Value;
-                    stats.ScissorsWLD.Losses = result.Statistics[2].Value;
-                    stats.RockWLD.Wins = result.Statistics[3].Value;
-                    stats.RockWLD.Draws = result.Statistics[4].Value;
-                    stats.RockWLD.Losses = result.Statistics[5].Value;
-                    stats.PaperWLD.Wins = result.Statistics[6].Value;
-                    stats.PaperWLD.Draws = result.Statistics[7].Value;
-                    stats.PaperWLD.Losses = result.Statistics[8].Value;
-                    stats.TotalWLD.Wins = result.Statistics[9].Value;
-                    stats.TotalWLD.Draws = result.Statistics[10].Value;
-                    stats.TotalWLD.Losses = result.Statistics[11].Value;
+                    stats.TotalWLD.Draws = result.Statistics[0].Value;
+                    stats.TotalWLD.Losses = result.Statistics[1].Value;
+                    stats.PaperWLD.Draws = result.Statistics[2].Value;
+                    stats.PaperWLD.Losses = result.Statistics[3].Value;
+                    stats.PaperWLD.Wins = result.Statistics[4].Value;
+                    stats.RockWLD.Draws = result.Statistics[5].Value;
+                    stats.RockWLD.Losses = result.Statistics[6].Value;
+                    stats.RockWLD.Wins = result.Statistics[7].Value;
+                    stats.ScissorsWLD.Draws = result.Statistics[8].Value;
+                    stats.ScissorsWLD.Losses = result.Statistics[9].Value;
+                    stats.ScissorsWLD.Wins = result.Statistics[10].Value;
+                    stats.TotalWLD.Wins = result.Statistics[11].Value;
                     PlayerManager.PlayerStats.data = stats;
                 },
                 error => Debug.LogError(error.GenerateErrorReport())
             );
         }
+        public class StatComparer : IComparer<StatisticValue>
+        {
+            public int Compare(StatisticValue first, StatisticValue second)
+            {
+                if (first != null && second != null)
+                {
+                    // We can compare both properties.
+                    return first.StatisticName.CompareTo(second.StatisticName);
+                }
 
+                if (first == null && second == null)
+                {
+                    // We can't compare any properties, so they are essentially equal.
+                    return 0;
+                }
+
+                if (first != null)
+                {
+                    // Only the first instance is not null, so prefer that.
+                    return -1;
+                }
+
+                // Only the second instance is not null, so prefer that.
+                return 1;
+            }
+        }
     }
 }

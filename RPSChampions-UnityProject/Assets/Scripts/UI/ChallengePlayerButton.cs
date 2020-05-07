@@ -32,7 +32,7 @@ namespace ThirstyJoe.RPSChampions
         private string playerName;
 
 
-        public void SetButtonText(PlayerStats stats)
+        public void SetButtonText(PlayerStatsBrief stats)
         {
             playerName = stats.PlayerName;
             nameText.text = stats.PlayerName;

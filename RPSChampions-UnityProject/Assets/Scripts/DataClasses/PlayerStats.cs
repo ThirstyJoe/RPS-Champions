@@ -115,15 +115,61 @@ namespace ThirstyJoe.RPSChampions
             }
         }
 
+        public float WinRate
+        {
+            get
+            {
+                if (TotalGames == 0)
+                    return 0F;
+                return (float)Wins / (float)TotalGames;
+            }
+        }
+
+
+        public float RockWinRate
+        {
+            get
+            {
+                if (data.RockWLD.Total == 0)
+                    return 0F;
+                return (float)data.RockWLD.Wins / (float)data.RockWLD.Total;
+            }
+        }
+
+        public float PaperWinRate
+        {
+            get
+            {
+                if (data.PaperWLD.Total == 0)
+                    return 0F;
+                return (float)data.PaperWLD.Wins / (float)data.PaperWLD.Total;
+            }
+        }
+
+        public float ScissorsWinRate
+        {
+            get
+            {
+                if (data.ScissorsWLD.Total == 0)
+                    return 0F;
+                return (float)data.ScissorsWLD.Wins / (float)data.ScissorsWLD.Total;
+            }
+        }
+
         public string GetReadout()
         {
             return
-                "Favors: " + "\t\t" + FavoriteWeapon + "\n\n" +
-                "W - L - D\n" +
-                "Totals: " + "\t\t" + PlayerManager.PlayerStats.data.TotalWLD.GetReadout(false) + "\n" +
-                "Rock: " + "\t\t" + PlayerManager.PlayerStats.data.RockWLD.GetReadout(false) + "\n" +
-                "Paper: " + "\t\t" + PlayerManager.PlayerStats.data.PaperWLD.GetReadout(false) + "\n" +
-                "Scissors: " + "\t" + PlayerManager.PlayerStats.data.ScissorsWLD.GetReadout(false);
+                "Favors\t\t" + FavoriteWeapon + "\n\n" +
+
+                "Wins\t\t" + PlayerManager.PlayerStats.Wins + "\n" +
+                "Losses\t\t" + PlayerManager.PlayerStats.Losses + "\n" +
+                "Draws\t\t" + PlayerManager.PlayerStats.Draws + "\n" +
+                "Games\t\t" + PlayerManager.PlayerStats.TotalGames + "\n\n" +
+
+                "Win Rates\n" +
+                "Rock\t\t" + String.Format("{0:p0}", PlayerManager.PlayerStats.RockWinRate) + "\n" +
+                "Paper\t\t" + String.Format("{0:p0}", PlayerManager.PlayerStats.PaperWinRate) + "\n" +
+                "Scissors\t" + String.Format("{0:p0}", PlayerManager.PlayerStats.ScissorsWinRate);
         }
 
         private string RandomGuestName()
@@ -131,6 +177,23 @@ namespace ThirstyJoe.RPSChampions
             var v = Enum.GetValues(typeof(GuestName));
             var name = (GuestName)v.GetValue(new Random().Next(v.Length));
             return name.ToString();
+        }
+    }
+
+    public class PlayerStatsBrief
+    {
+        public string PlayerName;
+        public string FavoriteWeapon;
+        public int Wins;
+        public int Losses;
+
+
+        public PlayerStatsBrief(string playerName, string favors, int wins, int losses)
+        {
+            PlayerName = playerName;
+            FavoriteWeapon = favors;
+            Wins = wins;
+            Losses = losses;
         }
     }
 }

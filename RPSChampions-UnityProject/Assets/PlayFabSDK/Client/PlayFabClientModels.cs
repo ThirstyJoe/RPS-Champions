@@ -272,15 +272,15 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// Cost of the catalog item for each applicable real world currency.
         /// </summary>
-        public Dictionary<string,uint> RealCurrencyPrices;
+        public Dictionary<string, uint> RealCurrencyPrices;
         /// <summary>
         /// Amount of each applicable virtual currency which will be received as a result of purchasing this catalog item.
         /// </summary>
-        public Dictionary<string,uint> VCAmount;
+        public Dictionary<string, uint> VCAmount;
         /// <summary>
         /// Cost of the catalog item for each applicable virtual currency.
         /// </summary>
-        public Dictionary<string,uint> VirtualCurrencyPrices;
+        public Dictionary<string, uint> VirtualCurrencyPrices;
     }
 
     /// <summary>
@@ -360,7 +360,7 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// override prices for this item for specific currencies
         /// </summary>
-        public Dictionary<string,uint> RealCurrencyPrices;
+        public Dictionary<string, uint> RealCurrencyPrices;
         /// <summary>
         /// list of item tags
         /// </summary>
@@ -368,7 +368,7 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// price of this item in virtual currencies and "RM" (the base Real Money purchase price, in USD pennies)
         /// </summary>
-        public Dictionary<string,uint> VirtualCurrencyPrices;
+        public Dictionary<string, uint> VirtualCurrencyPrices;
     }
 
     [Serializable]
@@ -386,7 +386,7 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// virtual currency types and balances which will be added to the player inventory when the bundle is added
         /// </summary>
-        public Dictionary<string,uint> BundledVirtualCurrencies;
+        public Dictionary<string, uint> BundledVirtualCurrencies;
     }
 
     [Serializable]
@@ -436,7 +436,7 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// virtual currency types and balances which will be added to the player inventory when the container is unlocked
         /// </summary>
-        public Dictionary<string,uint> VirtualCurrencyContents;
+        public Dictionary<string, uint> VirtualCurrencyContents;
     }
 
     [Serializable]
@@ -667,7 +667,7 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// Content of data
         /// </summary>
-        public Dictionary<string,string> Data;
+        public Dictionary<string, string> Data;
     }
 
     public enum ContinentCode
@@ -1173,7 +1173,7 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// Information posted to the PlayStream Event. Currently arbitrary, and specific to the environment sending it.
         /// </summary>
-        public Dictionary<string,object> Info;
+        public Dictionary<string, object> Info;
     }
 
     public enum EmailVerificationStatus
@@ -1455,7 +1455,7 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// game session tags
         /// </summary>
-        public Dictionary<string,string> Tags;
+        public Dictionary<string, string> Tags;
     }
 
     public enum GameInstanceState
@@ -1610,7 +1610,7 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// User specific data for this title.
         /// </summary>
-        public Dictionary<string,UserDataRecord> Data;
+        public Dictionary<string, UserDataRecord> Data;
         /// <summary>
         /// Indicates the current version of the data that has been set. This is incremented with every set call for that type of
         /// data (read-only, internal, etc). This version can be provided in Get calls to find updated data.
@@ -1650,11 +1650,11 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// Array of virtual currency balance(s) belonging to the character.
         /// </summary>
-        public Dictionary<string,int> VirtualCurrency;
+        public Dictionary<string, int> VirtualCurrency;
         /// <summary>
         /// Array of remaining times and timestamps for virtual currencies.
         /// </summary>
-        public Dictionary<string,VirtualCurrencyRechargeTime> VirtualCurrencyRechargeTimes;
+        public Dictionary<string, VirtualCurrencyRechargeTime> VirtualCurrencyRechargeTimes;
     }
 
     [Serializable]
@@ -1708,7 +1708,7 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// The requested character statistics.
         /// </summary>
-        public Dictionary<string,int> CharacterStatistics;
+        public Dictionary<string, int> CharacterStatistics;
     }
 
     [Serializable]
@@ -2197,11 +2197,11 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// Title data for this title.
         /// </summary>
-        public Dictionary<string,string> TitleData;
+        public Dictionary<string, string> TitleData;
         /// <summary>
         /// User specific custom data.
         /// </summary>
-        public Dictionary<string,UserDataRecord> UserData;
+        public Dictionary<string, UserDataRecord> UserData;
         /// <summary>
         /// The version of the UserData that was returned.
         /// </summary>
@@ -2213,7 +2213,7 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// User specific read-only data.
         /// </summary>
-        public Dictionary<string,UserDataRecord> UserReadOnlyData;
+        public Dictionary<string, UserDataRecord> UserReadOnlyData;
         /// <summary>
         /// The version of the Read-Only UserData that was returned.
         /// </summary>
@@ -2221,11 +2221,11 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// Dictionary of virtual currency balance(s) belonging to the user.
         /// </summary>
-        public Dictionary<string,int> UserVirtualCurrency;
+        public Dictionary<string, int> UserVirtualCurrency;
         /// <summary>
         /// Dictionary of remaining times and timestamps for virtual currencies.
         /// </summary>
-        public Dictionary<string,VirtualCurrencyRechargeTime> UserVirtualCurrencyRechargeTimes;
+        public Dictionary<string, VirtualCurrencyRechargeTime> UserVirtualCurrencyRechargeTimes;
     }
 
     /// <summary>
@@ -2631,7 +2631,7 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// a dictionary object of key / value pairs
         /// </summary>
-        public Dictionary<string,string> Data;
+        public Dictionary<string, string> Data;
     }
 
     [Serializable]
@@ -2709,7 +2709,7 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// Data for the requested keys.
         /// </summary>
-        public Dictionary<string,SharedGroupDataRecord> Data;
+        public Dictionary<string, SharedGroupDataRecord> Data;
         /// <summary>
         /// List of PlayFabId identifiers for the members of this group, if requested.
         /// </summary>
@@ -2808,7 +2808,7 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// a dictionary object of key / value pairs
         /// </summary>
-        public Dictionary<string,string> Data;
+        public Dictionary<string, string> Data;
     }
 
     [Serializable]
@@ -2914,7 +2914,7 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// User specific data for this title.
         /// </summary>
-        public Dictionary<string,UserDataRecord> Data;
+        public Dictionary<string, UserDataRecord> Data;
         /// <summary>
         /// Indicates the current version of the data that has been set. This is incremented with every set call for that type of
         /// data (read-only, internal, etc). This version can be provided in Get calls to find updated data.
@@ -2942,11 +2942,11 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// Array of virtual currency balance(s) belonging to the user.
         /// </summary>
-        public Dictionary<string,int> VirtualCurrency;
+        public Dictionary<string, int> VirtualCurrency;
         /// <summary>
         /// Array of remaining times and timestamps for virtual currencies.
         /// </summary>
-        public Dictionary<string,VirtualCurrencyRechargeTime> VirtualCurrencyRechargeTimes;
+        public Dictionary<string, VirtualCurrencyRechargeTime> VirtualCurrencyRechargeTimes;
     }
 
     /// <summary>
@@ -3059,7 +3059,7 @@ namespace PlayFab.ClientModels
         /// A set of custom key-value pairs on the instance of the inventory item, which is not to be confused with the catalog
         /// item's custom data.
         /// </summary>
-        public Dictionary<string,string> CustomData;
+        public Dictionary<string, string> CustomData;
         /// <summary>
         /// CatalogItem.DisplayName at the time this item was purchased.
         /// </summary>
@@ -4579,11 +4579,11 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// Virtual currencies granted by the transaction, if any.
         /// </summary>
-        public Dictionary<string,int> VCAmount;
+        public Dictionary<string, int> VCAmount;
         /// <summary>
         /// Current virtual currency balances for the user.
         /// </summary>
-        public Dictionary<string,int> VirtualCurrency;
+        public Dictionary<string, int> VirtualCurrency;
     }
 
     [Serializable]
@@ -5488,7 +5488,7 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// Current virtual currency totals for the user.
         /// </summary>
-        public Dictionary<string,int> VirtualCurrencyBalances;
+        public Dictionary<string, int> VirtualCurrencyBalances;
     }
 
     [Serializable]
@@ -5591,11 +5591,11 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// Override prices for this item for specific currencies
         /// </summary>
-        public Dictionary<string,uint> RealCurrencyPrices;
+        public Dictionary<string, uint> RealCurrencyPrices;
         /// <summary>
         /// Override prices for this item in virtual currencies and "RM" (the base Real Money purchase price, in USD pennies)
         /// </summary>
-        public Dictionary<string,uint> VirtualCurrencyPrices;
+        public Dictionary<string, uint> VirtualCurrencyPrices;
     }
 
     /// <summary>
@@ -6093,7 +6093,7 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// Virtual currency granted to the player as a result of unlocking the container.
         /// </summary>
-        public Dictionary<string,uint> VirtualCurrency;
+        public Dictionary<string, uint> VirtualCurrency;
     }
 
     [Serializable]
@@ -6122,7 +6122,7 @@ namespace PlayFab.ClientModels
         /// Key-value pairs to be written to the custom data. Note that keys are trimmed of whitespace, are limited in size, and may
         /// not begin with a '!' character or be null.
         /// </summary>
-        public Dictionary<string,string> Data;
+        public Dictionary<string, string> Data;
         /// <summary>
         /// Optional list of Data-keys to remove from UserData. Some SDKs cannot insert null-values into Data due to language
         /// constraints. Use this to delete the keys directly.
@@ -6161,7 +6161,7 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// Statistics to be updated with the provided values, in the Key(string), Value(int) pattern.
         /// </summary>
-        public Dictionary<string,int> CharacterStatistics;
+        public Dictionary<string, int> CharacterStatistics;
     }
 
     [Serializable]
@@ -6205,7 +6205,7 @@ namespace PlayFab.ClientModels
         /// Key-value pairs to be written to the custom data. Note that keys are trimmed of whitespace, are limited in size, and may
         /// not begin with a '!' character or be null.
         /// </summary>
-        public Dictionary<string,string> Data;
+        public Dictionary<string, string> Data;
         /// <summary>
         /// Optional list of Data-keys to remove from UserData. Some SDKs cannot insert null-values into Data due to language
         /// constraints. Use this to delete the keys directly.
@@ -6239,7 +6239,7 @@ namespace PlayFab.ClientModels
         /// Key-value pairs to be written to the custom data. Note that keys are trimmed of whitespace, are limited in size, and may
         /// not begin with a '!' character or be null.
         /// </summary>
-        public Dictionary<string,string> Data;
+        public Dictionary<string, string> Data;
         /// <summary>
         /// Optional list of Data-keys to remove from UserData. Some SDKs cannot insert null-values into Data due to language
         /// constraints. Use this to delete the keys directly.
@@ -6928,7 +6928,7 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// Custom event properties. Each property consists of a name (string) and a value (JSON object).
         /// </summary>
-        public Dictionary<string,object> Body;
+        public Dictionary<string, object> Body;
         /// <summary>
         /// Unique PlayFab assigned ID for a specific character owned by a user
         /// </summary>
@@ -6955,7 +6955,7 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// Custom data properties associated with the event. Each property consists of a name (string) and a value (JSON object).
         /// </summary>
-        public Dictionary<string,object> Body;
+        public Dictionary<string, object> Body;
         /// <summary>
         /// The name of the event, within the namespace scoped to the title. The naming convention is up to the caller, but it
         /// commonly follows the subject_verb_object pattern (e.g. player_logged_in).
@@ -6988,7 +6988,7 @@ namespace PlayFab.ClientModels
         /// <summary>
         /// Custom event properties. Each property consists of a name (string) and a value (JSON object).
         /// </summary>
-        public Dictionary<string,object> Body;
+        public Dictionary<string, object> Body;
         /// <summary>
         /// The name of the event, within the namespace scoped to the title. The naming convention is up to the caller, but it
         /// commonly follows the subject_verb_object pattern (e.g. player_logged_in).

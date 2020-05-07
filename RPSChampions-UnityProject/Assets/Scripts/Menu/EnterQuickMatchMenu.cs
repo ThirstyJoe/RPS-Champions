@@ -93,6 +93,8 @@ namespace ThirstyJoe.RPSChampions
 
         public override void OnConnectedToMaster()
         {
+            // connect to room
+            SetPlayerProperties();
             Debug.Log("connected to master");
             if (startingMatch)
                 PhotonNetwork.JoinOrCreateRoom(PlayerManager.QuickMatchId, null, null);
@@ -236,6 +238,19 @@ namespace ThirstyJoe.RPSChampions
         #endregion
 
         #region CUSTOM PRIVATE
+
+        // custom properties for plaer
+        private void SetPlayerProperties()
+        {
+            Hashtable properties = new Hashtable()
+            {
+                {"Favors", PlayerManager.PlayerStats.FavoriteWeapon.ToString()},
+                {"Wins",   PlayerManager.PlayerStats.Wins},
+                {"Losses", PlayerManager.PlayerStats.Losses},
+            };
+
+            PhotonNetwork.LocalPlayer.SetCustomProperties(properties);
+        }
 
         // player to send final request in match making is labeled as the "HOST"
         private void StartMatch(string opponentName, bool isHost)
@@ -403,7 +418,13 @@ namespace ThirstyJoe.RPSChampions
                         continue;
 
                     var button = buttonArray[i];
-                    var stats = new PlayerStats(player.NickName);
+
+                    PlayerStatsBrief stats = new PlayerStatsBrief(
+                        player.NickName,
+                        (string)player.CustomProperties["Favors"],
+                        (int)player.CustomProperties["Wins"],
+                        (int)player.CustomProperties["Losses"]
+                    );
 
                     button.gameObject.SetActive(true);  // Switch button on
                     button.SetButtonText(stats);        // TODO: get real user stats
