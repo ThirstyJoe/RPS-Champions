@@ -16,6 +16,7 @@ namespace ThirstyJoe.RPSChampions
     using System.Collections.Generic;
     using ExitGames.Client.Photon;
 
+
     #endregion
 
     #region GAME DATA CLASSES 
@@ -138,6 +139,8 @@ namespace ThirstyJoe.RPSChampions
         [SerializeField]
         private GameObject OpponentQuitPanel;
         [SerializeField]
+        private GameObject DisconnectPanel;
+        [SerializeField]
         private GameObject[] opponentWeaponChoice; // Reveal: rock, paper, scissors
         [SerializeField]
         private GameObject[] myWeaponChoice; // Reveal: rock, paper, scissors
@@ -202,6 +205,13 @@ namespace ThirstyJoe.RPSChampions
             Debug.LogFormat("OnPlayerLeftRoom() {0}", other.NickName);
 
             ShowOpponentQuitUI();
+        }
+
+        public override void OnDisconnected(DisconnectCause cause)
+        {
+            Debug.Log("You have been disconnected: " + cause.ToString());
+
+            DisconnectPanel.SetActive(true);
         }
 
         #endregion
