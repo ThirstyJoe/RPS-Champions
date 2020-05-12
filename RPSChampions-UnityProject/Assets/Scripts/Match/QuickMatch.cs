@@ -99,6 +99,7 @@ namespace ThirstyJoe.RPSChampions
         private const byte REQUEST_REMATCH_EVENT = 0;
         private const byte ACCEPT_REMATCH_EVENT = 1;
         private const byte WEAPON_CHOSEN_EVENT = 2;
+        private const byte TURN_RECIEVED_EVENT = 4;
 
         #endregion
 
@@ -148,9 +149,12 @@ namespace ThirstyJoe.RPSChampions
 
         #region PRIVATE VARS
 
-        // flags for when a rematch has been requested
+        // flags used to help synchronize start and end of matches
         private bool opponentRequestedRematch = false;
         private bool selfRequestedRematch = false;
+        private bool selfServerRecievedTurn = false;
+        private bool opponentServerRecievedTurn = false;
+        private bool turnTimerActive = false;
 
         // flags for when each player has made their initial weapon choice
         private bool opponentFirstChoiceMade = false;
@@ -327,13 +331,28 @@ namespace ThirstyJoe.RPSChampions
             waitingForGameStateUpdate = true;
             SendLocalTurnDataToServer();
 
+            // show your choice for 2 seconds to allow time for server to gogogo
+            yield return new WaitForSeconds(2.0F);
+
             while (waitingForGameStateUpdate)
             {
-                // repeatably attempts to get next game state from server
-                // this ensures we still get a response even if our own local counter gets ahead somehow
-                yield return new WaitForSeconds(1.0F);
+                // both players have heard from server 
+                if (!(opponentServerRecievedTurn && selfServerRecievedTurn))
+                    yield return null;
+
+                // waitingForGameStateUpdate set to false when next turn is started
                 UpdateGameStateFromServer();
+
+                if (waitingForGameStateUpdate)
+                {
+                    // wait another 1.0 seconds if server has not finished turn
+                    yield return new WaitForSeconds(1.0F);
+                }
+
+                // TODO: after several unsuccessful tries, disconnect from match with error
             }
+
+            turnTimerActive = false;
         }
 
         #endregion
@@ -388,24 +407,25 @@ namespace ThirstyJoe.RPSChampions
 
         public void OnRematchButtonPressed()
         {
-            if (opponentRequestedRematch)
-            {
-                opponentRequestedRematch = false;
+            Debug.Log("rematch requested, event sent");
 
+            // send event
+            PhotonNetwork.RaiseEvent(
+                REQUEST_REMATCH_EVENT,        // .Code
+                null,                         // .CustomData
+                RaiseEventOptions.Default,
+                SendOptions.SendReliable);
+
+            // set local flag
+            selfRequestedRematch = true;
+
+            // set UI
+            rematchButton.SetActive(false);
+
+            // only host communicate with server
+            if (opponentRequestedRematch && isHost)
+            {
                 RequestRematchToServer();
-            }
-            else
-            {
-                selfRequestedRematch = true;
-                rematchButton.SetActive(false);
-
-                // has not yet been challenged, send event
-                Debug.Log("rematch requested, event sent");
-                PhotonNetwork.RaiseEvent(
-                    REQUEST_REMATCH_EVENT,        // .Code
-                    null,                         // .CustomData
-                    RaiseEventOptions.Default,
-                    SendOptions.SendReliable);
             }
         }
 
@@ -430,7 +450,15 @@ namespace ThirstyJoe.RPSChampions
                 case WEAPON_CHOSEN_EVENT:
                     OpponentSelectedFirstWeapon();
                     break;
+                case TURN_RECIEVED_EVENT:
+                    OpponentTurnRecievedByServer();
+                    break;
             }
+        }
+
+        private void OpponentTurnRecievedByServer()
+        {
+            opponentServerRecievedTurn = true;
         }
 
         private void IncomingRematchRequest()
@@ -462,6 +490,9 @@ namespace ThirstyJoe.RPSChampions
             // reset these flags
             opponentRequestedRematch = false;
             selfRequestedRematch = false;
+            opponentServerRecievedTurn = false;
+            selfServerRecievedTurn = false;
+
 
             // get game state before moving on
             PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
@@ -497,7 +528,12 @@ namespace ThirstyJoe.RPSChampions
             SetupStartGameUI();
 
             // start timer
-            StartCoroutine(TurnTimer(localGameState.turnCompletionTime));
+            if (!turnTimerActive) // prevent double action
+            {
+                turnTimerActive = true;
+                StartCoroutine(TurnTimer(localGameState.turnCompletionTime));
+            }
+
         }
 
         private void UpdateGameStateFromServer()
@@ -639,6 +675,13 @@ namespace ThirstyJoe.RPSChampions
 
         private void OnTurnDataRecieved(ExecuteCloudScriptResult result)
         {
+            // flag and send event to other player to help synchronize
+            selfServerRecievedTurn = true;
+            PhotonNetwork.RaiseEvent(
+                  TURN_RECIEVED_EVENT,        // .Code
+                  null,                       // .CustomData
+                  RaiseEventOptions.Default,
+                  SendOptions.SendReliable);
             Debug.Log("server recieved updated turn data from player");
         }
 
