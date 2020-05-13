@@ -41,9 +41,9 @@
         {
             SceneManager.LoadScene("EnterQuickMatch");
         }
-        public void OnLeaguePlayerButtonPress()
+        public void OnLeaguePlayButtonPress()
         {
-            SceneManager.LoadScene("LeaguePlayDashboard");
+            SceneManager.LoadScene("LeagueDashboard");
         }
         public void OnPracticeButtonPress()
         {
