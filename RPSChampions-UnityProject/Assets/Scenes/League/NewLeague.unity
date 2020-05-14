@@ -1258,7 +1258,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 256998611}
-        m_MethodName: OnBackButtonPress
+        m_MethodName: OnCreateLeagueButtonPress
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

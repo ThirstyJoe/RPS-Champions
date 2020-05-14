@@ -15,7 +15,7 @@ namespace ThirstyJoe.RPSChampions
             // TODO: Save league settings in LeagueManager
             // LeagueSettings leagueSettings = new LeagueSettings();
             // LeagueManager.SetCurrentLeagueSettings(leagueSettings);
-            SceneManager.UnloadSceneAsync("LeagueView");
+            SceneManager.UnloadSceneAsync("NewLeague");
         }
     }
 }

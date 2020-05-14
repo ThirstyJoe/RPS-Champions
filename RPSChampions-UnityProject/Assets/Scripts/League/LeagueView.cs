@@ -6,6 +6,18 @@ namespace ThirstyJoe.RPSChampions
 
     public class LeagueView : MonoBehaviour
     {
+        [SerializeField]
+        private GameObject StandingsListPanel;
+        [SerializeField]
+        private GameObject StandingsListContent;
+        [SerializeField]
+        private GameObject PlayerListPanel;
+        [SerializeField]
+        private GameObject PlayerListContent;
+        [SerializeField]
+        private GameObject MatchListPanel;
+        [SerializeField]
+        private GameObject MatchListContent;
         public void OnBackButtonPress()
         {
             SceneManager.UnloadSceneAsync("LeagueView");
