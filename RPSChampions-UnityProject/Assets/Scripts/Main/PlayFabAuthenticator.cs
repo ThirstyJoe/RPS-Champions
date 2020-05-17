@@ -73,6 +73,7 @@ namespace ThirstyJoe.RPSChampions
 
             // Save the player PlayFabId. This will come in handy during next step
             PlayerPrefs.SetString("playFabId", loginResult.PlayFabId);
+            PlayerManager.PlayerName = PlayerPrefs.GetString("screenName");
 
             // move onto Photon Authentication
             RequestPhotonToken();

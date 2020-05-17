@@ -532,7 +532,7 @@ namespace ThirstyJoe.RPSChampions
             }
 
             // get game state from server
-            localGameState = GameState.CreateFromJSON(InterpretCloudScriptData(jsonResult, "gameState"));
+            localGameState = GameState.CreateFromJSON(RPSCommon.InterpretCloudScriptData(jsonResult, "gameState"));
 
             // UI
             SetupStartGameUI();
@@ -575,10 +575,10 @@ namespace ThirstyJoe.RPSChampions
 
             // data successfully received 
             // interpret data in appropriate classes:
-            TurnData turnData = TurnData.CreateFromJSON(InterpretCloudScriptData(jsonResult, "turnData"));
-            GameState gameState = GameState.CreateFromJSON(InterpretCloudScriptData(jsonResult, "gameState"));
-            PlayerData playerData = PlayerData.CreateFromJSON(InterpretCloudScriptData(jsonResult, "playerData"));
-            gameSettings = GameSettings.CreateFromJSON(InterpretCloudScriptData(jsonResult, "gameSettings"));
+            TurnData turnData = TurnData.CreateFromJSON(RPSCommon.InterpretCloudScriptData(jsonResult, "turnData"));
+            GameState gameState = GameState.CreateFromJSON(RPSCommon.InterpretCloudScriptData(jsonResult, "gameState"));
+            PlayerData playerData = PlayerData.CreateFromJSON(RPSCommon.InterpretCloudScriptData(jsonResult, "playerData"));
+            gameSettings = GameSettings.CreateFromJSON(RPSCommon.InterpretCloudScriptData(jsonResult, "gameSettings"));
 
 
             // turn counting debug
@@ -655,15 +655,6 @@ namespace ThirstyJoe.RPSChampions
 
                 nextRoundPanel.SetActive(true);
             }
-        }
-
-
-        private string InterpretCloudScriptData(JsonObject jsonResult, string dataName)
-        {
-            // interpret playerData
-            object objValue;
-            jsonResult.TryGetValue(dataName, out objValue);
-            return (string)objValue;
         }
 
         public void SendLocalTurnDataToServer()

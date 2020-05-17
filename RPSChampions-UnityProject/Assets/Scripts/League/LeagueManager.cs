@@ -2,7 +2,9 @@ namespace ThirstyJoe.RPSChampions
 {
     using UnityEngine;
     using System.Collections.Generic;
-
+    using PlayFab;
+    using PlayFab.ClientModels;
+    using System.Linq;
 
     public enum LeagueType
     {
@@ -16,6 +18,34 @@ namespace ThirstyJoe.RPSChampions
         public LeagueSettings(LeagueType type)
         {
             LeagueType = type.ToString();
+        }
+
+        public string ToJSON()
+        {
+            return JsonUtility.ToJson(this);
+        }
+        public static LeagueSettings CreateFromJSON(string jsonString)
+        {
+            return JsonUtility.FromJson<LeagueSettings>(jsonString);
+        }
+    }
+
+    // server saves this data in TitleData so it can be easily looked up when populating league lists
+    public class LeagueInfo
+    {
+        public string Status;
+        public string LeagueSettingsJSON;
+        public string LeagueName;
+        public string HostName;
+        public string HostId;
+
+        public string ToJSON()
+        {
+            return JsonUtility.ToJson(this);
+        }
+        public static LeagueInfo CreateFromJSON(string jsonString)
+        {
+            return JsonUtility.FromJson<LeagueInfo>(jsonString);
         }
     }
 
@@ -36,16 +66,20 @@ namespace ThirstyJoe.RPSChampions
         public string OpponentName;
     }
 
+
     public class League
     {
         public LeagueSettings LeagueSettings;
         public string LeagueName = "Unnamed";
+        public string LeagueHost = "NoHost";
         public LeaguePlayer[] LeaguePlayerList;
+        public string Key = "";
 
-        public League(string name, LeagueSettings settings)
+        public League(string name, string host, LeagueSettings settings)
         {
             LeagueName = name;
             LeagueSettings = settings;
+            LeagueHost = host;
         }
     }
 
@@ -66,56 +100,108 @@ namespace ThirstyJoe.RPSChampions
             leagueSettings = new LeagueSettings(leagueType);
         }
 
-        public static TitleDescriptionPair[] GetCurrentLeagues()
+        public delegate void GetLeaguesCallBack(List<TitleDescriptionPair> leagues);
+        public static void GetCurrentLeagues(GetLeaguesCallBack callback)
         {
-            return FakePlayerList();
-            //return new TitleDescriptionPair[0];
+            //return FakePlayerList();
+
+            // get list of league keys from PlayerData
+            List<string> userDataKeys = new List<string>() { "CurrentLeagues" };
+            List<string> leagueKeys = new List<string>();
+            List<TitleDescriptionPair> toRet = new List<TitleDescriptionPair>();
+
+            PlayFabClientAPI.GetUserData(new GetUserDataRequest()
+            {
+                Keys = userDataKeys
+            },
+            result =>
+            {
+                // validate this key before getting keys from JSON
+                if (result.Data.ContainsKey("CurrentLeagues"))
+                {
+                    // parse LeagueIds from JSON into a list of string 
+                    var leagueListJSON = result.Data["CurrentLeagues"].Value;
+                    var leagueKeysArray = leagueListJSON.Split('"').Where((item, index) => index % 2 != 0);
+                    leagueKeys = new List<string>(leagueKeysArray);
+                }
+
+
+                // nested server calls, i know this is ugly!
+                PlayFabClientAPI.GetTitleData(new GetTitleDataRequest()
+                {
+                    Keys = leagueKeys
+                },
+                titleResult =>
+                {
+                    foreach (var key in leagueKeys)
+                    {
+                        if (titleResult.Data.ContainsKey(key))
+                        {
+                            LeagueInfo leagueInfo = LeagueInfo.CreateFromJSON(titleResult.Data[key]);
+                            if (leagueInfo.Status != "Complete")
+                            {
+                                toRet.Add(new TitleDescriptionPair(leagueInfo.LeagueName, "Host: " + leagueInfo.HostName));
+                            }
+                        }
+                    }
+                    callback(toRet);
+                },
+
+                errorCallback =>
+                {
+                    Debug.Log(errorCallback.ErrorMessage + "error attempting to start rematch.");
+                    callback(toRet);
+                }
+                );
+
+            },
+            errorCallback =>
+            {
+                Debug.Log(errorCallback.ErrorMessage + "error attempting to start rematch.");
+                callback(toRet);
+            }
+            );
         }
 
-        public static TitleDescriptionPair[] GetLeagueHistory()
+        public static void GetLeagueHistory(GetLeaguesCallBack callback)
         {
-            return new TitleDescriptionPair[0];
+            List<TitleDescriptionPair> toRet = new List<TitleDescriptionPair>();
+            callback(toRet);
         }
 
-        public static TitleDescriptionPair[] GetOpenLeagues()
+        public static void GetOpenLeagues(GetLeaguesCallBack callback)
         {
-            return new TitleDescriptionPair[0];
+            List<TitleDescriptionPair> toRet = new List<TitleDescriptionPair>();
+
+            //PlayFabClientAPI.GetTitleData(new GetTitleDataRequest(),
+            //result =>
+            //{
+            //    TitleDescriptionPair[] toRet = new TitleDescriptionPair[] { };
+            //    int index = 0;
+            //    foreach (var leagueJSON in result.Data)
+            //    {
+            //        LeagueInfo leagueInfo = LeagueInfo.CreateFromJSON(leagueJSON.Value);
+            //        if (leagueInfo.Status == "InProgress")
+            //            toRet[index++] = new TitleDescriptionPair(leagueInfo.LeagueName, "Host: " + leagueInfo.HostName);
+            //    }
+            //},
+            //errorCallback =>
+            //{
+            //    Debug.Log(errorCallback.ErrorMessage + "error attempting to start rematch.");
+            //}
+            //);
+
+            callback(toRet);
         }
 
-        private static TitleDescriptionPair[] FakePlayerList()
+        private static List<TitleDescriptionPair> FakePlayerList()
         {
-            return new TitleDescriptionPair[]{
-                new TitleDescriptionPair("League1",  "0-0-0"),
-                new TitleDescriptionPair("League2",  "0-0-0"),
-                new TitleDescriptionPair("League3",  "0-0-0"),
-                new TitleDescriptionPair("League4",  "0-0-0"),
-                new TitleDescriptionPair("League5",  "0-0-0"),
-                new TitleDescriptionPair("League6",  "0-0-0"),
-                new TitleDescriptionPair("League7",  "0-0-0"),
-                new TitleDescriptionPair("League8",  "0-0-0"),
-                new TitleDescriptionPair("League9",  "0-0-0"),
-                new TitleDescriptionPair("League10", "0-0-0"),
-                new TitleDescriptionPair("League11", "0-0-0"),
-                new TitleDescriptionPair("League12", "0-0-0"),
-                new TitleDescriptionPair("League13", "0-0-0"),
-                new TitleDescriptionPair("League14", "0-0-0"),
-                new TitleDescriptionPair("League15", "0-0-0"),
-                new TitleDescriptionPair("League16",  "0-0-0"),
-                new TitleDescriptionPair("League17",  "0-0-0"),
-                new TitleDescriptionPair("League3",  "0-0-0"),
-                new TitleDescriptionPair("League4",  "0-0-0"),
-                new TitleDescriptionPair("League5",  "0-0-0"),
-                new TitleDescriptionPair("League6",  "0-0-0"),
-                new TitleDescriptionPair("League7",  "0-0-0"),
-                new TitleDescriptionPair("League8",  "0-0-0"),
-                new TitleDescriptionPair("League9",  "0-0-0"),
-                new TitleDescriptionPair("League10", "0-0-0"),
-                new TitleDescriptionPair("League11", "0-0-0"),
-                new TitleDescriptionPair("League12", "0-0-0"),
-                new TitleDescriptionPair("League13", "0-0-0"),
-                new TitleDescriptionPair("League14", "0-0-0"),
-                new TitleDescriptionPair("League15", "0-0-0"),
-            };
+            List<TitleDescriptionPair> toRet = new List<TitleDescriptionPair>();
+            for (int i = 0; i < 30; i++)
+            {
+                toRet.Add(new TitleDescriptionPair("League_" + (i + 1).ToString(), "0-0-0"));
+            }
+            return toRet;
         }
     }
 }

@@ -4,7 +4,6 @@ namespace ThirstyJoe.RPSChampions
     using TMPro;
     using System.Collections.Generic;
     using UnityEngine.SceneManagement;
-    using UnityEngine.UIElements;
     using UnityEngine.UI;
 
     public class LeagueDashboard : MonoBehaviour
@@ -20,6 +19,12 @@ namespace ThirstyJoe.RPSChampions
         [SerializeField]
         private GameObject NoLeagueHistoryPanel;
         [SerializeField]
+        private GameObject LeagueToggle;
+        [SerializeField]
+        private GameObject JoinToggle;
+        [SerializeField]
+        private GameObject HistoryToggle;
+        [SerializeField]
         private GameObject LeagueListPanel;
         [SerializeField]
         private GameObject LeagueListContent;
@@ -34,7 +39,7 @@ namespace ThirstyJoe.RPSChampions
         #region UNITY 
         private void Start()
         {
-            ShowCurrentLeagues();
+            LeagueManager.GetCurrentLeagues(new LeagueManager.GetLeaguesCallBack(ShowCurrentLeagues));
             StartToggle.SendMessage("Select");
         }
 
@@ -44,15 +49,18 @@ namespace ThirstyJoe.RPSChampions
 
         public void OnLeaguesToggleOn()
         {
-            ShowCurrentLeagues();
+            if (LeagueToggle.GetComponent<Toggle>().isOn)
+                LeagueManager.GetCurrentLeagues(new LeagueManager.GetLeaguesCallBack(ShowCurrentLeagues));
         }
         public void OnJoinToggleOn()
         {
-            ShowOpenLeagues();
+            if (JoinToggle.GetComponent<Toggle>().isOn)
+                LeagueManager.GetOpenLeagues(new LeagueManager.GetLeaguesCallBack(ShowOpenLeagues));
         }
         public void OnHistoryToggleOn()
         {
-            ShowHistory();
+            if (HistoryToggle.GetComponent<Toggle>().isOn)
+                LeagueManager.GetLeagueHistory(new LeagueManager.GetLeaguesCallBack(ShowLeagueHistory));
         }
         public void OnMainMenuButtonPress()
         {
@@ -77,31 +85,28 @@ namespace ThirstyJoe.RPSChampions
 
         #region UI 
 
-        private void ShowCurrentLeagues()
+        private void ShowCurrentLeagues(List<TitleDescriptionPair> leagueList)
         {
-            TitleDescriptionPair[] leagueList = LeagueManager.GetCurrentLeagues();
-            if (leagueList.Length == 0)
+            if (leagueList.Count == 0)
                 HideAllPanelsExcept(NoLeaguesPanel);
             else
                 UpdateLeagueList(leagueList);
         }
-        private void ShowOpenLeagues()
+        private void ShowOpenLeagues(List<TitleDescriptionPair> leagueList)
         {
-            TitleDescriptionPair[] leagueList = LeagueManager.GetOpenLeagues();
-            if (leagueList.Length == 0)
+            if (leagueList.Count == 0)
                 HideAllPanelsExcept(NoLeaguesOpenPanel);
             else
                 UpdateLeagueList(leagueList);
         }
-        private void ShowHistory()
+        private void ShowLeagueHistory(List<TitleDescriptionPair> leagueList)
         {
-            TitleDescriptionPair[] leagueList = LeagueManager.GetLeagueHistory();
-            if (leagueList.Length == 0)
+            if (leagueList.Count == 0)
                 HideAllPanelsExcept(NoLeagueHistoryPanel);
             else
                 UpdateLeagueList(leagueList);
         }
-        private void UpdateLeagueList(TitleDescriptionPair[] leagueList)
+        private void UpdateLeagueList(List<TitleDescriptionPair> leagueList)
         {
             HideAllPanelsExcept(LeagueListPanel);
 
@@ -113,11 +118,11 @@ namespace ThirstyJoe.RPSChampions
             }
 
             // generate new list
-            foreach (TitleDescriptionPair player in leagueList)
+            foreach (TitleDescriptionPair league in leagueList)
             {
                 GameObject obj = Instantiate(PlayerButtonPrefab, LeagueListContent.transform);
                 var tdButton = obj.GetComponent<TitleDescriptionButton>();
-                tdButton.SetText(player);
+                tdButton.SetText(league);
                 tdButton.SetLoadSceneName("LeagueView");
             }
         }
