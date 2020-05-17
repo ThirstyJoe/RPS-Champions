@@ -1,5 +1,8 @@
 namespace ThirstyJoe.RPSChampions
 {
+    using PlayFab;
+    using PlayFab.ClientModels;
+    using UnityEngine;
     using PlayFab.Json;
 
     public static class RPSCommon
@@ -15,5 +18,9 @@ namespace ThirstyJoe.RPSChampions
             return (string)objValue;
         }
 
+        public static void OnPlayFabError(PlayFabError obj)
+        {
+            Debug.Log(obj.ErrorMessage);
+        }
     }
 }

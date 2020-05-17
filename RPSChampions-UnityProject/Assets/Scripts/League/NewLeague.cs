@@ -8,17 +8,26 @@ namespace ThirstyJoe.RPSChampions
     using PlayFab.Json;
     using UnityEngine.SceneManagement;
     using UnityEngine.UI;
-
-
-
+    using UnityEngine.EventSystems;
 
     public class NewLeague : MonoBehaviour
     {
+        // alert
         [SerializeField] private GameObject alertPanel;
         [SerializeField] private TextMeshProUGUI alertPanelText;
 
+
         // input fields
         [SerializeField] private TMP_InputField leagueNameInput;
+
+
+        // tracking previous selection, for when returning from this menu
+        GameObject prevUISelection;
+
+        private void Start()
+        {
+            prevUISelection = EventSystem.current.currentSelectedGameObject;
+        }
 
         public void OnAlertConfirmButtonPress()
         {
@@ -26,6 +35,7 @@ namespace ThirstyJoe.RPSChampions
         }
         public void OnBackButtonPress()
         {
+            EventSystem.current.SetSelectedGameObject(prevUISelection);
             SceneManager.UnloadSceneAsync("NewLeague");
         }
         public void OnCreateLeagueButtonPress()
@@ -52,6 +62,7 @@ namespace ThirstyJoe.RPSChampions
             OnSuccess =>
             {
                 Debug.Log("New League created");
+                EventSystem.current.SetSelectedGameObject(prevUISelection);
                 SceneManager.UnloadSceneAsync("NewLeague");
 
                 // message returned from cloud script

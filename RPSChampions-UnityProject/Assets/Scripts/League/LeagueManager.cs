@@ -103,13 +103,11 @@ namespace ThirstyJoe.RPSChampions
         public delegate void GetLeaguesCallBack(List<TitleDescriptionPair> leagues);
         public static void GetCurrentLeagues(GetLeaguesCallBack callback)
         {
-            //return FakePlayerList();
-
-            // get list of league keys from PlayerData
             List<string> userDataKeys = new List<string>() { "CurrentLeagues" };
             List<string> leagueKeys = new List<string>();
             List<TitleDescriptionPair> toRet = new List<TitleDescriptionPair>();
 
+            // get list of league keys from PlayerData
             PlayFabClientAPI.GetUserData(new GetUserDataRequest()
             {
                 Keys = userDataKeys
@@ -124,7 +122,6 @@ namespace ThirstyJoe.RPSChampions
                     var leagueKeysArray = leagueListJSON.Split('"').Where((item, index) => index % 2 != 0);
                     leagueKeys = new List<string>(leagueKeysArray);
                 }
-
 
                 // nested server calls, i know this is ugly!
                 PlayFabClientAPI.GetTitleData(new GetTitleDataRequest()
@@ -146,52 +143,85 @@ namespace ThirstyJoe.RPSChampions
                     }
                     callback(toRet);
                 },
-
-                errorCallback =>
-                {
-                    Debug.Log(errorCallback.ErrorMessage + "error attempting to start rematch.");
-                    callback(toRet);
-                }
+                RPSCommon.OnPlayFabError
                 );
-
             },
-            errorCallback =>
-            {
-                Debug.Log(errorCallback.ErrorMessage + "error attempting to start rematch.");
-                callback(toRet);
-            }
+            RPSCommon.OnPlayFabError
             );
         }
 
         public static void GetLeagueHistory(GetLeaguesCallBack callback)
         {
+            List<string> userDataKeys = new List<string>() { "FinishedLeagues" };
+            List<string> leagueKeys = new List<string>();
             List<TitleDescriptionPair> toRet = new List<TitleDescriptionPair>();
-            callback(toRet);
+
+            // get list of league keys from PlayerData
+            PlayFabClientAPI.GetUserData(new GetUserDataRequest()
+            {
+                Keys = userDataKeys
+            },
+            result =>
+            {
+                // validate this key before getting keys from JSON
+                if (result.Data.ContainsKey("FinishedLeagues"))
+                {
+                    // parse LeagueIds from JSON into a list of string 
+                    var leagueListJSON = result.Data["FinishedLeagues"].Value;
+                    var leagueKeysArray = leagueListJSON.Split('"').Where((item, index) => index % 2 != 0);
+                    leagueKeys = new List<string>(leagueKeysArray);
+                }
+
+                // nested PlayFab call to get tTitleData using keys returned from UserData
+                PlayFabClientAPI.GetTitleData(new GetTitleDataRequest()
+                {
+                    Keys = leagueKeys
+                },
+                titleResult =>
+                {
+                    foreach (var key in leagueKeys)
+                    {
+                        if (titleResult.Data.ContainsKey(key))
+                        {
+                            LeagueInfo leagueInfo = LeagueInfo.CreateFromJSON(titleResult.Data[key]);
+                            if (leagueInfo.Status == "Complete")
+                            {
+                                toRet.Add(new TitleDescriptionPair(leagueInfo.LeagueName, "Host: " + leagueInfo.HostName));
+                            }
+                        }
+                    }
+                    callback(toRet);
+                },
+                RPSCommon.OnPlayFabError
+                );
+            },
+            RPSCommon.OnPlayFabError
+            );
         }
 
         public static void GetOpenLeagues(GetLeaguesCallBack callback)
         {
+            List<string> leagueKeys = new List<string>();
             List<TitleDescriptionPair> toRet = new List<TitleDescriptionPair>();
 
-            //PlayFabClientAPI.GetTitleData(new GetTitleDataRequest(),
-            //result =>
-            //{
-            //    TitleDescriptionPair[] toRet = new TitleDescriptionPair[] { };
-            //    int index = 0;
-            //    foreach (var leagueJSON in result.Data)
-            //    {
-            //        LeagueInfo leagueInfo = LeagueInfo.CreateFromJSON(leagueJSON.Value);
-            //        if (leagueInfo.Status == "InProgress")
-            //            toRet[index++] = new TitleDescriptionPair(leagueInfo.LeagueName, "Host: " + leagueInfo.HostName);
-            //    }
-            //},
-            //errorCallback =>
-            //{
-            //    Debug.Log(errorCallback.ErrorMessage + "error attempting to start rematch.");
-            //}
-            //);
-
-            callback(toRet);
+            // nested PlayFab call to get tTitleData using keys returned from UserData
+            PlayFabClientAPI.GetTitleData(new GetTitleDataRequest()
+            { }, // don't provide keys in order to get all league entries
+            titleResult =>
+            {
+                foreach (var entry in titleResult.Data.Values)
+                {
+                    // TODO: if we add other kinds of data to title data, we need to check for prefix "League"
+                    LeagueInfo leagueInfo = LeagueInfo.CreateFromJSON(entry);
+                    if (leagueInfo.Status == "Open")
+                    {
+                        toRet.Add(new TitleDescriptionPair(leagueInfo.LeagueName, "Host: " + leagueInfo.HostName));
+                    }
+                }
+                callback(toRet);
+            },
+            RPSCommon.OnPlayFabError
+            );
         }
 
         private static List<TitleDescriptionPair> FakePlayerList()
