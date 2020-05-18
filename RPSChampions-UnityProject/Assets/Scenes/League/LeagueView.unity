@@ -674,12 +674,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 61fb9bfce69708f4699d2721b886776a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  TitleText: {fileID: 497691627}
   StandingsListPanel: {fileID: 127053401}
   StandingsListContent: {fileID: 1431601545}
   PlayerListPanel: {fileID: 2053891161}
-  PlayerListContent: {fileID: 1409076316}
+  PlayerListContent: {fileID: 1848830807}
   MatchListPanel: {fileID: 1393100756}
   MatchListContent: {fileID: 157272763}
+  PlayerButtonPrefab: {fileID: 7387927946017910649, guid: 7e04ba8880b29a745a3095d18dff0015,
+    type: 3}
 --- !u!4 &350497817
 Transform:
   m_ObjectHideFlags: 0
@@ -1044,7 +1047,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: League Name
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: a72907b2c4bb54043acb53feedf8ce98, type: 2}
   m_sharedMaterial: {fileID: 3210437276951574258, guid: a72907b2c4bb54043acb53feedf8ce98,
@@ -1114,13 +1117,13 @@ MonoBehaviour:
   m_margin: {x: 0, y: 0, z: 0, w: -10}
   m_textInfo:
     textComponent: {fileID: 497691627}
-    characterCount: 11
+    characterCount: 0
     spriteCount: 0
-    spaceCount: 1
-    wordCount: 2
+    spaceCount: 0
+    wordCount: 0
     linkCount: 0
-    lineCount: 1
-    pageCount: 1
+    lineCount: 0
+    pageCount: 0
     materialCount: 1
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
@@ -2635,7 +2638,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2053891162
 RectTransform:
   m_ObjectHideFlags: 0

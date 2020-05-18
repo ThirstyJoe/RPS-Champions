@@ -1,14 +1,16 @@
 namespace ThirstyJoe.RPSChampions
 {
-    public class TitleDescriptionPair
+    public class TitleDescriptionButtonData
     {
         public string Title;
         public string Description;
+        public string LinkID;
 
-        public TitleDescriptionPair(string title, string description = "")
+        public TitleDescriptionButtonData(string linkID, string title, string description = "")
         {
             Title = title;
             Description = description;
+            LinkID = linkID;
         }
     }
 }

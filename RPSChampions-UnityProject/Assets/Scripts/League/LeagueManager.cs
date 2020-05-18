@@ -35,9 +35,8 @@ namespace ThirstyJoe.RPSChampions
     {
         public string Status;
         public string LeagueSettingsJSON;
-        public string LeagueName;
+        public string Name;
         public string HostName;
-        public string HostId;
 
         public string ToJSON()
         {
@@ -52,11 +51,27 @@ namespace ThirstyJoe.RPSChampions
     public class LeaguePlayer
     {
         public string PlayerName;
+        public string PlayFabId;
         public int Wins;
         public int Losses;
         public int Draws;
         public int Rating;
-        public ScheduledMatch[] Schedule;
+
+        public LeaguePlayer(string name, string playfabId, int rating)
+        {
+            PlayerName = name;
+            PlayFabId = playfabId;
+            Rating = rating;
+        }
+
+        public string ToJSON()
+        {
+            return JsonUtility.ToJson(this);
+        }
+        public static LeaguePlayer CreateFromJSON(string jsonString)
+        {
+            return JsonUtility.FromJson<LeaguePlayer>(jsonString);
+        }
     }
 
     public class ScheduledMatch
@@ -64,28 +79,43 @@ namespace ThirstyJoe.RPSChampions
         public int DateTime;
         public string OpponentID;
         public string OpponentName;
+
+        public string ToJSON()
+        {
+            return JsonUtility.ToJson(this);
+        }
+        public static ScheduledMatch CreateFromJSON(string jsonString)
+        {
+            return JsonUtility.FromJson<ScheduledMatch>(jsonString);
+        }
     }
 
 
     public class League
     {
-        public LeagueSettings LeagueSettings;
-        public string LeagueName = "Unnamed";
-        public string LeagueHost = "NoHost";
-        public LeaguePlayer[] LeaguePlayerList;
+        public string Status;
+        public LeagueSettings Settings;
+        public string Name = "Unnamed";
+        public string Host = "NoHost";
+        public List<LeaguePlayer> PlayerList;
         public string Key = "";
 
-        public League(string name, string host, LeagueSettings settings)
+        public League(string status, string name, string host,
+                        LeagueSettings settings, string key, List<LeaguePlayer> playerList)
         {
-            LeagueName = name;
-            LeagueSettings = settings;
-            LeagueHost = host;
+            Status = status;
+            Name = name;
+            Settings = settings;
+            Host = host;
+            Key = key;
+            PlayerList = playerList;
         }
     }
 
     public class LeagueManager : Singleton<PlayerManager>
     {
         public static LeagueSettings leagueSettings;
+        private static string leagueViewKey;
 
         public static void NewCustomLeague()
         {
@@ -100,12 +130,12 @@ namespace ThirstyJoe.RPSChampions
             leagueSettings = new LeagueSettings(leagueType);
         }
 
-        public delegate void GetLeaguesCallBack(List<TitleDescriptionPair> leagues);
+        public delegate void GetLeaguesCallBack(List<TitleDescriptionButtonData> leagues);
         public static void GetCurrentLeagues(GetLeaguesCallBack callback)
         {
             List<string> userDataKeys = new List<string>() { "CurrentLeagues" };
             List<string> leagueKeys = new List<string>();
-            List<TitleDescriptionPair> toRet = new List<TitleDescriptionPair>();
+            List<TitleDescriptionButtonData> toRet = new List<TitleDescriptionButtonData>();
 
             // get list of league keys from PlayerData
             PlayFabClientAPI.GetUserData(new GetUserDataRequest()
@@ -137,7 +167,10 @@ namespace ThirstyJoe.RPSChampions
                             LeagueInfo leagueInfo = LeagueInfo.CreateFromJSON(titleResult.Data[key]);
                             if (leagueInfo.Status != "Complete")
                             {
-                                toRet.Add(new TitleDescriptionPair(leagueInfo.LeagueName, "Host: " + leagueInfo.HostName));
+                                toRet.Add(new TitleDescriptionButtonData(
+                                    key,
+                                    leagueInfo.Name,
+                                    "Host: " + leagueInfo.HostName));
                             }
                         }
                     }
@@ -154,7 +187,7 @@ namespace ThirstyJoe.RPSChampions
         {
             List<string> userDataKeys = new List<string>() { "FinishedLeagues" };
             List<string> leagueKeys = new List<string>();
-            List<TitleDescriptionPair> toRet = new List<TitleDescriptionPair>();
+            List<TitleDescriptionButtonData> toRet = new List<TitleDescriptionButtonData>();
 
             // get list of league keys from PlayerData
             PlayFabClientAPI.GetUserData(new GetUserDataRequest()
@@ -164,10 +197,10 @@ namespace ThirstyJoe.RPSChampions
             result =>
             {
                 // validate this key before getting keys from JSON
-                if (result.Data.ContainsKey("FinishedLeagues"))
+                if (result.Data.ContainsKey("CurrentLeagues"))
                 {
                     // parse LeagueIds from JSON into a list of string 
-                    var leagueListJSON = result.Data["FinishedLeagues"].Value;
+                    var leagueListJSON = result.Data["CurrentLeagues"].Value;
                     var leagueKeysArray = leagueListJSON.Split('"').Where((item, index) => index % 2 != 0);
                     leagueKeys = new List<string>(leagueKeysArray);
                 }
@@ -186,7 +219,10 @@ namespace ThirstyJoe.RPSChampions
                             LeagueInfo leagueInfo = LeagueInfo.CreateFromJSON(titleResult.Data[key]);
                             if (leagueInfo.Status == "Complete")
                             {
-                                toRet.Add(new TitleDescriptionPair(leagueInfo.LeagueName, "Host: " + leagueInfo.HostName));
+                                toRet.Add(new TitleDescriptionButtonData(
+                                   key,
+                                   leagueInfo.Name,
+                                   "Host: " + leagueInfo.HostName));
                             }
                         }
                     }
@@ -201,37 +237,65 @@ namespace ThirstyJoe.RPSChampions
 
         public static void GetOpenLeagues(GetLeaguesCallBack callback)
         {
+            List<string> userDataKeys = new List<string>() { "CurrentLeagues" };
             List<string> leagueKeys = new List<string>();
-            List<TitleDescriptionPair> toRet = new List<TitleDescriptionPair>();
+            List<TitleDescriptionButtonData> toRet = new List<TitleDescriptionButtonData>();
 
-            // nested PlayFab call to get tTitleData using keys returned from UserData
-            PlayFabClientAPI.GetTitleData(new GetTitleDataRequest()
-            { }, // don't provide keys in order to get all league entries
-            titleResult =>
+            // get list of league keys from PlayerData
+            PlayFabClientAPI.GetUserData(new GetUserDataRequest()
             {
-                foreach (var entry in titleResult.Data.Values)
+                Keys = userDataKeys
+            },
+            result =>
+            {
+                // validate this key before getting keys from JSON
+                if (result.Data.ContainsKey("CurrentLeagues"))
                 {
-                    // TODO: if we add other kinds of data to title data, we need to check for prefix "League"
-                    LeagueInfo leagueInfo = LeagueInfo.CreateFromJSON(entry);
-                    if (leagueInfo.Status == "Open")
-                    {
-                        toRet.Add(new TitleDescriptionPair(leagueInfo.LeagueName, "Host: " + leagueInfo.HostName));
-                    }
+                    // parse LeagueIds from JSON into a list of string 
+                    var leagueListJSON = result.Data["CurrentLeagues"].Value;
+                    var leagueKeysArray = leagueListJSON.Split('"').Where((item, index) => index % 2 != 0);
+                    leagueKeys = new List<string>(leagueKeysArray);
                 }
-                callback(toRet);
+
+                // nested PlayFab call to get tTitleData using keys returned from UserData
+                PlayFabClientAPI.GetTitleData(new GetTitleDataRequest()
+                { }, // get all data from Title
+                titleResult =>
+                {
+                    foreach (var entry in titleResult.Data)
+                    {
+                        // TODO: if we add other kinds of data to title data, we need to check for prefix "League"
+                        LeagueInfo leagueInfo = LeagueInfo.CreateFromJSON(entry.Value);
+                        if (leagueInfo.Status == "Open" && !leagueKeys.Contains(entry.Key))
+                        {
+                            toRet.Add(new TitleDescriptionButtonData(
+                                entry.Key,
+                                leagueInfo.Name,
+                                "Host: " + leagueInfo.HostName));
+                        }
+                    }
+                    callback(toRet);
+                },
+                RPSCommon.OnPlayFabError
+                );
             },
             RPSCommon.OnPlayFabError
             );
         }
 
-        private static List<TitleDescriptionPair> FakePlayerList()
+        private static List<TitleDescriptionButtonData> FakePlayerList()
         {
-            List<TitleDescriptionPair> toRet = new List<TitleDescriptionPair>();
+            List<TitleDescriptionButtonData> toRet = new List<TitleDescriptionButtonData>();
             for (int i = 0; i < 30; i++)
             {
-                toRet.Add(new TitleDescriptionPair("League_" + (i + 1).ToString(), "0-0-0"));
+                toRet.Add(new TitleDescriptionButtonData(null, "League_" + (i + 1).ToString(), "TEST LEAGUE"));
             }
             return toRet;
+        }
+
+        public static string GetCurrentLeagueViewKey()
+        {
+            return leagueViewKey;
         }
     }
 }
