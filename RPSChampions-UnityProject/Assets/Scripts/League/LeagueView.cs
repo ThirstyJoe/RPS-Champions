@@ -70,7 +70,6 @@ namespace ThirstyJoe.RPSChampions
                     List<LeaguePlayer> playerList = new List<LeaguePlayer>();
                     foreach (string key in result.Data.Keys)
                     {
-                        Debug.Log(key);
                         if (key.StartsWith("Player_"))
                         {
                             string playerDataJSON = result.Data[key].Value;
@@ -120,6 +119,29 @@ namespace ThirstyJoe.RPSChampions
             MatchListPanel.SetActive(true);
             PlayerListPanel.SetActive(false);
             StandingsListPanel.SetActive(true);
+
+            // generate player list
+            foreach (LeaguePlayer player in league.PlayerList)
+            {
+                GameObject obj = Instantiate(PlayerButtonPrefab, StandingsListContent.transform);
+                var tdButton = obj.GetComponent<TitleDescriptionButton>();
+
+                var buttonData = new TitleDescriptionButtonData(
+                    player.PlayerName, // TODO: PlayFabId might be better to use here for LinkID
+                    player.PlayerName,
+                    player.Wins.ToString() + " - " + player.Losses.ToString() + " - " + player.Draws.ToString()
+                );
+                tdButton.SetupButton(buttonData, "PlayerProfile");
+            }
+
+            // generate match list
+            foreach (ScheduledMatch match in matchList)
+            {
+                GameObject obj = Instantiate(PlayerButtonPrefab, MatchListContent.transform);
+                var tdButton = obj.GetComponent<TitleDescriptionButton>();
+                var buttonData = match.GetButtonData();
+                tdButton.SetupButton(buttonData, "PlayerProfile");
+            }
         }
 
         private void LeagueViewOpenUI()
@@ -140,7 +162,7 @@ namespace ThirstyJoe.RPSChampions
                     player.PlayerName,
                     "Rating: " + player.Rating.ToString()
                 );
-                tdButton.SetupButton(buttonData, "LeagueView");
+                tdButton.SetupButton(buttonData, "PlayerProfile");
             }
         }
 
@@ -151,7 +173,8 @@ namespace ThirstyJoe.RPSChampions
         }
         public void OnStartSeasonButtonPress()
         {
-            // TODO: send message to server that season is starting NOW NOW NOW, remove from OPEN list
+            league.StartSeason();
+            LeagueViewClosedUI();
         }
 
 

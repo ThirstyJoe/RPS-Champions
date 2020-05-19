@@ -76,9 +76,18 @@ namespace ThirstyJoe.RPSChampions
 
     public class ScheduledMatch
     {
+        public string LeagueID;
         public int DateTime;
-        public string OpponentID;
-        public string OpponentName;
+        public string OpponentJSON; // JSON for easier reading and writing to and from Server
+        public string MatchID;
+        public string Result = "";
+        public string MyWeapon;
+        public string OpponentWeapon;
+
+        public ScheduledMatch()
+        {
+            Opponent = LeaguePlayer.CreateFromJSON(OpponentJSON);
+        }
 
         public string ToJSON()
         {
@@ -87,6 +96,28 @@ namespace ThirstyJoe.RPSChampions
         public static ScheduledMatch CreateFromJSON(string jsonString)
         {
             return JsonUtility.FromJson<ScheduledMatch>(jsonString);
+        }
+
+        public TitleDescriptionButtonData GetButtonData()
+        {
+            string matchDescription;
+            if (Result == "None") // no winner yet
+            {
+                // description is start time of match
+                var dateTime = new System.DateTime(DateTime);
+                matchDescription = dateTime.ToShortDateString() + " " + dateTime.ToShortTimeString();
+            }
+            else
+            {
+                matchDescription = Result;
+            }
+
+            LeaguePlayer Opponent = LeaguePlayer.CreateFromJSON(OpponentJSON);
+            return new TitleDescriptionButtonData(
+                MatchID, // MatchID = LeagueID_OpponentName_MatchTime
+                "vs " + Opponent.PlayerName,
+                matchDescription
+            );
         }
     }
 
@@ -109,6 +140,52 @@ namespace ThirstyJoe.RPSChampions
             Host = host;
             Key = key;
             PlayerList = playerList;
+        }
+        public void StartSeason()
+        {
+            Status = "In Progress";
+            PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
+            {
+                FunctionName = "StartLeagueSeason",
+                FunctionParameter = new
+                {
+                    status = Status,
+                    leagueId = Key,
+                },
+                GeneratePlayStreamEvent = true,
+            },
+           OnSuccess =>
+           {
+               Debug.Log("League Status updated: " + Status);
+           },
+           RPSCommon.OnPlayFabError
+           );
+        }
+
+        public void EndSeason()
+        {
+            Status = "Complete";
+            UpdateStatusOnServer();
+        }
+
+        private void UpdateStatusOnServer()
+        {
+            PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
+            {
+                FunctionName = "UpdateLeagueStatus",
+                FunctionParameter = new
+                {
+                    status = Status,
+                    leagueId = Key,
+                },
+                GeneratePlayStreamEvent = true,
+            },
+            OnSuccess =>
+            {
+                Debug.Log("League Status updated: " + Status);
+            },
+            RPSCommon.OnPlayFabError
+            );
         }
     }
 
@@ -170,7 +247,7 @@ namespace ThirstyJoe.RPSChampions
                                 toRet.Add(new TitleDescriptionButtonData(
                                     key,
                                     leagueInfo.Name,
-                                    "Host: " + leagueInfo.HostName));
+                                    leagueInfo.Status));
                             }
                         }
                     }
@@ -222,7 +299,7 @@ namespace ThirstyJoe.RPSChampions
                                 toRet.Add(new TitleDescriptionButtonData(
                                    key,
                                    leagueInfo.Name,
-                                   "Host: " + leagueInfo.HostName));
+                                   leagueInfo.Status));
                             }
                         }
                     }
@@ -271,7 +348,7 @@ namespace ThirstyJoe.RPSChampions
                             toRet.Add(new TitleDescriptionButtonData(
                                 entry.Key,
                                 leagueInfo.Name,
-                                "Host: " + leagueInfo.HostName));
+                                leagueInfo.Status));
                         }
                     }
                     callback(toRet);
