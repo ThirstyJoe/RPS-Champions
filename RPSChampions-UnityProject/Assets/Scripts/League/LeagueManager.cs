@@ -5,6 +5,7 @@ namespace ThirstyJoe.RPSChampions
     using PlayFab;
     using PlayFab.ClientModels;
     using System.Linq;
+    using PlayFab.Json;
 
     public enum LeagueType
     {
@@ -76,6 +77,7 @@ namespace ThirstyJoe.RPSChampions
 
     public class ScheduledMatch
     {
+        public int Round;
         public string LeagueID;
         public int DateTime;
         public string OpponentJSON; // JSON for easier reading and writing to and from Server
@@ -83,11 +85,6 @@ namespace ThirstyJoe.RPSChampions
         public string Result = "";
         public string MyWeapon;
         public string OpponentWeapon;
-
-        public ScheduledMatch()
-        {
-            Opponent = LeaguePlayer.CreateFromJSON(OpponentJSON);
-        }
 
         public string ToJSON()
         {
@@ -154,9 +151,23 @@ namespace ThirstyJoe.RPSChampions
                 },
                 GeneratePlayStreamEvent = true,
             },
-           OnSuccess =>
+           result =>
            {
-               Debug.Log("League Status updated: " + Status);
+               // get Json object representing the host's schedule out of FunctionResult
+               JsonObject jsonResult = (JsonObject)result.FunctionResult;
+
+               // check if data exists
+               if (jsonResult == null)
+               {
+                   Debug.Log("schedule generation failed...");
+                   return;
+               }
+
+               // data successfully received 
+               // interpret data
+               string scheduleJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "schedule");
+               Debug.Log("League schedule: " + scheduleJSON);
+               // List<ScheduledMatch> schedule = scheduleJSON.CreateFromJSON();
            },
            RPSCommon.OnPlayFabError
            );
