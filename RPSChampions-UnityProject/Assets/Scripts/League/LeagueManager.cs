@@ -32,6 +32,7 @@ namespace ThirstyJoe.RPSChampions
     }
 
     // server saves this data in TitleData so it can be easily looked up when populating league lists
+    [System.Serializable]
     public class LeagueInfo
     {
         public string Status;
@@ -49,6 +50,7 @@ namespace ThirstyJoe.RPSChampions
         }
     }
 
+    [System.Serializable]
     public class LeaguePlayer
     {
         public string PlayerName;
@@ -75,10 +77,9 @@ namespace ThirstyJoe.RPSChampions
         }
     }
 
+    [System.Serializable]
     public class ScheduledMatch
     {
-        public int Round;
-        public string LeagueID;
         public int DateTime;
         public string OpponentJSON; // JSON for easier reading and writing to and from Server
         public string MatchID;
@@ -119,6 +120,28 @@ namespace ThirstyJoe.RPSChampions
     }
 
 
+    [System.Serializable]
+    public class MatchBrief
+    {
+        public int DateTime;
+        public string Opponent;
+
+
+        public string GetLinkID(League league)
+        {
+            return "Match_" + league.Key + Opponent + DateTime.ToString();
+        }
+        public string ToJSON()
+        {
+            return JsonUtility.ToJson(this);
+        }
+        public static MatchBrief CreateFromJSON(string jsonString)
+        {
+            return JsonUtility.FromJson<MatchBrief>(jsonString);
+        }
+    }
+
+
     public class League
     {
         public string Status;
@@ -127,6 +150,7 @@ namespace ThirstyJoe.RPSChampions
         public string Host = "NoHost";
         public List<LeaguePlayer> PlayerList;
         public string Key = "";
+        public MatchBrief[] Schedule;
 
         public League(string status, string name, string host,
                         LeagueSettings settings, string key, List<LeaguePlayer> playerList)
@@ -138,7 +162,8 @@ namespace ThirstyJoe.RPSChampions
             Key = key;
             PlayerList = playerList;
         }
-        public void StartSeason()
+        public delegate void StartSeasonCallback();
+        public void StartSeason(StartSeasonCallback callback)
         {
             Status = "In Progress";
             PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
@@ -167,7 +192,8 @@ namespace ThirstyJoe.RPSChampions
                // interpret data
                string scheduleJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "schedule");
                Debug.Log("League schedule: " + scheduleJSON);
-               // List<ScheduledMatch> schedule = scheduleJSON.CreateFromJSON();
+               Schedule = JsonHelper.getJsonArray<MatchBrief>(scheduleJSON);
+               callback();
            },
            RPSCommon.OnPlayFabError
            );

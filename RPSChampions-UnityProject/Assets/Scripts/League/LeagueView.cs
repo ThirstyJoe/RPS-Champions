@@ -8,6 +8,8 @@ namespace ThirstyJoe.RPSChampions
     using PlayFab.ClientModels;
     using System.Collections.Generic;
     using System.Linq;
+    using System;
+    using System.Globalization;
 
     public class LeagueView : MonoBehaviour
     {
@@ -26,7 +28,6 @@ namespace ThirstyJoe.RPSChampions
 
         // All the data for the league
         private League league;
-        private List<ScheduledMatch> matchList = new List<ScheduledMatch>();
 
         private void Start()
         {
@@ -78,19 +79,6 @@ namespace ThirstyJoe.RPSChampions
                         }
                     }
 
-                    // get our schedule
-                    string scheduleKey = "PlayerSchedule_" + PlayerPrefs.GetString("playFabId");
-                    if (result.Data.ContainsKey(scheduleKey))
-                    {
-                        string scheduleJSON = result.Data[scheduleKey].Value;
-                        var matchJSONArray = scheduleJSON.Split('"').Where((item, index) => index % 2 != 0);
-                        foreach (string matchJSON in matchJSONArray)
-                        {
-                            ScheduledMatch match = ScheduledMatch.CreateFromJSON(matchJSON);
-                            matchList.Add(match);
-                        }
-                    }
-
                     // create instance of league
                     league = new League(
                         result.Data["Status"].Value,
@@ -100,6 +88,15 @@ namespace ThirstyJoe.RPSChampions
                         leagueKey,
                         playerList
                     );
+
+                    // get our schedule
+                    string scheduleKey = "PlayerSchedule_" + PlayerPrefs.GetString("playFabId");
+                    if (result.Data.ContainsKey(scheduleKey))
+                    {
+                        string scheduleJSON = result.Data[scheduleKey].Value;
+                        league.Schedule = JsonHelper.getJsonArray<MatchBrief>(scheduleJSON);
+                        Debug.Log(league.Schedule);
+                    }
 
                     // determine type of UI we need to set up, OPEN league or CLOSED
                     // Open means it is still recruiting, otherwise it has started or completed
@@ -134,14 +131,7 @@ namespace ThirstyJoe.RPSChampions
                 tdButton.SetupButton(buttonData, "PlayerProfile");
             }
 
-            // generate match list
-            foreach (ScheduledMatch match in matchList)
-            {
-                GameObject obj = Instantiate(PlayerButtonPrefab, MatchListContent.transform);
-                var tdButton = obj.GetComponent<TitleDescriptionButton>();
-                var buttonData = match.GetButtonData();
-                tdButton.SetupButton(buttonData, "PlayerProfile");
-            }
+            UpdateMatchList();
         }
 
         private void LeagueViewOpenUI()
@@ -173,10 +163,34 @@ namespace ThirstyJoe.RPSChampions
         }
         public void OnStartSeasonButtonPress()
         {
-            league.StartSeason();
+            league.StartSeason(UpdateMatchList);
             LeagueViewClosedUI();
         }
 
+        public void UpdateMatchList()
+        {
+            CultureInfo culture = new CultureInfo("en-US");
+            // generate match list
+            if (league.Schedule != null)
+            {
+                foreach (MatchBrief match in league.Schedule)
+                {
+                    GameObject obj = Instantiate(PlayerButtonPrefab, MatchListContent.transform);
+                    var tdButton = obj.GetComponent<TitleDescriptionButton>();
+                    Debug.Log(match.Opponent);
+                    string formattedDate =
+                        RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("m", culture) +
+                        " " +
+                        RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("t", culture);
+                    var buttonData = new TitleDescriptionButtonData(
+                        match.GetLinkID(league),
+                        match.Opponent,
+                        formattedDate
+                    );
+                    tdButton.SetupButton(buttonData, "MatchOverview");
+                }
+            }
+        }
 
     }
 }
