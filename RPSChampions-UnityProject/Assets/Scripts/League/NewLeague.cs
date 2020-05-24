@@ -62,14 +62,27 @@ namespace ThirstyJoe.RPSChampions
                 },
                 GeneratePlayStreamEvent = true,
             },
-            OnSuccess =>
+            result =>
             {
-                Debug.Log("New League created");
-                EventSystem.current.SetSelectedGameObject(prevUISelection);
-                SceneManager.UnloadSceneAsync("NewLeague");
+                // get Json object representing the Game State out of FunctionResult
+                JsonObject jsonResult = (JsonObject)result.FunctionResult;
 
-                // message returned from cloud script
-                JsonObject jsonResult = (JsonObject)OnSuccess.FunctionResult;
+                // check if data exists
+                if (jsonResult == null)
+                {
+                    Debug.Log("server failed to return data");
+                }
+                else
+                {
+                    Debug.Log("New League created");
+
+                    TitleDescriptionButtonLinkID.LastSavedLinkID = RPSCommon.InterpretCloudScriptData(jsonResult, "leagueKey");
+
+                    EventSystem.current.SetSelectedGameObject(prevUISelection);
+
+                    SceneManager.UnloadSceneAsync("NewLeague");
+                    SceneManager.LoadScene("LeagueView", LoadSceneMode.Additive);
+                }
             },
             errorCallback =>
             {

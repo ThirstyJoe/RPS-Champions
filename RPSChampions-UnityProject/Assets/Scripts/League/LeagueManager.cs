@@ -129,7 +129,7 @@ namespace ThirstyJoe.RPSChampions
 
         public string GetLinkID(League league)
         {
-            return "Match_" + league.Key + Opponent + DateTime.ToString();
+            return "Match_" + league.Key + "_" + DateTime.ToString();
         }
         public string ToJSON()
         {

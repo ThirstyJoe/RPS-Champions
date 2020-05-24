@@ -177,11 +177,12 @@ namespace ThirstyJoe.RPSChampions
                 {
                     GameObject obj = Instantiate(PlayerButtonPrefab, MatchListContent.transform);
                     var tdButton = obj.GetComponent<TitleDescriptionButton>();
-                    Debug.Log(match.Opponent);
+
                     string formattedDate =
                         RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("m", culture) +
                         " " +
                         RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("t", culture);
+
                     var buttonData = new TitleDescriptionButtonData(
                         match.GetLinkID(league),
                         match.Opponent,
