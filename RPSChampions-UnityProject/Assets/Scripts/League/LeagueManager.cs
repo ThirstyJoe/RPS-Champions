@@ -6,6 +6,7 @@ namespace ThirstyJoe.RPSChampions
     using PlayFab.ClientModels;
     using System.Linq;
     using PlayFab.Json;
+    using System;
 
     public enum LeagueType
     {
@@ -125,12 +126,17 @@ namespace ThirstyJoe.RPSChampions
     {
         public int DateTime;
         public string Opponent;
+        public string OpponentId;
 
-
-        public string GetLinkID(League league)
+        // constructor using @ seperated string instead of JSON to meet server 1000 byte requirement
+        public MatchBrief(string specialString)
         {
-            return "Match_" + league.Key + "_" + DateTime.ToString();
+            var splitString = specialString.Split('@');
+            DateTime = Int32.Parse(splitString[0]);
+            Opponent = splitString[1];
+            OpponentId = splitString[2];
         }
+
         public string ToJSON()
         {
             return JsonUtility.ToJson(this);
@@ -150,7 +156,7 @@ namespace ThirstyJoe.RPSChampions
         public string Host = "NoHost";
         public List<LeaguePlayer> PlayerList;
         public string Key = "";
-        public MatchBrief[] Schedule;
+        public List<MatchBrief> Schedule = new List<MatchBrief>();
 
         public League(string status, string name, string host,
                         LeagueSettings settings, string key, List<LeaguePlayer> playerList)
@@ -192,7 +198,10 @@ namespace ThirstyJoe.RPSChampions
                // interpret data
                string scheduleJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "schedule");
                Debug.Log("League schedule: " + scheduleJSON);
-               Schedule = JsonHelper.getJsonArray<MatchBrief>(scheduleJSON);
+               var matchDataArray = scheduleJSON.Split('"').Where((item, index) => index % 2 != 0);
+               foreach (string matchString in matchDataArray)
+                   Schedule.Add(new MatchBrief(matchString));
+
                callback();
            },
            RPSCommon.OnPlayFabError

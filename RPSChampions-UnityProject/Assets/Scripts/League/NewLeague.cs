@@ -76,7 +76,7 @@ namespace ThirstyJoe.RPSChampions
                 {
                     Debug.Log("New League created");
 
-                    TitleDescriptionButtonLinkID.LastSavedLinkID = RPSCommon.InterpretCloudScriptData(jsonResult, "leagueKey");
+                    TitleDescriptionButtonLinkData.LinkID = RPSCommon.InterpretCloudScriptData(jsonResult, "leagueKey");
 
                     EventSystem.current.SetSelectedGameObject(prevUISelection);
 

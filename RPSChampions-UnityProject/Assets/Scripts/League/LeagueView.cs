@@ -37,7 +37,7 @@ namespace ThirstyJoe.RPSChampions
         private void GetLeagueDataFromServer()
         {
             // id saved by this butto
-            string leagueKey = TitleDescriptionButtonLinkID.LastSavedLinkID;
+            string leagueKey = TitleDescriptionButtonLinkData.LinkID;
             // keys that must exist for valid league
             List<string> validLeagueKeys = new List<string>()
             {
@@ -94,8 +94,9 @@ namespace ThirstyJoe.RPSChampions
                     if (result.Data.ContainsKey(scheduleKey))
                     {
                         string scheduleJSON = result.Data[scheduleKey].Value;
-                        league.Schedule = JsonHelper.getJsonArray<MatchBrief>(scheduleJSON);
-                        Debug.Log(league.Schedule);
+                        var matchDataArray = scheduleJSON.Split('"').Where((item, index) => index % 2 != 0);
+                        foreach (string matchString in matchDataArray)
+                            league.Schedule.Add(new MatchBrief(matchString));
                     }
 
                     // determine type of UI we need to set up, OPEN league or CLOSED
@@ -118,6 +119,7 @@ namespace ThirstyJoe.RPSChampions
             StandingsListPanel.SetActive(true);
 
             // generate player list
+            int matchIndex = 0;
             foreach (LeaguePlayer player in league.PlayerList)
             {
                 GameObject obj = Instantiate(PlayerButtonPrefab, StandingsListContent.transform);
@@ -173,6 +175,7 @@ namespace ThirstyJoe.RPSChampions
             // generate match list
             if (league.Schedule != null)
             {
+                int matchIndex = 0;
                 foreach (MatchBrief match in league.Schedule)
                 {
                     GameObject obj = Instantiate(PlayerButtonPrefab, MatchListContent.transform);
@@ -184,11 +187,11 @@ namespace ThirstyJoe.RPSChampions
                         RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("t", culture);
 
                     var buttonData = new TitleDescriptionButtonData(
-                        match.GetLinkID(league),
+                        league.Key,
                         match.Opponent,
                         formattedDate
                     );
-                    tdButton.SetupButton(buttonData, "MatchOverview");
+                    tdButton.SetupButton(buttonData, "MatchOverview", matchIndex++);
                 }
             }
         }
