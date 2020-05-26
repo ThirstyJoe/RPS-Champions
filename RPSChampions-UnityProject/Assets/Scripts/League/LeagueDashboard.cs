@@ -20,7 +20,6 @@ namespace ThirstyJoe.RPSChampions
         [SerializeField] private GameObject LeagueListPanel;
         [SerializeField] private GameObject LeagueListContent;
         [SerializeField] private GameObject PlayerButtonPrefab;
-        [SerializeField] private float PlayerButtonSpacing = 55.0F;
 
 
         #endregion
@@ -79,23 +78,23 @@ namespace ThirstyJoe.RPSChampions
             if (leagueList.Count == 0)
                 HideAllPanelsExcept(NoLeaguesPanel);
             else
-                UpdateLeagueList(leagueList);
+                UpdateLeagueList(leagueList, "Current");
         }
         private void ShowOpenLeagues(List<TitleDescriptionButtonData> leagueList)
         {
             if (leagueList.Count == 0)
                 HideAllPanelsExcept(NoLeaguesOpenPanel);
             else
-                UpdateLeagueList(leagueList);
+                UpdateLeagueList(leagueList, "Open");
         }
         private void ShowLeagueHistory(List<TitleDescriptionButtonData> leagueList)
         {
             if (leagueList.Count == 0)
                 HideAllPanelsExcept(NoLeagueHistoryPanel);
             else
-                UpdateLeagueList(leagueList);
+                UpdateLeagueList(leagueList, "History");
         }
-        private void UpdateLeagueList(List<TitleDescriptionButtonData> leagueList)
+        private void UpdateLeagueList(List<TitleDescriptionButtonData> leagueList, string label)
         {
             HideAllPanelsExcept(LeagueListPanel);
 
@@ -110,7 +109,7 @@ namespace ThirstyJoe.RPSChampions
             {
                 GameObject obj = Instantiate(PlayerButtonPrefab, LeagueListContent.transform);
                 var tdButton = obj.GetComponent<TitleDescriptionButton>();
-                tdButton.SetupButton(league, "LeagueView");
+                tdButton.SetupButton(league, "LeagueView", label);
             }
         }
 

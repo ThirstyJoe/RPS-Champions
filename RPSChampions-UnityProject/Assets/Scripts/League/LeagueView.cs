@@ -10,6 +10,7 @@ namespace ThirstyJoe.RPSChampions
     using System.Linq;
     using System;
     using System.Globalization;
+    using PlayFab.Json;
 
     public class LeagueView : MonoBehaviour
     {
@@ -31,13 +32,54 @@ namespace ThirstyJoe.RPSChampions
 
         private void Start()
         {
-            GetLeagueDataFromServer();
+            if (TitleDescriptionButtonLinkData.Label == "Open")
+                JoinLeague();
+            else
+                GetLeagueDataFromServer();
+        }
+
+        private void JoinLeague()
+        {
+            string leagueKey = TitleDescriptionButtonLinkData.LinkID;
+            LeaguePlayerStats leaguePlayerData = new LeaguePlayerStats(
+                PlayerManager.PlayerName,
+                PlayerPrefs.GetString("playFabId"));
+
+            PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
+            {
+                FunctionName = "JoinLeague",
+                FunctionParameter = new
+                {
+                    playerData = leaguePlayerData.ToJSON(),
+                    leagueId = leagueKey,
+                },
+                GeneratePlayStreamEvent = true,
+            },
+            result =>
+            {
+                // get Json object representing the Game State out of FunctionResult
+                JsonObject jsonResult = (JsonObject)result.FunctionResult;
+
+                // check if data exists
+                if (jsonResult == null)
+                {
+                    Debug.Log("server failed to return data");
+                }
+                else
+                {
+                    Debug.Log("Joined League");
+                    GetLeagueDataFromServer(); // TODO: skip this by using the data returned from joining
+                }
+            },
+            RPSCommon.OnPlayFabError
+            );
         }
 
         private void GetLeagueDataFromServer()
         {
             // id saved by this butto
             string leagueKey = TitleDescriptionButtonLinkData.LinkID;
+            Debug.Log(leagueKey);
             // keys that must exist for valid league
             List<string> validLeagueKeys = new List<string>()
             {
@@ -68,13 +110,13 @@ namespace ThirstyJoe.RPSChampions
                     // generate player list
                     // "Player_" Prefix, in a key is brief player data
                     // "PlayerSchedule_" Prefix is the complete list of matches for a player
-                    List<LeaguePlayer> playerList = new List<LeaguePlayer>();
+                    List<LeaguePlayerStats> playerList = new List<LeaguePlayerStats>();
                     foreach (string key in result.Data.Keys)
                     {
                         if (key.StartsWith("Player_"))
                         {
                             string playerDataJSON = result.Data[key].Value;
-                            LeaguePlayer playerData = LeaguePlayer.CreateFromJSON(playerDataJSON);
+                            LeaguePlayerStats playerData = LeaguePlayerStats.CreateFromJSON(playerDataJSON);
                             playerList.Add(playerData);
                         }
                     }
@@ -120,7 +162,7 @@ namespace ThirstyJoe.RPSChampions
 
             // generate player list
             int matchIndex = 0;
-            foreach (LeaguePlayer player in league.PlayerList)
+            foreach (LeaguePlayerStats player in league.PlayerList)
             {
                 GameObject obj = Instantiate(PlayerButtonPrefab, StandingsListContent.transform);
                 var tdButton = obj.GetComponent<TitleDescriptionButton>();
@@ -144,7 +186,7 @@ namespace ThirstyJoe.RPSChampions
             StandingsListPanel.SetActive(false);
 
             // generate player list
-            foreach (LeaguePlayer player in league.PlayerList)
+            foreach (LeaguePlayerStats player in league.PlayerList)
             {
                 GameObject obj = Instantiate(PlayerButtonPrefab, PlayerListContent.transform);
                 var tdButton = obj.GetComponent<TitleDescriptionButton>();
@@ -191,7 +233,7 @@ namespace ThirstyJoe.RPSChampions
                         match.Opponent,
                         formattedDate
                     );
-                    tdButton.SetupButton(buttonData, "MatchOverview", matchIndex++);
+                    tdButton.SetupButton(buttonData, "MatchOverview", "", matchIndex++);
                 }
             }
         }

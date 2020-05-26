@@ -52,21 +52,29 @@ namespace ThirstyJoe.RPSChampions
                // data successfully received 
                // interpret data
                string matchJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "match");
-               UpdateMatchUI(new MatchBrief(matchJSON));
+               string statsJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "opponentStats");
+               var matchData = ScheduledMatch.CreateFromJSON(matchJSON);
+               var statsData = LeaguePlayerStats.CreateFromJSON(matchJSON);
+               UpdateMatchUI(matchData, statsData);
            },
            RPSCommon.OnPlayFabError
            );
         }
 
-        public void UpdateMatchUI(MatchBrief match)
+        public void UpdateMatchUI(ScheduledMatch match, LeaguePlayerStats stats)
         {
-            TitleText.text = "Match VS " + match.Opponent;
+            TitleText.text = PlayerManager.PlayerName + " VS " + match.OpponentName;
             CultureInfo culture = new CultureInfo("en-US");
             DateText.text =
-                        RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("m", culture) +
-                        " " +
-                        RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("t", culture);
-            OpponentStatsText.text = "No stats available, coming soon!";
+                RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("m", culture) +
+                " " +
+                RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("t", culture);
+
+            OpponentStatsText.text =
+                match.OpponentName + " League Stats" + "\n" +
+                "Wins\t  " + stats.Wins.ToString() + "\n" +
+                "Losses\t  " + stats.Losses.ToString() + "\n" +
+                "Draws\t  " + stats.Draws.ToString();
         }
     }
 }

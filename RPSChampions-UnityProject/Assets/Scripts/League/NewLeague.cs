@@ -45,10 +45,10 @@ namespace ThirstyJoe.RPSChampions
             // TODO: Save league settings in LeagueManager
             // LeagueSettings leagueSettings = new LeagueSettings();
             // LeagueManager.SetCurrentLeagueSettings(leagueSettings);
-            LeaguePlayer leaguePlayerData = new LeaguePlayer(
+            LeaguePlayerStats leaguePlayerData = new LeaguePlayerStats(
                 PlayerManager.PlayerName,
-                PlayerPrefs.GetString("playFabId"),
-                1200);
+                PlayerPrefs.GetString("playFabId"));
+
             PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
             {
                 FunctionName = "CreateNewLeague",

@@ -51,42 +51,59 @@ namespace ThirstyJoe.RPSChampions
         }
     }
 
+
     [System.Serializable]
-    public class LeaguePlayer
+    public class LeaguePlayerStats
     {
         public string PlayerName;
-        public string PlayFabId;
+        public string PlayerId;
         public int Wins;
         public int Losses;
         public int Draws;
         public int Rating;
 
-        public LeaguePlayer(string name, string playfabId, int rating)
+        public LeaguePlayerStats(string name, string id)
         {
             PlayerName = name;
-            PlayFabId = playfabId;
-            Rating = rating;
+            PlayerId = id;
+            Rating = 1200;  // todo: get rating leaderboards
         }
 
         public string ToJSON()
         {
             return JsonUtility.ToJson(this);
         }
-        public static LeaguePlayer CreateFromJSON(string jsonString)
+        public static LeaguePlayerStats CreateFromJSON(string jsonString)
         {
-            return JsonUtility.FromJson<LeaguePlayer>(jsonString);
+            return JsonUtility.FromJson<LeaguePlayerStats>(jsonString);
         }
     }
+
 
     [System.Serializable]
     public class ScheduledMatch
     {
         public int DateTime;
-        public string OpponentJSON; // JSON for easier reading and writing to and from Server
+        public int Round;
+        public string OpponentName;
+        public string OpponentId;
         public string MatchID;
         public string Result = "";
         public string MyWeapon;
         public string OpponentWeapon;
+
+        private LeaguePlayerStats opponentStats;
+        public LeaguePlayerStats OpponentStats
+        {
+            get
+            {
+                return opponentStats;
+            }
+            set
+            {
+                opponentStats = value;
+            }
+        }
 
         public string ToJSON()
         {
@@ -111,10 +128,9 @@ namespace ThirstyJoe.RPSChampions
                 matchDescription = Result;
             }
 
-            LeaguePlayer Opponent = LeaguePlayer.CreateFromJSON(OpponentJSON);
             return new TitleDescriptionButtonData(
                 MatchID, // MatchID = LeagueID_OpponentName_MatchTime
-                "vs " + Opponent.PlayerName,
+                "vs " + OpponentStats.PlayerName,
                 matchDescription
             );
         }
@@ -131,6 +147,7 @@ namespace ThirstyJoe.RPSChampions
         // constructor using @ seperated string instead of JSON to meet server 1000 byte requirement
         public MatchBrief(string specialString)
         {
+            Debug.Log(specialString);
             var splitString = specialString.Split('@');
             DateTime = Int32.Parse(splitString[0]);
             Opponent = splitString[1];
@@ -154,12 +171,12 @@ namespace ThirstyJoe.RPSChampions
         public LeagueSettings Settings;
         public string Name = "Unnamed";
         public string Host = "NoHost";
-        public List<LeaguePlayer> PlayerList;
+        public List<LeaguePlayerStats> PlayerList;
         public string Key = "";
         public List<MatchBrief> Schedule = new List<MatchBrief>();
 
         public League(string status, string name, string host,
-                        LeagueSettings settings, string key, List<LeaguePlayer> playerList)
+                        LeagueSettings settings, string key, List<LeaguePlayerStats> playerList)
         {
             Status = status;
             Name = name;
@@ -197,7 +214,6 @@ namespace ThirstyJoe.RPSChampions
                // data successfully received 
                // interpret data
                string scheduleJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "schedule");
-               Debug.Log("League schedule: " + scheduleJSON);
                var matchDataArray = scheduleJSON.Split('"').Where((item, index) => index % 2 != 0);
                foreach (string matchString in matchDataArray)
                    Schedule.Add(new MatchBrief(matchString));
