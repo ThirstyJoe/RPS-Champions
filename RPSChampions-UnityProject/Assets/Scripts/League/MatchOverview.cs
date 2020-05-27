@@ -11,9 +11,21 @@ namespace ThirstyJoe.RPSChampions
     public class MatchOverview : MonoBehaviour
     {
 
+
+        #region UNITY OBJ REFS
         [SerializeField] private TextMeshProUGUI TitleText;
         [SerializeField] private TextMeshProUGUI DateText;
         [SerializeField] private TextMeshProUGUI OpponentStatsText;
+        [SerializeField] private TextMeshProUGUI gameStatusText; // "select Rock Paper or Scissors", "Waiting for opponent...",
+        [SerializeField] private GameObject winPanel;
+        [SerializeField] private GameObject losePanel;
+        [SerializeField] private GameObject drawPanel;
+        [SerializeField] private GameObject chooseWeaponPanel;
+        [SerializeField] private GameObject showWeaponPanel;
+        [SerializeField] private GameObject[] opponentWeaponChoice; // Reveal: rock, paper, scissors, no move
+        [SerializeField] private GameObject[] myWeaponChoice; // Reveal: rock, paper, scissors, no move
+        [SerializeField] private GameObject[] weaponToggles;
+        #endregion
 
         private void Start()
         {

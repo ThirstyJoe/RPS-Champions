@@ -106,46 +106,26 @@ namespace ThirstyJoe.RPSChampions
 
         #region UNITY OBJ REFS
 
-        [SerializeField]
-        private TextMeshProUGUI opponentNameText;
-        [SerializeField]
-        private TextMeshProUGUI userNameText;
-        [SerializeField]
-        private TextMeshProUGUI seriesRecordText;
-        [SerializeField]
-        private TextMeshProUGUI winText;
-        [SerializeField]
-        private TextMeshProUGUI loseText;
-        [SerializeField]
-        private TextMeshProUGUI drawText;
-        [SerializeField]
-        private TextMeshProUGUI countdownText;
-        [SerializeField]
-        private TextMeshProUGUI gameStatusText; // "select Rock Paper or Scissors", "Waiting for opponent...",
-        [SerializeField]
-        private GameObject nextRoundPanel;
-        [SerializeField]
-        private GameObject winPanel;
-        [SerializeField]
-        private GameObject losePanel;
-        [SerializeField]
-        private GameObject drawPanel;
-        [SerializeField]
-        private GameObject rematchButton;
-        [SerializeField]
-        private GameObject chooseWeaponPanel;
-        [SerializeField]
-        private GameObject showWeaponPanel;
-        [SerializeField]
-        private GameObject OpponentQuitPanel;
-        [SerializeField]
-        private GameObject DisconnectPanel;
-        [SerializeField]
-        private GameObject[] opponentWeaponChoice; // Reveal: rock, paper, scissors
-        [SerializeField]
-        private GameObject[] myWeaponChoice; // Reveal: rock, paper, scissors
-        [SerializeField]
-        private GameObject[] weaponToggles;
+        [SerializeField] private TextMeshProUGUI opponentNameText;
+        [SerializeField] private TextMeshProUGUI userNameText;
+        [SerializeField] private TextMeshProUGUI seriesRecordText;
+        [SerializeField] private TextMeshProUGUI winText;
+        [SerializeField] private TextMeshProUGUI loseText;
+        [SerializeField] private TextMeshProUGUI drawText;
+        [SerializeField] private TextMeshProUGUI countdownText;
+        [SerializeField] private TextMeshProUGUI gameStatusText; // "select Rock Paper or Scissors", "Waiting for opponent...",
+        [SerializeField] private GameObject nextRoundPanel;
+        [SerializeField] private GameObject winPanel;
+        [SerializeField] private GameObject losePanel;
+        [SerializeField] private GameObject drawPanel;
+        [SerializeField] private GameObject rematchButton;
+        [SerializeField] private GameObject chooseWeaponPanel;
+        [SerializeField] private GameObject showWeaponPanel;
+        [SerializeField] private GameObject OpponentQuitPanel;
+        [SerializeField] private GameObject DisconnectPanel;
+        [SerializeField] private GameObject[] opponentWeaponChoice; // Reveal: rock, paper, scissors
+        [SerializeField] private GameObject[] myWeaponChoice; // Reveal: rock, paper, scissors
+        [SerializeField] private GameObject[] weaponToggles;
 
 
         #endregion
