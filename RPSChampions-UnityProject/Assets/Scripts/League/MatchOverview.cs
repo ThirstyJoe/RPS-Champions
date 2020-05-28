@@ -17,7 +17,8 @@ namespace ThirstyJoe.RPSChampions
     public class MatchOverview : MonoBehaviour
     {
         #region UNITY OBJ REFS
-        [SerializeField] private TextMeshProUGUI TitleText;
+        [SerializeField] private TextMeshProUGUI TitleTextSelf;
+        [SerializeField] private TextMeshProUGUI TitleTextOpponent;
         [SerializeField] private TextMeshProUGUI DateText;
         [SerializeField] private TextMeshProUGUI OpponentStatsText;
         [SerializeField] private TextMeshProUGUI gameStatusText; // "select Rock Paper or Scissors", "Waiting for opponent...",
@@ -36,6 +37,7 @@ namespace ThirstyJoe.RPSChampions
         private GameObject prevUISelection;
         private ScheduledMatch Match;
         private LeaguePlayerStats OpponentStats;
+        private int OpponentRating;
 
 
         #endregion
@@ -83,6 +85,7 @@ namespace ThirstyJoe.RPSChampions
                string statsJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "opponentStats");
                Match = ScheduledMatch.CreateFromJSON(matchJSON);
                OpponentStats = LeaguePlayerStats.CreateFromJSON(statsJSON);
+               OpponentRating = Int32.Parse(RPSCommon.InterpretCloudScriptData(jsonResult, "opponentRating"));
                UpdateMatchUI();
            },
            RPSCommon.OnPlayFabError
@@ -114,7 +117,9 @@ namespace ThirstyJoe.RPSChampions
         #region UI 
         private void UpdateMatchUI()
         {
-            TitleText.text = PlayerManager.PlayerName + " VS " + Match.OpponentName;
+            TitleTextSelf.text = PlayerManager.PlayerName + "  " + PlayerManager.PlayerStats.Rating;
+            TitleTextOpponent.text = Match.OpponentName + "  " + OpponentRating.ToString();
+
             CultureInfo culture = new CultureInfo("en-US");
             DateText.text =
                 RPSCommon.UnixTimeToDateTime(Match.DateTime).ToString("m", culture) +

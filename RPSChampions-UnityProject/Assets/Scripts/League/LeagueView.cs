@@ -191,9 +191,9 @@ namespace ThirstyJoe.RPSChampions
                 var tdButton = obj.GetComponent<TitleDescriptionButton>();
 
                 var buttonData = new TitleDescriptionButtonData(
-                    player.PlayerName, // TODO: PlayFabId might be better to use here for LinkID
                     player.PlayerName,
-                    "Rating: " + player.Rating.ToString()
+                    player.PlayerName,
+                    "Rating: " + 1200 // TODO: get actual rating from leaderboard
                 );
                 tdButton.SetupButton(buttonData, "PlayerProfile");
             }

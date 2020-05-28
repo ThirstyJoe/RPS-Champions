@@ -37,6 +37,7 @@ namespace ThirstyJoe.RPSChampions
 
     public class PlayerStatsData
     {
+        public int Rating;
         public WinLoseDrawStats TotalWLD = new WinLoseDrawStats();
         public WinLoseDrawStats RockWLD = new WinLoseDrawStats();
         public WinLoseDrawStats PaperWLD = new WinLoseDrawStats();
@@ -80,6 +81,15 @@ namespace ThirstyJoe.RPSChampions
                 int[] weaponTotals = { data.RockWLD.Total, data.PaperWLD.Total, data.ScissorsWLD.Total };
                 var max = weaponTotals.Select((n, i) => (Number: n, Index: i)).Max();
                 return (Weapon)Enum.ToObject(typeof(Weapon), max.Index);
+            }
+        }
+
+
+        public int Rating
+        {
+            get
+            {
+                return data.Rating;
             }
         }
 
@@ -159,6 +169,7 @@ namespace ThirstyJoe.RPSChampions
         public string GetReadout()
         {
             return
+                "Rating\t\t" + PlayerManager.PlayerStats.Rating + "\n\n" +
                 "Favors\t\t" + FavoriteWeapon + "\n\n" +
 
                 "Wins\t\t" + PlayerManager.PlayerStats.Wins + "\n" +

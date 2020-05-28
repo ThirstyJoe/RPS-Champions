@@ -61,12 +61,11 @@ namespace ThirstyJoe.RPSChampions
         public int Losses;
         public int Draws;
         public int Rating;
-
         public LeaguePlayerStats(string name, string id)
         {
             PlayerName = name;
             PlayerId = id;
-            Rating = 1200;  // todo: get rating leaderboards
+            Rating = PlayerManager.PlayerStats.Rating;
         }
 
         public string ToJSON()
@@ -75,8 +74,6 @@ namespace ThirstyJoe.RPSChampions
         }
         public static LeaguePlayerStats CreateFromJSON(string jsonString)
         {
-            if (jsonString == "null")
-                return new LeaguePlayerStats("", "");
             return JsonUtility.FromJson<LeaguePlayerStats>(jsonString);
         }
     }

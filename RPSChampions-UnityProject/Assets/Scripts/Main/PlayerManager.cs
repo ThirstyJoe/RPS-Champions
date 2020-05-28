@@ -42,6 +42,7 @@ namespace ThirstyJoe.RPSChampions
                 "Wins",
                 "Draws",
                 "Losses",
+                "Rating"
             };
 
 
@@ -59,13 +60,15 @@ namespace ThirstyJoe.RPSChampions
                     stats.PaperWLD.Draws = result.Statistics[2].Value;
                     stats.PaperWLD.Losses = result.Statistics[3].Value;
                     stats.PaperWLD.Wins = result.Statistics[4].Value;
-                    stats.RockWLD.Draws = result.Statistics[5].Value;
-                    stats.RockWLD.Losses = result.Statistics[6].Value;
-                    stats.RockWLD.Wins = result.Statistics[7].Value;
-                    stats.ScissorsWLD.Draws = result.Statistics[8].Value;
-                    stats.ScissorsWLD.Losses = result.Statistics[9].Value;
-                    stats.ScissorsWLD.Wins = result.Statistics[10].Value;
-                    stats.TotalWLD.Wins = result.Statistics[11].Value;
+                    stats.Rating = result.Statistics[5].Value;
+                    stats.RockWLD.Draws = result.Statistics[6].Value;
+                    stats.RockWLD.Losses = result.Statistics[7].Value;
+                    stats.RockWLD.Wins = result.Statistics[8].Value;
+                    stats.ScissorsWLD.Draws = result.Statistics[9].Value;
+                    stats.ScissorsWLD.Losses = result.Statistics[10].Value;
+                    stats.ScissorsWLD.Wins = result.Statistics[11].Value;
+                    stats.TotalWLD.Wins = result.Statistics[12].Value;
+
                     PlayerManager.PlayerStats.data = stats;
                 },
                 error => Debug.LogError(error.GenerateErrorReport())

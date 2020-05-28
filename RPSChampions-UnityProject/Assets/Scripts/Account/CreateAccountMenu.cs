@@ -85,6 +85,18 @@ namespace ThirstyJoe.RPSChampions
                 PlayFabAuthenticator.OnPlayFabError
             );
 
+            // initialize rating stat
+            PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
+            {
+                FunctionName = "InitializePlayerStats"
+            },
+           result =>
+           {
+               Debug.Log("rating stat initialized on account creation");
+           },
+           RPSCommon.OnPlayFabError
+           );
+
             // return to main menu after successful account creation
             var request = new LoginWithPlayFabRequest
             {
