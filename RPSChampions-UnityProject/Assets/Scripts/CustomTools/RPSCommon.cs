@@ -32,5 +32,43 @@ namespace ThirstyJoe.RPSChampions
             dtDateTime = dtDateTime.AddSeconds(unixtime).ToLocalTime();
             return dtDateTime;
         }
+
+        public static Weapon ParseWeapon(string weaponName)
+        {
+            if (weaponName == null)
+                return Weapon.None;
+
+            return (Weapon)Enum.Parse(typeof(Weapon), weaponName);
+        }
+
+
+        public static string GetMatchKey(string leagueId, string matchIndex)
+        {
+            return "Match_" + leagueId + "_" + matchIndex;
+        }
+        public static string GetPlayerKey(string playerId)
+        {
+            return "Player_" + playerId;
+        }
+        public static string GetStatsKey(string leagueId)
+        {
+            return "LeagueStats_" + leagueId;
+        }
+        public static string GetScheduleKey(string playerId)
+        {
+            return "PlayerSchedule_" + playerId;
+        }
+        public static int GetDataTimeFromMatchBrief(string matchBrief)
+        {
+            return Int32.Parse(matchBrief.Split('@')[0]);
+        }
+        public static string GetOpponentNameFromMatchBrief(string matchBrief)
+        {
+            return matchBrief.Split('@')[1];
+        }
+        public static string GetOpponentIdFromMatchBrief(string matchBrief)
+        {
+            return matchBrief.Split('@')[2];
+        }
     }
 }

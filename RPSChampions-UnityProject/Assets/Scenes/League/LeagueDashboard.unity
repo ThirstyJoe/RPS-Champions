@@ -474,7 +474,6 @@ MonoBehaviour:
   LeagueListContent: {fileID: 1513771586}
   PlayerButtonPrefab: {fileID: 7387927946017910649, guid: 7e04ba8880b29a745a3095d18dff0015,
     type: 3}
-  PlayerButtonSpacing: 60
 --- !u!4 &256998612
 Transform:
   m_ObjectHideFlags: 0

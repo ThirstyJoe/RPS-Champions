@@ -75,6 +75,8 @@ namespace ThirstyJoe.RPSChampions
         }
         public static LeaguePlayerStats CreateFromJSON(string jsonString)
         {
+            if (jsonString == "null")
+                return new LeaguePlayerStats("", "");
             return JsonUtility.FromJson<LeaguePlayerStats>(jsonString);
         }
     }
@@ -85,25 +87,13 @@ namespace ThirstyJoe.RPSChampions
     {
         public int DateTime;
         public int Round;
+        public string MatchID;
         public string OpponentName;
         public string OpponentId;
-        public string MatchID;
-        public string Result = "";
+        public string Result;
         public string MyWeapon;
         public string OpponentWeapon;
 
-        private LeaguePlayerStats opponentStats;
-        public LeaguePlayerStats OpponentStats
-        {
-            get
-            {
-                return opponentStats;
-            }
-            set
-            {
-                opponentStats = value;
-            }
-        }
 
         public string ToJSON()
         {
@@ -112,27 +102,6 @@ namespace ThirstyJoe.RPSChampions
         public static ScheduledMatch CreateFromJSON(string jsonString)
         {
             return JsonUtility.FromJson<ScheduledMatch>(jsonString);
-        }
-
-        public TitleDescriptionButtonData GetButtonData()
-        {
-            string matchDescription;
-            if (Result == "None") // no winner yet
-            {
-                // description is start time of match
-                var dateTime = new System.DateTime(DateTime);
-                matchDescription = dateTime.ToShortDateString() + " " + dateTime.ToShortTimeString();
-            }
-            else
-            {
-                matchDescription = Result;
-            }
-
-            return new TitleDescriptionButtonData(
-                MatchID, // MatchID = LeagueID_OpponentName_MatchTime
-                "vs " + OpponentStats.PlayerName,
-                matchDescription
-            );
         }
     }
 
@@ -147,7 +116,6 @@ namespace ThirstyJoe.RPSChampions
         // constructor using @ seperated string instead of JSON to meet server 1000 byte requirement
         public MatchBrief(string specialString)
         {
-            Debug.Log(specialString);
             var splitString = specialString.Split('@');
             DateTime = Int32.Parse(splitString[0]);
             Opponent = splitString[1];

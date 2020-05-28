@@ -79,7 +79,6 @@ namespace ThirstyJoe.RPSChampions
         {
             // id saved by this butto
             string leagueKey = TitleDescriptionButtonLinkData.LinkID;
-            Debug.Log(leagueKey);
             // keys that must exist for valid league
             List<string> validLeagueKeys = new List<string>()
             {

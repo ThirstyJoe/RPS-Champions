@@ -348,6 +348,7 @@ namespace ThirstyJoe.RPSChampions
         #endregion
 
         #region PLAYER ACTIONS
+
         public void OnSelectRock()
         {
             ChooseWeapon(Weapon.Rock);

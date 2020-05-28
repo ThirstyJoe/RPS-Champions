@@ -1,5 +1,7 @@
 namespace ThirstyJoe.RPSChampions
 {
+    #region IMPORTS 
+
     using UnityEngine;
     using TMPro;
     using UnityEngine.SceneManagement;
@@ -7,11 +9,13 @@ namespace ThirstyJoe.RPSChampions
     using PlayFab.ClientModels;
     using PlayFab.Json;
     using System.Globalization;
+    using System;
+    using UnityEngine.UI;
+    using UnityEngine.EventSystems;
 
+    #endregion
     public class MatchOverview : MonoBehaviour
     {
-
-
         #region UNITY OBJ REFS
         [SerializeField] private TextMeshProUGUI TitleText;
         [SerializeField] private TextMeshProUGUI DateText;
@@ -27,15 +31,27 @@ namespace ThirstyJoe.RPSChampions
         [SerializeField] private GameObject[] weaponToggles;
         #endregion
 
+        #region PRIVATE VARS 
+        // tracking previous selection, for when returning from this menu
+        private GameObject prevUISelection;
+        private ScheduledMatch Match;
+        private LeaguePlayerStats OpponentStats;
+
+
+        #endregion
+
+        #region UNITY 
+
         private void Start()
         {
+            prevUISelection = EventSystem.current.currentSelectedGameObject;
             GetMatchFromServer();
         }
 
-        public void OnBackButtonPress()
-        {
-            SceneManager.UnloadSceneAsync("MatchOverview");
-        }
+
+        #endregion
+
+        #region PLAYFAB
 
         private void GetMatchFromServer()
         {
@@ -65,28 +81,98 @@ namespace ThirstyJoe.RPSChampions
                // interpret data
                string matchJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "match");
                string statsJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "opponentStats");
-               var matchData = ScheduledMatch.CreateFromJSON(matchJSON);
-               var statsData = LeaguePlayerStats.CreateFromJSON(matchJSON);
-               UpdateMatchUI(matchData, statsData);
+               Match = ScheduledMatch.CreateFromJSON(matchJSON);
+               OpponentStats = LeaguePlayerStats.CreateFromJSON(statsJSON);
+               UpdateMatchUI();
            },
            RPSCommon.OnPlayFabError
            );
         }
 
-        public void UpdateMatchUI(ScheduledMatch match, LeaguePlayerStats stats)
+        private void SubmitLeagueMatchTurn(Weapon weapon)
         {
-            TitleText.text = PlayerManager.PlayerName + " VS " + match.OpponentName;
+            PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
+            {
+                FunctionName = "SubmitLeagueMatchTurn",
+                FunctionParameter = new
+                {
+                    matchId = Match.MatchID,
+                    weapon = weapon.ToString(),
+                },
+                GeneratePlayStreamEvent = true,
+            },
+           result =>
+           {
+               Debug.Log("submitted match turn");
+           },
+           RPSCommon.OnPlayFabError
+           );
+        }
+
+        #endregion
+
+        #region UI 
+        private void UpdateMatchUI()
+        {
+            TitleText.text = PlayerManager.PlayerName + " VS " + Match.OpponentName;
             CultureInfo culture = new CultureInfo("en-US");
             DateText.text =
-                RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("m", culture) +
+                RPSCommon.UnixTimeToDateTime(Match.DateTime).ToString("m", culture) +
                 " " +
-                RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("t", culture);
+                RPSCommon.UnixTimeToDateTime(Match.DateTime).ToString("t", culture);
 
             OpponentStatsText.text =
-                match.OpponentName + " League Stats" + "\n" +
-                "Wins\t  " + stats.Wins.ToString() + "\n" +
-                "Losses\t  " + stats.Losses.ToString() + "\n" +
-                "Draws\t  " + stats.Draws.ToString();
+                Match.OpponentName + " League Stats" + "\n" +
+                "Wins\t  " + OpponentStats.Wins.ToString() + "\n" +
+                "Losses\t  " + OpponentStats.Losses.ToString() + "\n" +
+                "Draws\t  " + OpponentStats.Draws.ToString();
+
+            SetWeaponToggleUI(RPSCommon.ParseWeapon(Match.MyWeapon));
         }
+
+        private void SetWeaponToggleUI(Weapon weapon)
+        {
+            int weaponInt = (int)weapon;
+            if (weaponInt < weaponToggles.Length)
+                weaponToggles[weaponInt].GetComponent<Toggle>().isOn = true;
+        }
+
+        #endregion
+
+        #region PLAYER ACTIONS
+
+        public void OnBackButtonPress()
+        {
+            EventSystem.current.SetSelectedGameObject(prevUISelection);
+            SceneManager.UnloadSceneAsync("MatchOverview");
+        }
+        public void OnSelectRock()
+        {
+            ChooseWeapon(Weapon.Rock);
+        }
+        public void OnSelectPaper()
+        {
+            ChooseWeapon(Weapon.Paper);
+        }
+        public void OnSelectScissors()
+        {
+            ChooseWeapon(Weapon.Scissors);
+        }
+
+        private void ChooseWeapon(Weapon weapon)
+        {
+            // check if it is already selected
+            if (Match.MyWeapon != weapon.ToString())
+            {
+                Match.MyWeapon = weapon.ToString();
+                SubmitLeagueMatchTurn(weapon);
+            }
+
+
+            // TODO: prevent players from spamming input? 
+            // ... Could cause too many server calls
+        }
+
+        #endregion
     }
 }
