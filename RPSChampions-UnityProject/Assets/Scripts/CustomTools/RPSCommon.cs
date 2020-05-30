@@ -5,13 +5,14 @@ namespace ThirstyJoe.RPSChampions
     using UnityEngine;
     using PlayFab.Json;
     using System;
+    using System.Collections.Generic;
 
     public static class RPSCommon
     {
         public static string InterpretCloudScriptData(JsonObject jsonResult, string dataName)
         {
             if (jsonResult == null)
-                return "null";
+                return null;
 
             // interpret playerData
             object objValue;
@@ -42,9 +43,15 @@ namespace ThirstyJoe.RPSChampions
         }
 
 
-        public static string GetMatchKey(string leagueId, string matchIndex)
+        public static string GetMatchTurnKey(string playerId, string matchIndex)
         {
-            return "Match_" + leagueId + "_" + matchIndex;
+            return "MatchTurn_" + playerId + "_" + matchIndex;
+        }
+        public static string GetMatchResultKey(string p1Id, string p2Id, string matchIndex)
+        {
+            List<string> playerIds = new List<string>() { p1Id, p2Id };
+            playerIds.Sort();
+            return "MatchResult_" + playerIds[0] + "_" + playerIds[1] + "_" + matchIndex;
         }
         public static string GetPlayerKey(string playerId)
         {

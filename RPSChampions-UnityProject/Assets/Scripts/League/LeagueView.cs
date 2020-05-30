@@ -52,6 +52,7 @@ namespace ThirstyJoe.RPSChampions
                 {
                     playerData = leaguePlayerData.ToJSON(),
                     leagueId = leagueKey,
+                    playerName = PlayerManager.PlayerName
                 },
                 GeneratePlayStreamEvent = true,
             },
@@ -77,8 +78,8 @@ namespace ThirstyJoe.RPSChampions
 
         private void GetLeagueDataFromServer()
         {
-            // id saved by this butto
-            string leagueKey = TitleDescriptionButtonLinkData.LinkID;
+            var leagueId = TitleDescriptionButtonLinkData.LinkID;
+
             // keys that must exist for valid league
             List<string> validLeagueKeys = new List<string>()
             {
@@ -87,66 +88,63 @@ namespace ThirstyJoe.RPSChampions
                 "HostName",
                 "Settings",
             };
-            PlayFabClientAPI.GetSharedGroupData(new GetSharedGroupDataRequest()
+            PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
             {
-                SharedGroupId = leagueKey,
+                FunctionName = "GetLeague",
+                FunctionParameter = new
+                {
+                    leagueKey = leagueId
+                },
+                GeneratePlayStreamEvent = true,
             },
             result =>
             {
-                // validate
-                bool failedKey = false;
-                foreach (string key in validLeagueKeys)
-                {
-                    if (!result.Data.ContainsKey(key))
-                    {
-                        Debug.Log("ERROR. Missing key from league: " + key);
-                        failedKey = true;
-                    }
-                }
+                // get Json object representing the Game State out of FunctionResult
+                JsonObject jsonResult = (JsonObject)result.FunctionResult;
 
-                if (!failedKey)
+                // check if data exists
+                if (jsonResult == null)
                 {
-                    // generate player list
-                    // "Player_" Prefix, in a key is brief player data
-                    // "PlayerSchedule_" Prefix is the complete list of matches for a player
-                    List<LeaguePlayerStats> playerList = new List<LeaguePlayerStats>();
-                    foreach (string key in result.Data.Keys)
-                    {
-                        if (key.StartsWith("Player_"))
-                        {
-                            string playerDataJSON = result.Data[key].Value;
-                            LeaguePlayerStats playerData = LeaguePlayerStats.CreateFromJSON(playerDataJSON);
-                            playerList.Add(playerData);
-                        }
-                    }
+                    Debug.Log("server failed to return data");
+                }
+                else
+                {
+                    Debug.Log("League data received from server");
+
+                    // get list of players
+                    string playerListJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "Players");
+                    var playerArray = JsonHelper.getJsonArray<LeaguePlayerStats>(playerListJSON);
+                    var playerList = new List<LeaguePlayerStats>();
+                    foreach (LeaguePlayerStats player in playerArray)
+                        playerList.Add(player);
 
                     // create instance of league
                     league = new League(
-                        result.Data["Status"].Value,
-                        result.Data["Name"].Value,
-                        result.Data["HostName"].Value,
-                        LeagueSettings.CreateFromJSON(result.Data["Settings"].Value),
-                        leagueKey,
+                        RPSCommon.InterpretCloudScriptData(jsonResult, "Status"),
+                        RPSCommon.InterpretCloudScriptData(jsonResult, "Name"),
+                        RPSCommon.InterpretCloudScriptData(jsonResult, "HostName"),
+                        LeagueSettings.CreateFromJSON(RPSCommon.InterpretCloudScriptData(jsonResult, "Settings")),
+                        leagueId,
                         playerList
                     );
 
-                    // get our schedule
-                    string scheduleKey = "PlayerSchedule_" + PlayerPrefs.GetString("playFabId");
-                    if (result.Data.ContainsKey(scheduleKey))
+                    // interpret schedule as object and save in league object
+                    string scheduleJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "Schedule");
+                    Debug.Log(scheduleJSON);
+                    if (scheduleJSON != "null")
                     {
-                        string scheduleJSON = result.Data[scheduleKey].Value;
                         var matchDataArray = scheduleJSON.Split('"').Where((item, index) => index % 2 != 0);
                         foreach (string matchString in matchDataArray)
                             league.Schedule.Add(new MatchBrief(matchString));
                     }
-
-                    // determine type of UI we need to set up, OPEN league or CLOSED
-                    // Open means it is still recruiting, otherwise it has started or completed
-                    if (league.Status == "Open")
-                        LeagueViewOpenUI();
-                    else
-                        LeagueViewClosedUI();
                 }
+
+                // determine type of UI we need to set up, OPEN league or CLOSED
+                // Open means it is still recruiting, otherwise it has started or completed
+                if (league.Status == "Open")
+                    LeagueViewOpenUI();
+                else
+                    LeagueViewClosedUI();
             },
             RPSCommon.OnPlayFabError
             );

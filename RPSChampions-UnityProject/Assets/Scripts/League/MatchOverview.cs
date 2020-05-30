@@ -35,7 +35,7 @@ namespace ThirstyJoe.RPSChampions
         #region PRIVATE VARS 
         // tracking previous selection, for when returning from this menu
         private GameObject prevUISelection;
-        private ScheduledMatch Match;
+        private ScheduledMatchTurn Match;
         private LeaguePlayerStats OpponentStats;
         private int OpponentRating;
 
@@ -83,7 +83,7 @@ namespace ThirstyJoe.RPSChampions
                // interpret data
                string matchJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "match");
                string statsJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "opponentStats");
-               Match = ScheduledMatch.CreateFromJSON(matchJSON);
+               Match = ScheduledMatchTurn.CreateFromJSON(matchJSON);
                OpponentStats = LeaguePlayerStats.CreateFromJSON(statsJSON);
                OpponentRating = Int32.Parse(RPSCommon.InterpretCloudScriptData(jsonResult, "opponentRating"));
                UpdateMatchUI();
@@ -101,6 +101,7 @@ namespace ThirstyJoe.RPSChampions
                 {
                     matchId = Match.MatchID,
                     weapon = weapon.ToString(),
+                    leagueId = Match.LeagueID
                 },
                 GeneratePlayStreamEvent = true,
             },
@@ -117,8 +118,8 @@ namespace ThirstyJoe.RPSChampions
         #region UI 
         private void UpdateMatchUI()
         {
-            TitleTextSelf.text = PlayerManager.PlayerName + "  " + PlayerManager.PlayerStats.Rating;
-            TitleTextOpponent.text = Match.OpponentName + "  " + OpponentRating.ToString();
+            TitleTextSelf.text = PlayerManager.PlayerName + " " + PlayerManager.PlayerStats.Rating;
+            TitleTextOpponent.text = Match.OpponentName + " " + OpponentRating.ToString();
 
             CultureInfo culture = new CultureInfo("en-US");
             DateText.text =

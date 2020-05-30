@@ -61,6 +61,7 @@ namespace ThirstyJoe.RPSChampions
         public int Losses;
         public int Draws;
         public int Rating;
+
         public LeaguePlayerStats(string name, string id)
         {
             PlayerName = name;
@@ -80,13 +81,8 @@ namespace ThirstyJoe.RPSChampions
 
 
     [System.Serializable]
-    public class ScheduledMatch
+    public class ScheduledMatchResult
     {
-        public int DateTime;
-        public int Round;
-        public string MatchID;
-        public string OpponentName;
-        public string OpponentId;
         public string Result;
         public string MyWeapon;
         public string OpponentWeapon;
@@ -96,9 +92,31 @@ namespace ThirstyJoe.RPSChampions
         {
             return JsonUtility.ToJson(this);
         }
-        public static ScheduledMatch CreateFromJSON(string jsonString)
+        public static ScheduledMatchResult CreateFromJSON(string jsonString)
         {
-            return JsonUtility.FromJson<ScheduledMatch>(jsonString);
+            return JsonUtility.FromJson<ScheduledMatchResult>(jsonString);
+        }
+    }
+
+    [System.Serializable]
+    public class ScheduledMatchTurn
+    {
+        public int DateTime;
+        public int Round;
+        public string MatchID;
+        public string LeagueID;
+        public string OpponentName;
+        public string OpponentId;
+        public string MyWeapon;
+
+
+        public string ToJSON()
+        {
+            return JsonUtility.ToJson(this);
+        }
+        public static ScheduledMatchTurn CreateFromJSON(string jsonString)
+        {
+            return JsonUtility.FromJson<ScheduledMatchTurn>(jsonString);
         }
     }
 
