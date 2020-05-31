@@ -129,14 +129,18 @@ namespace ThirstyJoe.RPSChampions
                     );
 
                     // interpret schedule as object and save in league object
-                    string scheduleJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "Schedule");
-                    Debug.Log(scheduleJSON);
-                    if (scheduleJSON != "null")
+                    if (league.Status == "In Progress")
                     {
-                        var matchDataArray = scheduleJSON.Split('"').Where((item, index) => index % 2 != 0);
-                        foreach (string matchString in matchDataArray)
-                            league.Schedule.Add(new MatchBrief(matchString));
+                        string scheduleJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "Schedule");
+                        Debug.Log(scheduleJSON);
+                        if (scheduleJSON != "null")
+                        {
+                            var matchDataArray = scheduleJSON.Split('"').Where((item, index) => index % 2 != 0);
+                            foreach (string matchString in matchDataArray)
+                                league.Schedule.Add(new MatchBrief(matchString));
+                        }
                     }
+
                 }
 
                 // determine type of UI we need to set up, OPEN league or CLOSED

@@ -84,8 +84,10 @@ namespace ThirstyJoe.RPSChampions
     public class ScheduledMatchResult
     {
         public string Result;
-        public string MyWeapon;
-        public string OpponentWeapon;
+        public string P1Weapon;
+        public string P2Weapon;
+        public string P1Id;
+        public string P2Id;
 
 
         public string ToJSON()
@@ -127,6 +129,8 @@ namespace ThirstyJoe.RPSChampions
         public int DateTime;
         public string Opponent;
         public string OpponentId;
+        public string PlayerId;
+        public string Result;
 
         // constructor using @ seperated string instead of JSON to meet server 1000 byte requirement
         public MatchBrief(string specialString)
@@ -135,6 +139,8 @@ namespace ThirstyJoe.RPSChampions
             DateTime = Int32.Parse(splitString[0]);
             Opponent = splitString[1];
             OpponentId = splitString[2];
+            PlayerId = splitString[3];
+            Result = splitString[4];
         }
 
         public string ToJSON()

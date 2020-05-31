@@ -45,13 +45,13 @@ namespace ThirstyJoe.RPSChampions
 
         public static string GetMatchTurnKey(string playerId, string matchIndex)
         {
-            return "MatchTurn_" + playerId + "_" + matchIndex;
+            return "MatchTurn_" + matchIndex + "_" + playerId;
         }
         public static string GetMatchResultKey(string p1Id, string p2Id, string matchIndex)
         {
             List<string> playerIds = new List<string>() { p1Id, p2Id };
             playerIds.Sort();
-            return "MatchResult_" + playerIds[0] + "_" + playerIds[1] + "_" + matchIndex;
+            return "MatchResult_" + matchIndex + "_" + playerIds[0] + "_" + playerIds[1];
         }
         public static string GetPlayerKey(string playerId)
         {
@@ -76,6 +76,14 @@ namespace ThirstyJoe.RPSChampions
         public static string GetOpponentIdFromMatchBrief(string matchBrief)
         {
             return matchBrief.Split('@')[2];
+        }
+        public static string GetPlayerIdFromMatchBrief(string matchBrief)
+        {
+            return matchBrief.Split('@')[3];
+        }
+        public static string GetResultFromMatchBrief(string matchBrief)
+        {
+            return matchBrief.Split('@')[4];
         }
     }
 }
