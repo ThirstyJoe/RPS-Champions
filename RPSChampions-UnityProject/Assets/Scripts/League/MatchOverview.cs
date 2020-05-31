@@ -124,7 +124,7 @@ namespace ThirstyJoe.RPSChampions
             CultureInfo culture = new CultureInfo("en-US");
             DateText.text =
                 RPSCommon.UnixTimeToDateTime(Match.DateTime).ToString("m", culture) +
-                " " +
+                "\n" +
                 RPSCommon.UnixTimeToDateTime(Match.DateTime).ToString("t", culture);
 
             OpponentStatsText.text =

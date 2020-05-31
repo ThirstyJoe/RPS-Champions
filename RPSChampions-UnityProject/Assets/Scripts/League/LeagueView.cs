@@ -225,7 +225,7 @@ namespace ThirstyJoe.RPSChampions
                     var tdButton = obj.GetComponent<TitleDescriptionButton>();
 
                     string formattedDate =
-                        RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("m", culture) +
+                        RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("m", culture) + "\n" +
                         " " +
                         RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("t", culture);
 
