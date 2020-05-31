@@ -129,7 +129,8 @@ namespace ThirstyJoe.RPSChampions
                     );
 
                     // interpret schedule as object and save in league object
-                    if (league.Status == "In Progress")
+                    Debug.Log(league.Status);
+                    if (league.Status != "Open")
                     {
                         string scheduleJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "Schedule");
                         Debug.Log(scheduleJSON);
@@ -137,10 +138,9 @@ namespace ThirstyJoe.RPSChampions
                         {
                             var matchDataArray = scheduleJSON.Split('"').Where((item, index) => index % 2 != 0);
                             foreach (string matchString in matchDataArray)
-                                league.Schedule.Add(new MatchBrief(matchString));
+                                league.Schedule.Add(new Match(matchString));
                         }
                     }
-
                 }
 
                 // determine type of UI we need to set up, OPEN league or CLOSED
@@ -195,7 +195,7 @@ namespace ThirstyJoe.RPSChampions
                 var buttonData = new TitleDescriptionButtonData(
                     player.PlayerName,
                     player.PlayerName,
-                    "Rating: " + 1200 // TODO: get actual rating from leaderboard
+                    player.Rating.ToString()
                 );
                 tdButton.SetupButton(buttonData, "PlayerProfile");
             }
@@ -219,7 +219,7 @@ namespace ThirstyJoe.RPSChampions
             if (league.Schedule != null)
             {
                 int matchIndex = 0;
-                foreach (MatchBrief match in league.Schedule)
+                foreach (Match match in league.Schedule)
                 {
                     GameObject obj = Instantiate(PlayerButtonPrefab, MatchListContent.transform);
                     var tdButton = obj.GetComponent<TitleDescriptionButton>();

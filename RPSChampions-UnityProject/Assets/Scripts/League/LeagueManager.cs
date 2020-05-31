@@ -79,29 +79,8 @@ namespace ThirstyJoe.RPSChampions
         }
     }
 
-
     [System.Serializable]
-    public class ScheduledMatchResult
-    {
-        public string Result;
-        public string P1Weapon;
-        public string P2Weapon;
-        public string P1Id;
-        public string P2Id;
-
-
-        public string ToJSON()
-        {
-            return JsonUtility.ToJson(this);
-        }
-        public static ScheduledMatchResult CreateFromJSON(string jsonString)
-        {
-            return JsonUtility.FromJson<ScheduledMatchResult>(jsonString);
-        }
-    }
-
-    [System.Serializable]
-    public class ScheduledMatchTurn
+    public class MatchTurn
     {
         public int DateTime;
         public int Round;
@@ -116,40 +95,61 @@ namespace ThirstyJoe.RPSChampions
         {
             return JsonUtility.ToJson(this);
         }
-        public static ScheduledMatchTurn CreateFromJSON(string jsonString)
+        public static MatchTurn CreateFromJSON(string jsonString)
         {
-            return JsonUtility.FromJson<ScheduledMatchTurn>(jsonString);
+            return JsonUtility.FromJson<MatchTurn>(jsonString);
         }
     }
 
 
     [System.Serializable]
-    public class MatchBrief
+    public class Match
     {
         public int DateTime;
         public string Opponent;
         public string OpponentId;
         public string PlayerId;
-        public string Result;
+        public Weapon MyWeapon;
+        public Weapon OpponentWeapon;
+        public WLD Result;
 
-        // constructor using @ seperated string instead of JSON to meet server 1000 byte requirement
-        public MatchBrief(string specialString)
+
+        // constructor using @ seperated string instead of JSON to meet server 1000 byte PlayFab requirement
+        public Match(string specialString)
         {
             var splitString = specialString.Split('@');
             DateTime = Int32.Parse(splitString[0]);
             Opponent = splitString[1];
             OpponentId = splitString[2];
             PlayerId = splitString[3];
-            Result = splitString[4];
+
+            // parsing result like "RSW" (rock beats scissors, win)
+            var resultCode = splitString[4];
+            MyWeapon = ParseWeapon(resultCode[0]);
+            OpponentWeapon = ParseWeapon(resultCode[1]);
+            Result = ParseWLD(resultCode[2]);
         }
 
-        public string ToJSON()
+        private Weapon ParseWeapon(char weaponCode)
         {
-            return JsonUtility.ToJson(this);
+            if (weaponCode == 'R')
+                return Weapon.Rock;
+            if (weaponCode == 'P')
+                return Weapon.Scissors;
+            if (weaponCode == 'S')
+                return Weapon.Paper;
+            return Weapon.None;
         }
-        public static MatchBrief CreateFromJSON(string jsonString)
+
+        private WLD ParseWLD(char wld)
         {
-            return JsonUtility.FromJson<MatchBrief>(jsonString);
+            if (wld == 'W')
+                return WLD.Win;
+            if (wld == 'L')
+                return WLD.Lose;
+            if (wld == 'D')
+                return WLD.Draw;
+            return WLD.None;
         }
     }
 
@@ -162,7 +162,7 @@ namespace ThirstyJoe.RPSChampions
         public string Host = "NoHost";
         public List<LeaguePlayerStats> PlayerList;
         public string Key = "";
-        public List<MatchBrief> Schedule = new List<MatchBrief>();
+        public List<Match> Schedule = new List<Match>();
 
         public League(string status, string name, string host,
                         LeagueSettings settings, string key, List<LeaguePlayerStats> playerList)
@@ -205,7 +205,7 @@ namespace ThirstyJoe.RPSChampions
                string scheduleJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "schedule");
                var matchDataArray = scheduleJSON.Split('"').Where((item, index) => index % 2 != 0);
                foreach (string matchString in matchDataArray)
-                   Schedule.Add(new MatchBrief(matchString));
+                   Schedule.Add(new Match(matchString));
 
                callback();
            },

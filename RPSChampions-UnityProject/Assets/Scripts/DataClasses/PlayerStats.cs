@@ -3,6 +3,16 @@ namespace ThirstyJoe.RPSChampions
     using System.Linq;
     using System;
 
+
+    [Serializable]
+    public enum WLD
+    {
+        Win,
+        Lose,
+        Draw,
+        None
+    }
+
     [Serializable]
     public enum Weapon
     {

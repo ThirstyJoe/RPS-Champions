@@ -35,7 +35,7 @@ namespace ThirstyJoe.RPSChampions
         #region PRIVATE VARS 
         // tracking previous selection, for when returning from this menu
         private GameObject prevUISelection;
-        private ScheduledMatchTurn Match;
+        private MatchTurn Match;
         private LeaguePlayerStats OpponentStats;
         private int OpponentRating;
 
@@ -83,7 +83,7 @@ namespace ThirstyJoe.RPSChampions
                // interpret data
                string matchJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "match");
                string statsJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "opponentStats");
-               Match = ScheduledMatchTurn.CreateFromJSON(matchJSON);
+               Match = MatchTurn.CreateFromJSON(matchJSON);
                OpponentStats = LeaguePlayerStats.CreateFromJSON(statsJSON);
                OpponentRating = Int32.Parse(RPSCommon.InterpretCloudScriptData(jsonResult, "opponentRating"));
                UpdateMatchUI();
