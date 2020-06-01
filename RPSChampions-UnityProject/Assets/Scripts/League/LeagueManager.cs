@@ -293,13 +293,10 @@ namespace ThirstyJoe.RPSChampions
                         if (titleResult.Data.ContainsKey(key))
                         {
                             LeagueInfo leagueInfo = LeagueInfo.CreateFromJSON(titleResult.Data[key]);
-                            if (leagueInfo.Status != "Complete")
-                            {
-                                toRet.Add(new TitleDescriptionButtonData(
-                                    key,
-                                    leagueInfo.Name,
-                                    leagueInfo.Status));
-                            }
+                            toRet.Add(new TitleDescriptionButtonData(
+                                key,
+                                leagueInfo.Name,
+                                leagueInfo.Status));
                         }
                     }
                     callback(toRet);
@@ -313,7 +310,7 @@ namespace ThirstyJoe.RPSChampions
 
         public static void GetLeagueHistory(GetLeaguesCallBack callback)
         {
-            List<string> userDataKeys = new List<string>() { "FinishedLeagues" };
+            List<string> userDataKeys = new List<string>() { "CurrentLeagues" };
             List<string> leagueKeys = new List<string>();
             List<TitleDescriptionButtonData> toRet = new List<TitleDescriptionButtonData>();
 

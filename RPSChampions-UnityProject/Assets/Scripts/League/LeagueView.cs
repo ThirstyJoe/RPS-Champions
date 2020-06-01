@@ -224,15 +224,26 @@ namespace ThirstyJoe.RPSChampions
                     GameObject obj = Instantiate(PlayerButtonPrefab, MatchListContent.transform);
                     var tdButton = obj.GetComponent<TitleDescriptionButton>();
 
-                    string formattedDate =
-                        RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("m", culture) + "\n" +
-                        " " +
-                        RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("t", culture);
+                    string description = "";
+                    if (match.Result == WLD.None)
+                    {
+                        description =
+                            RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("m", culture) + "\n" +
+                            " " +
+                            RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("t", culture);
+                    }
+                    else
+                    {
+                        if (match.Result == WLD.Draw)
+                            description = match.Result.ToString();
+                        else
+                            description = "You " + match.Result.ToString();
+                    }
 
                     var buttonData = new TitleDescriptionButtonData(
                         league.Key,
                         match.Opponent,
-                        formattedDate
+                        description
                     );
                     tdButton.SetupButton(buttonData, "MatchOverview", "", matchIndex++);
                 }
