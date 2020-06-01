@@ -62,6 +62,14 @@ namespace ThirstyJoe.RPSChampions
         public int Draws;
         public int Rating;
 
+        public int WLDScore
+        {
+            get
+            {
+                return (Wins * 2) + Draws;
+            }
+        }
+
         public LeaguePlayerStats(string name, string id)
         {
             PlayerName = name;

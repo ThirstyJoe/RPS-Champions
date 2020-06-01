@@ -117,6 +117,14 @@ namespace ThirstyJoe.RPSChampions
                     var playerList = new List<LeaguePlayerStats>();
                     foreach (LeaguePlayerStats player in playerArray)
                         playerList.Add(player);
+                    // order them WLD
+                    playerList.Sort(
+                        delegate (LeaguePlayerStats c1, LeaguePlayerStats c2)
+                        {
+                            return c1.WLDScore.CompareTo(c2.WLDScore);
+                        }
+                    );
+                    playerList.Reverse();
 
                     // create instance of league
                     league = new League(
