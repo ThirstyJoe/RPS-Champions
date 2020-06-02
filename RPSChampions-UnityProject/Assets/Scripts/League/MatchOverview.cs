@@ -172,7 +172,6 @@ namespace ThirstyJoe.RPSChampions
                     losePanel.SetActive(true);
                 else
                     drawPanel.SetActive(true);
-
             }
         }
 
@@ -190,6 +189,7 @@ namespace ThirstyJoe.RPSChampions
         public void OnBackButtonPress()
         {
             EventSystem.current.SetSelectedGameObject(prevUISelection);
+            FindObjectOfType<LeagueView>().UpdateLeagueView();
             SceneManager.UnloadSceneAsync("MatchOverview");
         }
         public void OnSelectRock()

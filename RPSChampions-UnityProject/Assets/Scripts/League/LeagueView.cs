@@ -28,6 +28,9 @@ namespace ThirstyJoe.RPSChampions
         [SerializeField] private GameObject HostQuitConfirmationPanel;
         [SerializeField] private GameObject NonHostQuitConfirmationPanel;
 
+        // use this list to delete buttons later
+        private List<GameObject> dynamicButtonList = new List<GameObject>();
+
 
         // tracking previous selection, for when returning from this menu
         private GameObject prevUISelection;
@@ -82,6 +85,16 @@ namespace ThirstyJoe.RPSChampions
             },
             RPSCommon.OnPlayFabError
             );
+        }
+
+        // called when returning from match overview
+        public void UpdateLeagueView()
+        {
+            foreach (var button in dynamicButtonList)
+                Destroy(button);
+
+            dynamicButtonList.Clear();
+            GetLeagueDataFromServer();
         }
 
         private void GetLeagueDataFromServer()
@@ -182,6 +195,7 @@ namespace ThirstyJoe.RPSChampions
             foreach (LeaguePlayerStats player in league.PlayerList)
             {
                 GameObject obj = Instantiate(PlayerButtonPrefab, StandingsListContent.transform);
+                dynamicButtonList.Add(obj);
                 var tdButton = obj.GetComponent<TitleDescriptionButton>();
 
                 var buttonData = new TitleDescriptionButtonData(
@@ -206,6 +220,7 @@ namespace ThirstyJoe.RPSChampions
             foreach (LeaguePlayerStats player in league.PlayerList)
             {
                 GameObject obj = Instantiate(PlayerButtonPrefab, PlayerListContent.transform);
+                dynamicButtonList.Add(obj);
                 var tdButton = obj.GetComponent<TitleDescriptionButton>();
 
                 var buttonData = new TitleDescriptionButtonData(
@@ -285,22 +300,32 @@ namespace ThirstyJoe.RPSChampions
                 foreach (MatchBrief match in league.Schedule)
                 {
                     GameObject obj = Instantiate(PlayerButtonPrefab, MatchListContent.transform);
+                    dynamicButtonList.Add(obj);
                     var tdButton = obj.GetComponent<TitleDescriptionButton>();
 
                     string description = "";
                     if (match.Result == WLD.None)
                     {
+                        string weaponText = "No Selection";
+                        if (match.MyWeapon != Weapon.None)
+                            weaponText = "Playing " + match.MyWeapon.ToString();
                         description =
-                            RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("m", culture) + "\n" +
+                            weaponText + "\n" +
+                            RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("m", culture) + ", " +
                             " " +
                             RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("t", culture);
                     }
                     else
                     {
+                        string weaponText = "No Selection";
+                        if (match.MyWeapon != Weapon.None)
+                            weaponText = match.MyWeapon.ToString() + " VS " + match.OpponentWeapon.ToString();
                         if (match.Result == WLD.Draw)
-                            description = match.Result.ToString();
+                            description = weaponText + "\n" +
+                                          match.Result.ToString();
                         else
-                            description = "You " + match.Result.ToString();
+                            description = weaponText + "\n" +
+                                          match.Result.ToString();
                     }
 
                     var buttonData = new TitleDescriptionButtonData(
