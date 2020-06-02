@@ -14,7 +14,8 @@ namespace ThirstyJoe.RPSChampions
 
     public class LeagueView : MonoBehaviour
     {
-        [SerializeField] private TextMeshProUGUI TitleText;
+        [SerializeField] private TextMeshProUGUI OpenTitleText;
+        [SerializeField] private TextMeshProUGUI ClosedTitleText;
         [SerializeField] private GameObject StandingsListPanel;
         [SerializeField] private GameObject StandingsListContent;
         [SerializeField] private GameObject PlayerListPanel;
@@ -22,6 +23,10 @@ namespace ThirstyJoe.RPSChampions
         [SerializeField] private GameObject MatchListPanel;
         [SerializeField] private GameObject MatchListContent;
         [SerializeField] private GameObject PlayerButtonPrefab;
+        [SerializeField] private GameObject HostButtonGroup;
+        [SerializeField] private GameObject NonHostButtonGroup;
+        [SerializeField] private GameObject HostQuitConfirmationPanel;
+        [SerializeField] private GameObject NonHostQuitConfirmationPanel;
 
 
         // tracking previous selection, for when returning from this menu
@@ -32,6 +37,9 @@ namespace ThirstyJoe.RPSChampions
 
         private void Start()
         {
+            HostButtonGroup.SetActive(false);
+            NonHostButtonGroup.SetActive(false);
+
             if (TitleDescriptionButtonLinkData.Label == "Open")
                 JoinLeague();
             else
@@ -164,7 +172,7 @@ namespace ThirstyJoe.RPSChampions
 
         private void LeagueViewClosedUI()
         {
-            TitleText.text = league.Name;
+            ClosedTitleText.text = league.Name;
             MatchListPanel.SetActive(true);
             PlayerListPanel.SetActive(false);
             StandingsListPanel.SetActive(true);
@@ -189,7 +197,7 @@ namespace ThirstyJoe.RPSChampions
 
         private void LeagueViewOpenUI()
         {
-            TitleText.text = league.Name;
+            OpenTitleText.text = league.Name;
             MatchListPanel.SetActive(false);
             PlayerListPanel.SetActive(true);
             StandingsListPanel.SetActive(false);
@@ -207,6 +215,12 @@ namespace ThirstyJoe.RPSChampions
                 );
                 tdButton.SetupButton(buttonData, "PlayerProfile");
             }
+
+            // buttons for host or non host
+            if (league.Host == PlayerManager.PlayerName)
+                HostButtonGroup.SetActive(true);
+            else
+                NonHostButtonGroup.SetActive(true);
         }
 
         public void OnBackButtonPress()
@@ -218,6 +232,47 @@ namespace ThirstyJoe.RPSChampions
         {
             league.StartSeason(UpdateMatchList);
             LeagueViewClosedUI();
+        }
+        public void OnQuitLeagueButtonPress()
+        {
+            // TODO: add confirmation pop-up
+            // nonHostQuitConfirmationPanel.SetActive(true);
+        }
+
+        public void OnCancelLeagueButtonPress()
+        {
+            // TODO: add confirmation pop-up
+            // hostQuitConfirmationPanel.SetActive(true);
+        }
+
+        public void HostQuitLeague()
+        {
+            // on confirmation...
+            // TODO: delete from all members league list
+            // TODO: delete from title data
+            // TODO: delete shared data
+
+            // return to previous menu
+            EventSystem.current.SetSelectedGameObject(prevUISelection);
+            SceneManager.UnloadSceneAsync("LeagueView");
+        }
+
+        public void NonHostQuitLeague()
+        {
+            // on confirmation...
+            // TODO: delete from current league list
+            // TODO: delete player from shared data
+
+            // return to previous menu
+            EventSystem.current.SetSelectedGameObject(prevUISelection);
+            SceneManager.UnloadSceneAsync("LeagueView");
+        }
+
+        public void OnExitLeagueButtonPress()
+        {
+            // return to previous menu
+            EventSystem.current.SetSelectedGameObject(prevUISelection);
+            SceneManager.UnloadSceneAsync("LeagueView");
         }
 
         public void UpdateMatchList()
