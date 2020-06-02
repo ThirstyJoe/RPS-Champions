@@ -17,16 +17,17 @@ namespace ThirstyJoe.RPSChampions
     public class MatchOverview : MonoBehaviour
     {
         #region UNITY OBJ REFS
-        [SerializeField] private TextMeshProUGUI TitleTextSelf;
-        [SerializeField] private TextMeshProUGUI TitleTextOpponent;
-        [SerializeField] private TextMeshProUGUI DateText;
-        [SerializeField] private TextMeshProUGUI OpponentStatsText;
+        [SerializeField] private TextMeshProUGUI titleTextSelf;
+        [SerializeField] private TextMeshProUGUI titleTextOpponent;
+        [SerializeField] private TextMeshProUGUI dateText;
+        [SerializeField] private TextMeshProUGUI opponentStatsText;
         [SerializeField] private TextMeshProUGUI gameStatusText; // "select Rock Paper or Scissors", "Waiting for opponent...",
         [SerializeField] private GameObject winPanel;
         [SerializeField] private GameObject losePanel;
         [SerializeField] private GameObject drawPanel;
         [SerializeField] private GameObject chooseWeaponPanel;
         [SerializeField] private GameObject showWeaponPanel;
+        [SerializeField] private GameObject titlePanel;
         [SerializeField] private GameObject[] opponentWeaponChoice; // Reveal: rock, paper, scissors, no move
         [SerializeField] private GameObject[] myWeaponChoice; // Reveal: rock, paper, scissors, no move
         [SerializeField] private GameObject[] weaponToggles;
@@ -35,9 +36,10 @@ namespace ThirstyJoe.RPSChampions
         #region PRIVATE VARS 
         // tracking previous selection, for when returning from this menu
         private GameObject prevUISelection;
-        private MatchTurn Match;
-        private LeaguePlayerStats OpponentStats;
-        private int OpponentRating;
+        private MatchTurn matchTurn;
+        private MatchBrief matchBrief;
+        private LeaguePlayerStats opponentStats;
+        private int opponentRating;
 
 
         #endregion
@@ -46,6 +48,10 @@ namespace ThirstyJoe.RPSChampions
 
         private void Start()
         {
+            titlePanel.SetActive(false);
+            showWeaponPanel.SetActive(false);
+            chooseWeaponPanel.SetActive(false);
+
             prevUISelection = EventSystem.current.currentSelectedGameObject;
             GetMatchFromServer();
         }
@@ -81,11 +87,13 @@ namespace ThirstyJoe.RPSChampions
 
                // data successfully received 
                // interpret data
-               string matchJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "match");
+               string matchJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "matchTurn");
                string statsJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "opponentStats");
-               Match = MatchTurn.CreateFromJSON(matchJSON);
-               OpponentStats = LeaguePlayerStats.CreateFromJSON(statsJSON);
-               OpponentRating = Int32.Parse(RPSCommon.InterpretCloudScriptData(jsonResult, "opponentRating"));
+               matchBrief = new MatchBrief(RPSCommon.InterpretCloudScriptData(jsonResult, "matchBrief"));
+               matchTurn = MatchTurn.CreateFromJSON(matchJSON);
+               opponentStats = LeaguePlayerStats.CreateFromJSON(statsJSON);
+               opponentRating = Int32.Parse(RPSCommon.InterpretCloudScriptData(jsonResult, "opponentRating"));
+
                UpdateMatchUI();
            },
            RPSCommon.OnPlayFabError
@@ -99,9 +107,9 @@ namespace ThirstyJoe.RPSChampions
                 FunctionName = "SubmitLeagueMatchTurn",
                 FunctionParameter = new
                 {
-                    matchId = Match.MatchID,
+                    matchId = matchTurn.MatchID,
                     weapon = weapon.ToString(),
-                    leagueId = Match.LeagueID
+                    leagueId = matchTurn.LeagueID
                 },
                 GeneratePlayStreamEvent = true,
             },
@@ -118,22 +126,54 @@ namespace ThirstyJoe.RPSChampions
         #region UI 
         private void UpdateMatchUI()
         {
-            TitleTextSelf.text = PlayerManager.PlayerName + " " + PlayerManager.PlayerStats.Rating;
-            TitleTextOpponent.text = Match.OpponentName + " " + OpponentRating.ToString();
+            // initially set both panel states to false
+            showWeaponPanel.SetActive(false);
+            chooseWeaponPanel.SetActive(false);
 
-            CultureInfo culture = new CultureInfo("en-US");
-            DateText.text =
-                RPSCommon.UnixTimeToDateTime(Match.DateTime).ToString("m", culture) +
-                "\n" +
-                RPSCommon.UnixTimeToDateTime(Match.DateTime).ToString("t", culture);
+            // set up title panel
+            titlePanel.SetActive(true);
+            titleTextSelf.text = PlayerManager.PlayerName + " " + PlayerManager.PlayerStats.Rating;
+            titleTextOpponent.text = matchTurn.OpponentName + " " + opponentRating.ToString();
 
-            OpponentStatsText.text =
-                Match.OpponentName + " League Stats" + "\n" +
-                "Wins\t  " + OpponentStats.Wins.ToString() + "\n" +
-                "Losses\t  " + OpponentStats.Losses.ToString() + "\n" +
-                "Draws\t  " + OpponentStats.Draws.ToString();
+            if (matchBrief.Result == WLD.None)
+            { // set up choose weapon panel
+                chooseWeaponPanel.SetActive(true);
+                CultureInfo culture = new CultureInfo("en-US");
+                dateText.text =
+                    RPSCommon.UnixTimeToDateTime(matchTurn.DateTime).ToString("m", culture) +
+                    "\n" +
+                    RPSCommon.UnixTimeToDateTime(matchTurn.DateTime).ToString("t", culture);
 
-            SetWeaponToggleUI(RPSCommon.ParseWeapon(Match.MyWeapon));
+                opponentStatsText.text =
+                    matchTurn.OpponentName + " League Stats" + "\n" +
+                    "Wins\t  " + opponentStats.Wins.ToString() + "\n" +
+                    "Losses\t  " + opponentStats.Losses.ToString() + "\n" +
+                    "Draws\t  " + opponentStats.Draws.ToString();
+
+                SetWeaponToggleUI(RPSCommon.ParseWeapon(matchTurn.MyWeapon));
+            }
+            else
+            { // set up show show weapons panel
+                showWeaponPanel.SetActive(true);
+                foreach (GameObject weap in opponentWeaponChoice)
+                    weap.SetActive(false);
+                opponentWeaponChoice[(int)matchBrief.OpponentWeapon].SetActive(true);
+                foreach (GameObject weap in myWeaponChoice)
+                    weap.SetActive(false);
+                myWeaponChoice[(int)matchBrief.MyWeapon].SetActive(true);
+
+                winPanel.SetActive(false);
+                losePanel.SetActive(false);
+                drawPanel.SetActive(false);
+
+                if (matchBrief.Result == WLD.Win)
+                    winPanel.SetActive(true);
+                else if (matchBrief.Result == WLD.Lose)
+                    losePanel.SetActive(true);
+                else
+                    drawPanel.SetActive(true);
+
+            }
         }
 
         private void SetWeaponToggleUI(Weapon weapon)
@@ -168,9 +208,9 @@ namespace ThirstyJoe.RPSChampions
         private void ChooseWeapon(Weapon weapon)
         {
             // check if it is already selected
-            if (Match.MyWeapon != weapon.ToString())
+            if (matchTurn.MyWeapon != weapon.ToString())
             {
-                Match.MyWeapon = weapon.ToString();
+                matchTurn.MyWeapon = weapon.ToString();
                 SubmitLeagueMatchTurn(weapon);
             }
 

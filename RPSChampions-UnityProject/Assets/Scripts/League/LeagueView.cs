@@ -146,7 +146,7 @@ namespace ThirstyJoe.RPSChampions
                         {
                             var matchDataArray = scheduleJSON.Split('"').Where((item, index) => index % 2 != 0);
                             foreach (string matchString in matchDataArray)
-                                league.Schedule.Add(new Match(matchString));
+                                league.Schedule.Add(new MatchBrief(matchString));
                         }
                     }
                 }
@@ -227,7 +227,7 @@ namespace ThirstyJoe.RPSChampions
             if (league.Schedule != null)
             {
                 int matchIndex = 0;
-                foreach (Match match in league.Schedule)
+                foreach (MatchBrief match in league.Schedule)
                 {
                     GameObject obj = Instantiate(PlayerButtonPrefab, MatchListContent.transform);
                     var tdButton = obj.GetComponent<TitleDescriptionButton>();

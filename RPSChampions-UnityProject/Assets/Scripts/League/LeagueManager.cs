@@ -111,7 +111,7 @@ namespace ThirstyJoe.RPSChampions
 
 
     [System.Serializable]
-    public class Match
+    public class MatchBrief
     {
         public int DateTime;
         public string Opponent;
@@ -123,7 +123,7 @@ namespace ThirstyJoe.RPSChampions
 
 
         // constructor using @ seperated string instead of JSON to meet server 1000 byte PlayFab requirement
-        public Match(string specialString)
+        public MatchBrief(string specialString)
         {
             var splitString = specialString.Split('@');
             DateTime = Int32.Parse(splitString[0]);
@@ -170,7 +170,7 @@ namespace ThirstyJoe.RPSChampions
         public string Host = "NoHost";
         public List<LeaguePlayerStats> PlayerList;
         public string Key = "";
-        public List<Match> Schedule = new List<Match>();
+        public List<MatchBrief> Schedule = new List<MatchBrief>();
 
         public League(string status, string name, string host,
                         LeagueSettings settings, string key, List<LeaguePlayerStats> playerList)
@@ -213,7 +213,7 @@ namespace ThirstyJoe.RPSChampions
                string scheduleJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "schedule");
                var matchDataArray = scheduleJSON.Split('"').Where((item, index) => index % 2 != 0);
                foreach (string matchString in matchDataArray)
-                   Schedule.Add(new Match(matchString));
+                   Schedule.Add(new MatchBrief(matchString));
 
                callback();
            },
