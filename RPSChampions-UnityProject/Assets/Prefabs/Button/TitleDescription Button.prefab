@@ -35,8 +35,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -130, y: 7.5}
-  m_SizeDelta: {x: -280, y: -15}
+  m_AnchoredPosition: {x: -147.32, y: 7.5}
+  m_SizeDelta: {x: -314.64, y: -15}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2225867692787609649
 CanvasRenderer:
@@ -72,7 +72,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Title
+  m_text: cRASHbANDICOOT1000
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: aade6ea5a7e3c984b89fc660ee014ab8, type: 2}
   m_sharedMaterial: {fileID: 3210437276951574258, guid: aade6ea5a7e3c984b89fc660ee014ab8,
@@ -101,7 +101,7 @@ MonoBehaviour:
   m_outlineColor:
     serializedVersion: 2
     rgba: 4278190080
-  m_fontSize: 50
+  m_fontSize: 36.1
   m_fontSizeBase: 50
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -115,7 +115,7 @@ MonoBehaviour:
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
-  m_enableWordWrapping: 1
+  m_enableWordWrapping: 0
   m_wordWrappingRatios: 0.4
   m_overflowMode: 0
   m_firstOverflowCharacterIndex: -1
@@ -142,7 +142,7 @@ MonoBehaviour:
   m_margin: {x: 0, y: 0, z: 0, w: -10}
   m_textInfo:
     textComponent: {fileID: 5826930664773469827}
-    characterCount: 5
+    characterCount: 18
     spriteCount: 0
     spaceCount: 0
     wordCount: 1
@@ -200,8 +200,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 220, y: 7.5}
-  m_SizeDelta: {x: -460, y: -15}
+  m_AnchoredPosition: {x: 193.905, y: 7.5}
+  m_SizeDelta: {x: -407.81, y: -15}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &469620861536552860
 CanvasRenderer:
@@ -237,7 +237,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Description
+  m_text: 'Scissors vs Scissors
+
+    Win'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: aade6ea5a7e3c984b89fc660ee014ab8, type: 2}
   m_sharedMaterial: {fileID: 3210437276951574258, guid: aade6ea5a7e3c984b89fc660ee014ab8,
@@ -266,7 +268,7 @@ MonoBehaviour:
   m_outlineColor:
     serializedVersion: 2
     rgba: 4278190080
-  m_fontSize: 41.65
+  m_fontSize: 28.65
   m_fontSizeBase: 50
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -280,7 +282,7 @@ MonoBehaviour:
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
-  m_enableWordWrapping: 1
+  m_enableWordWrapping: 0
   m_wordWrappingRatios: 0.4
   m_overflowMode: 0
   m_firstOverflowCharacterIndex: -1
@@ -307,12 +309,12 @@ MonoBehaviour:
   m_margin: {x: 0, y: 0, z: 0, w: -10}
   m_textInfo:
     textComponent: {fileID: 3730738033881636026}
-    characterCount: 11
+    characterCount: 24
     spriteCount: 0
-    spaceCount: 0
-    wordCount: 1
+    spaceCount: 3
+    wordCount: 4
     linkCount: 0
-    lineCount: 1
+    lineCount: 2
     pageCount: 1
     materialCount: 1
   m_isUsingLegacyAnimationComponent: 0
