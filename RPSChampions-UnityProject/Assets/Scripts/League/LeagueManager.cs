@@ -7,6 +7,9 @@ namespace ThirstyJoe.RPSChampions
     using System.Linq;
     using PlayFab.Json;
     using System;
+    using Photon.Pun;
+    using ExitGames.Client.Photon;
+    using Photon.Realtime;
 
     public enum LeagueType
     {
@@ -143,9 +146,9 @@ namespace ThirstyJoe.RPSChampions
             if (weaponCode == 'R')
                 return Weapon.Rock;
             if (weaponCode == 'P')
-                return Weapon.Scissors;
-            if (weaponCode == 'S')
                 return Weapon.Paper;
+            if (weaponCode == 'S')
+                return Weapon.Scissors;
             return Weapon.None;
         }
 
@@ -214,6 +217,15 @@ namespace ThirstyJoe.RPSChampions
                var matchDataArray = scheduleJSON.Split('"').Where((item, index) => index % 2 != 0);
                foreach (string matchString in matchDataArray)
                    Schedule.Add(new MatchBrief(matchString));
+
+               // send event that league is started, for anyone logged in
+               var data = new object[] { Key };
+               PhotonNetwork.RaiseEvent(
+                   LeagueView.LEAGUE_UPDATE_EVENT, // .Code
+                   data,                           // .CustomData
+                   RaiseEventOptions.Default,
+                   SendOptions.SendReliable
+               );
 
                callback();
            },

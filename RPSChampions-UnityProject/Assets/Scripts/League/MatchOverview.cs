@@ -3,7 +3,10 @@ namespace ThirstyJoe.RPSChampions
     #region IMPORTS 
 
     using UnityEngine;
+    using Photon.Pun;
     using TMPro;
+    using ExitGames.Client.Photon;
+    using Photon.Realtime;
     using UnityEngine.SceneManagement;
     using PlayFab;
     using PlayFab.ClientModels;
@@ -40,7 +43,6 @@ namespace ThirstyJoe.RPSChampions
         private MatchBrief matchBrief;
         private LeaguePlayerStats opponentStats;
         private int opponentRating;
-
 
         #endregion
 
@@ -116,6 +118,16 @@ namespace ThirstyJoe.RPSChampions
            result =>
            {
                Debug.Log("submitted match turn");
+
+               // send event to update in league view
+               string leagueKey = TitleDescriptionButtonLinkData.LinkID;
+               var data = new object[] { leagueKey, PlayerPrefs.GetString("playFabId") };
+               PhotonNetwork.RaiseEvent(
+                   LeagueView.LEAGUE_UPDATE_SELF_EVENT,         // .Code
+                   data,                                        // .CustomData
+                   RaiseEventOptions.Default,
+                   SendOptions.SendReliable
+               );
            },
            RPSCommon.OnPlayFabError
            );
@@ -153,7 +165,7 @@ namespace ThirstyJoe.RPSChampions
                 SetWeaponToggleUI(RPSCommon.ParseWeapon(matchTurn.MyWeapon));
             }
             else
-            { // set up show show weapons panel
+            { // set up show results panel
                 showWeaponPanel.SetActive(true);
                 foreach (GameObject weap in opponentWeaponChoice)
                     weap.SetActive(false);

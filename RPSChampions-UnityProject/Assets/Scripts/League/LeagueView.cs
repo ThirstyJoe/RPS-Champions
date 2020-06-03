@@ -1,7 +1,10 @@
 namespace ThirstyJoe.RPSChampions
 {
     using UnityEngine;
+    using Photon.Pun;
     using TMPro;
+    using ExitGames.Client.Photon;
+    using Photon.Realtime;
     using UnityEngine.SceneManagement;
     using UnityEngine.EventSystems;
     using PlayFab;
@@ -12,8 +15,17 @@ namespace ThirstyJoe.RPSChampions
     using System.Globalization;
     using PlayFab.Json;
 
-    public class LeagueView : MonoBehaviour
+    public class LeagueView : MonoBehaviourPunCallbacks
     {
+        #region EVENT DEFS
+
+        public const byte LEAGUE_UPDATE_EVENT = 0;
+        public const byte LEAGUE_UPDATE_SELF_EVENT = 1;
+        public const byte LEAGUE_CANCELLED_EVENT = 2;
+
+        #endregion
+
+        #region OBJ REFS 
         [SerializeField] private TextMeshProUGUI OpenTitleText;
         [SerializeField] private TextMeshProUGUI ClosedTitleText;
         [SerializeField] private GameObject StandingsListPanel;
@@ -28,8 +40,13 @@ namespace ThirstyJoe.RPSChampions
         [SerializeField] private GameObject HostQuitConfirmationPanel;
         [SerializeField] private GameObject NonHostQuitConfirmationPanel;
 
-        // use this list to delete buttons later
-        private List<GameObject> dynamicButtonList = new List<GameObject>();
+        #endregion
+
+        #region PRIVATE VARS 
+
+        // use these list to track buttons refs for cleanup when updating
+        private List<GameObject> playerButtonList = new List<GameObject>();
+        private List<GameObject> matchButtonList = new List<GameObject>();
 
 
         // tracking previous selection, for when returning from this menu
@@ -37,6 +54,20 @@ namespace ThirstyJoe.RPSChampions
 
         // All the data for the league
         private League league;
+
+        #endregion
+
+        #region UNITY 
+
+        private void Awake()
+        {
+            PhotonNetwork.NetworkingClient.EventReceived += ReceiveCustomPUNEvents;
+        }
+
+        private void OnDestroy()
+        {
+            PhotonNetwork.NetworkingClient.EventReceived -= ReceiveCustomPUNEvents;
+        }
 
         private void Start()
         {
@@ -47,8 +78,117 @@ namespace ThirstyJoe.RPSChampions
                 JoinLeague();
             else
                 GetLeagueDataFromServer();
+
+            ConnectToPhoton();
         }
 
+        #endregion
+
+        #region PUN EVENT FUNCS
+        private void ReceiveCustomPUNEvents(EventData obj)
+        {
+            // get data from event
+            object[] data = (object[])obj.CustomData;
+            if (data == null) return;
+
+            // make sure event is from the correct league
+            string eventLeague = (string)data[0];
+            if (eventLeague != league.Key) return;
+
+            // switch to correct function
+            switch (obj.Code)
+            {
+                case LEAGUE_UPDATE_EVENT:
+                    UpdateLeagueView();
+                    break;
+                case LEAGUE_UPDATE_SELF_EVENT:
+                    string playerId = (string)data[1];
+                    Debug.Log(playerId + " / " + PlayerPrefs.GetString("playFabId"));
+                    if (playerId == PlayerPrefs.GetString("playFabId"))
+                        UpdateLeagueView();
+                    break;
+                case LEAGUE_CANCELLED_EVENT:
+                    ShowLeagueCancelledAlert();
+                    break;
+            }
+        }
+
+        #endregion
+
+        #region PUN
+
+
+        public void ConnectToPhoton()
+        {
+            PhotonNetwork.LocalPlayer.NickName = PlayerManager.PlayerStats.PlayerName;
+            PhotonNetwork.ConnectUsingSettings();
+        }
+
+        public override void OnPlayerEnteredRoom(Player other)
+        {
+            Debug.LogFormat("OnPlayerEnteredRoom() {0}", other.NickName);
+            if (league.Status == "Open")
+                UpdateLeagueView();
+        }
+
+        public override void OnPlayerLeftRoom(Player other)
+        {
+            Debug.LogFormat("OnPlayerLeftRoom() {0}", other.NickName);
+        }
+
+        public override void OnConnectedToMaster()
+        {
+            // connect to room
+            Debug.Log("connected to master");
+            string leagueKey = TitleDescriptionButtonLinkData.LinkID;
+            PhotonNetwork.JoinOrCreateRoom(leagueKey, null, null);
+        }
+
+        public override void OnCreatedRoom()
+        {
+            Debug.Log("Game Created");
+        }
+
+        public override void OnJoinedRoom()
+        {
+            Debug.Log("Join Game Successful");
+        }
+
+        public override void OnCreateRoomFailed(short returnCode, string message)
+        {
+            Debug.Log("Create Game Failed: " + message);
+        }
+
+        public override void OnJoinRoomFailed(short returnCode, string message)
+        {
+            Debug.Log("Join Game Failed: " + message);
+        }
+
+        public override void OnJoinRandomFailed(short returnCode, string message)
+        {
+            Debug.Log("Join Random Game Failed: " + message);
+        }
+
+        #endregion
+
+        #region CUSTOM PUBLIC 
+
+
+
+        // called when returning from match overview
+        public void UpdateLeagueView()
+        {
+            GetLeagueDataFromServer();
+        }
+
+        #endregion
+
+        #region CUSTOM PRIVATE 
+
+        private void ShowLeagueCancelledAlert()
+        {
+
+        }
         private void JoinLeague()
         {
             string leagueKey = TitleDescriptionButtonLinkData.LinkID;
@@ -85,16 +225,6 @@ namespace ThirstyJoe.RPSChampions
             },
             RPSCommon.OnPlayFabError
             );
-        }
-
-        // called when returning from match overview
-        public void UpdateLeagueView()
-        {
-            foreach (var button in dynamicButtonList)
-                Destroy(button);
-
-            dynamicButtonList.Clear();
-            GetLeagueDataFromServer();
         }
 
         private void GetLeagueDataFromServer()
@@ -183,6 +313,10 @@ namespace ThirstyJoe.RPSChampions
             );
         }
 
+        #endregion
+
+        #region UI 
+
         private void LeagueViewClosedUI()
         {
             ClosedTitleText.text = league.Name;
@@ -190,12 +324,17 @@ namespace ThirstyJoe.RPSChampions
             PlayerListPanel.SetActive(false);
             StandingsListPanel.SetActive(true);
 
+            // clear previous buttons
+            foreach (var button in playerButtonList)
+                GameObject.Destroy(button);
+            playerButtonList.Clear();
+
             // generate player list
             int matchIndex = 0;
             foreach (LeaguePlayerStats player in league.PlayerList)
             {
                 GameObject obj = Instantiate(PlayerButtonPrefab, StandingsListContent.transform);
-                dynamicButtonList.Add(obj);
+                playerButtonList.Add(obj);
                 var tdButton = obj.GetComponent<TitleDescriptionButton>();
 
                 var buttonData = new TitleDescriptionButtonData(
@@ -211,6 +350,11 @@ namespace ThirstyJoe.RPSChampions
 
         private void LeagueViewOpenUI()
         {
+            // clear previous buttons
+            foreach (var button in playerButtonList)
+                GameObject.Destroy(button);
+            playerButtonList.Clear();
+
             OpenTitleText.text = league.Name;
             MatchListPanel.SetActive(false);
             PlayerListPanel.SetActive(true);
@@ -220,7 +364,7 @@ namespace ThirstyJoe.RPSChampions
             foreach (LeaguePlayerStats player in league.PlayerList)
             {
                 GameObject obj = Instantiate(PlayerButtonPrefab, PlayerListContent.transform);
-                dynamicButtonList.Add(obj);
+                playerButtonList.Add(obj);
                 var tdButton = obj.GetComponent<TitleDescriptionButton>();
 
                 var buttonData = new TitleDescriptionButtonData(
@@ -238,8 +382,66 @@ namespace ThirstyJoe.RPSChampions
                 NonHostButtonGroup.SetActive(true);
         }
 
+        public void UpdateMatchList()
+        {
+            // clear previous buttons
+            foreach (var button in matchButtonList)
+                GameObject.Destroy(button);
+            matchButtonList.Clear();
+
+            CultureInfo culture = new CultureInfo("en-US");
+            // generate match list
+            if (league.Schedule != null)
+            {
+                int matchIndex = 0;
+                foreach (MatchBrief match in league.Schedule)
+                {
+                    GameObject obj = Instantiate(PlayerButtonPrefab, MatchListContent.transform);
+                    matchButtonList.Add(obj);
+                    var tdButton = obj.GetComponent<TitleDescriptionButton>();
+
+                    string description = "";
+                    if (match.Result == WLD.None)
+                    {
+                        string weaponText = "No Selection";
+                        if (match.MyWeapon != Weapon.None)
+                            weaponText = "Playing " + match.MyWeapon.ToString();
+                        description =
+                            weaponText + "\n" +
+                            RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("m", culture) + ", " +
+                            " " +
+                            RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("t", culture);
+                    }
+                    else
+                    {
+                        string weaponText = "No Selection";
+                        if (match.MyWeapon != Weapon.None)
+                            weaponText = match.MyWeapon.ToString() + " VS " + match.OpponentWeapon.ToString();
+                        if (match.Result == WLD.Draw)
+                            description = weaponText + "\n" +
+                                          match.Result.ToString();
+                        else
+                            description = weaponText + "\n" +
+                                          match.Result.ToString();
+                    }
+
+                    var buttonData = new TitleDescriptionButtonData(
+                        league.Key,
+                        match.Opponent,
+                        description
+                    );
+                    tdButton.SetupButton(buttonData, "MatchOverview", "", matchIndex++);
+                }
+            }
+        }
+
+        #endregion
+
+        #region PLAYER ACTIONS 
+
         public void OnBackButtonPress()
         {
+            DisconnectFromGame();
             EventSystem.current.SetSelectedGameObject(prevUISelection);
             SceneManager.UnloadSceneAsync("LeagueView");
         }
@@ -290,53 +492,11 @@ namespace ThirstyJoe.RPSChampions
             SceneManager.UnloadSceneAsync("LeagueView");
         }
 
-        public void UpdateMatchList()
+        private void DisconnectFromGame()
         {
-            CultureInfo culture = new CultureInfo("en-US");
-            // generate match list
-            if (league.Schedule != null)
-            {
-                int matchIndex = 0;
-                foreach (MatchBrief match in league.Schedule)
-                {
-                    GameObject obj = Instantiate(PlayerButtonPrefab, MatchListContent.transform);
-                    dynamicButtonList.Add(obj);
-                    var tdButton = obj.GetComponent<TitleDescriptionButton>();
-
-                    string description = "";
-                    if (match.Result == WLD.None)
-                    {
-                        string weaponText = "No Selection";
-                        if (match.MyWeapon != Weapon.None)
-                            weaponText = "Playing " + match.MyWeapon.ToString();
-                        description =
-                            weaponText + "\n" +
-                            RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("m", culture) + ", " +
-                            " " +
-                            RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("t", culture);
-                    }
-                    else
-                    {
-                        string weaponText = "No Selection";
-                        if (match.MyWeapon != Weapon.None)
-                            weaponText = match.MyWeapon.ToString() + " VS " + match.OpponentWeapon.ToString();
-                        if (match.Result == WLD.Draw)
-                            description = weaponText + "\n" +
-                                          match.Result.ToString();
-                        else
-                            description = weaponText + "\n" +
-                                          match.Result.ToString();
-                    }
-
-                    var buttonData = new TitleDescriptionButtonData(
-                        league.Key,
-                        match.Opponent,
-                        description
-                    );
-                    tdButton.SetupButton(buttonData, "MatchOverview", "", matchIndex++);
-                }
-            }
+            PhotonNetwork.Disconnect();
         }
 
+        #endregion
     }
 }
