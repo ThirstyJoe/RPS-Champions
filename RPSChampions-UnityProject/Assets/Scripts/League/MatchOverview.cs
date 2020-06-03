@@ -109,6 +109,7 @@ namespace ThirstyJoe.RPSChampions
                 FunctionName = "SubmitLeagueMatchTurn",
                 FunctionParameter = new
                 {
+                    round = matchTurn.Round,
                     matchId = matchTurn.MatchID,
                     weapon = weapon.ToString(),
                     leagueId = matchTurn.LeagueID
