@@ -37,6 +37,8 @@ namespace ThirstyJoe.RPSChampions
         [SerializeField] private GameObject PlayerButtonPrefab;
         [SerializeField] private GameObject HostButtonGroup;
         [SerializeField] private GameObject NonHostButtonGroup;
+        [SerializeField] private GameObject NonHostSeasonOverButtonGroup;
+        [SerializeField] private GameObject HostSeasonOverButtonGroup;
         [SerializeField] private GameObject HostQuitConfirmationPanel;
         [SerializeField] private GameObject NonHostQuitConfirmationPanel;
 
@@ -73,6 +75,8 @@ namespace ThirstyJoe.RPSChampions
         {
             HostButtonGroup.SetActive(false);
             NonHostButtonGroup.SetActive(false);
+            HostSeasonOverButtonGroup.SetActive(false);
+            NonHostSeasonOverButtonGroup.SetActive(false);
 
             if (TitleDescriptionButtonLinkData.Label == "Open")
                 JoinLeague();
@@ -329,10 +333,26 @@ namespace ThirstyJoe.RPSChampions
                 GameObject.Destroy(button);
             playerButtonList.Clear();
 
+            // show buttons for end of season navigation
+            if (league.Status == "Complete")
+            {
+                NonHostSeasonOverButtonGroup.SetActive(true);
+            }
+
+            // data for end of season rating adjustments
+            List<int> ratings = new List<int>();
+            int rank = 0;
+            if (league.Status == "Complete")
+            {
+                foreach (LeaguePlayerStats player in league.PlayerList)
+                    ratings.Add(player.Rating);
+            }
+
             // generate player list
-            int matchIndex = 0;
             foreach (LeaguePlayerStats player in league.PlayerList)
             {
+                rank++;
+
                 GameObject obj = Instantiate(PlayerButtonPrefab, StandingsListContent.transform);
                 playerButtonList.Add(obj);
                 var tdButton = obj.GetComponent<TitleDescriptionButton>();
@@ -343,11 +363,43 @@ namespace ThirstyJoe.RPSChampions
                     player.Wins.ToString() + " - " + player.Losses.ToString() + " - " + player.Draws.ToString()
                 );
                 tdButton.SetupButton(buttonData, "PlayerProfile");
+
+                if (league.Status == "Complete")
+                {
+                    int points = CalculateRatingChange(ratings, rank);
+                    tdButton.SetPointText(points);
+                }
             }
 
             UpdateMatchList();
         }
 
+        private int CalculateRatingChange(List<int> ratings, int rank)
+        {
+            int index = rank - 1;
+            int myRating = ratings[index];
+            float ratingChange = 0;
+
+            for (int i = 0; i < ratings.Count; i++)
+            {
+                if (i == index) continue;
+                ratingChange += CalculateRatingChangeFactor(myRating, ratings[i], index, i);
+            }
+
+            return (int)ratingChange;
+        }
+
+        // using: https://www.youtube.com/watch?v=AsYfbmp0To0&feature=emb_title
+        private float CalculateRatingChangeFactor(int myRating, int oppRating, int myRank, int oppRank)
+        {
+            float maxChange = 32F;
+            float ELOrange = 400F;
+            float expectedScore = 1F / (1F + (float)Math.Pow(10F, (oppRating - myRating) / ELOrange));
+            float score = 0.5F;
+            if (oppRank < myRank) score = 0F;
+            if (oppRank > myRank) score = 1F;
+            return maxChange * (score - expectedScore);
+        }
         private void LeagueViewOpenUI()
         {
             // clear previous buttons
@@ -431,6 +483,13 @@ namespace ThirstyJoe.RPSChampions
                         description
                     );
                     tdButton.SetupButton(buttonData, "MatchOverview", "", matchIndex++);
+
+                    int points = 0;
+                    if (match.Result == WLD.Draw)
+                        points = 1;
+                    if (match.Result == WLD.Win)
+                        points = 3;
+                    tdButton.SetPointText(points);
                 }
             }
         }
@@ -454,6 +513,9 @@ namespace ThirstyJoe.RPSChampions
         {
             // TODO: add confirmation pop-up
             // nonHostQuitConfirmationPanel.SetActive(true);
+
+            // temp
+            NonHostQuitLeague();
         }
 
         public void OnCancelLeagueButtonPress()

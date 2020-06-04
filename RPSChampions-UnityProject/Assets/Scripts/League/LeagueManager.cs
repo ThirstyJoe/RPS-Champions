@@ -69,7 +69,7 @@ namespace ThirstyJoe.RPSChampions
         {
             get
             {
-                return (Wins * 2) + Draws;
+                return (Wins * 3) + Draws;
             }
         }
 

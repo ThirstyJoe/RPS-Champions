@@ -17,6 +17,8 @@
     {
         [SerializeField] private TextMeshProUGUI Title;
         [SerializeField] private TextMeshProUGUI Description;
+        [SerializeField] private TextMeshProUGUI PositivePointText;
+        [SerializeField] private TextMeshProUGUI NegativePointText;
 
         private string LinkID;
         private int DataIndex; // index used to retrieve data from an Array
@@ -26,6 +28,8 @@
 
         public void OnPressedTitleDescriptionButton()
         {
+            PositivePointText.text = "";
+            NegativePointText.text = "";
             TitleDescriptionButtonLinkData.LinkID = LinkID;
             TitleDescriptionButtonLinkData.DataIndex = DataIndex;
             TitleDescriptionButtonLinkData.Label = Label;
@@ -36,6 +40,18 @@
         {
             Title.SetText(tdPair.Title);
             Description.SetText(tdPair.Description);
+        }
+
+        public void SetPointText(int value)
+        {
+            if (value > 0)
+            {
+                PositivePointText.text = "+" + value.ToString();
+            }
+            else if (value < 0)
+            {
+                NegativePointText.text = value.ToString();
+            }
         }
 
         public void SetLoadSceneName(string loadSceneName)
