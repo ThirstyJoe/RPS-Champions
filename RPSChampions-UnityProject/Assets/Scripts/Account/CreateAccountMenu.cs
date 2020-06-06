@@ -116,7 +116,10 @@ namespace ThirstyJoe.RPSChampions
             PlayerPrefs.SetString("password", password);
             PlayerPrefs.SetString("screenName", username);
 
-            SceneManager.LoadScene("MainMenu");
+            if (LeagueManager.redirectLoginToLeague)
+                SceneManager.LoadScene("LeagueDashboard");
+            else
+                SceneManager.LoadScene("MainMenu");
         }
 
         private void FailureCallback(PlayFabError error)

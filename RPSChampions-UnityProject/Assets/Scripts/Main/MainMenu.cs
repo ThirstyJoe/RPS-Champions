@@ -14,12 +14,15 @@
         [SerializeField]
         private GameObject accountButton;
 
+        private bool loggedIn = false;
+
 
         private void Start()
         {
-            // TODO: maybe wait to see if player actually logs in?
             if (PlayerPrefs.HasKey("screenName") && PlayerPrefs.HasKey("password"))
             {
+                loggedIn = true;
+
                 // player was logged in previously
                 TextMeshProUGUI buttonText = accountButton.GetComponentInChildren<TextMeshProUGUI>();
                 buttonText.text = PlayerPrefs.GetString("screenName");
@@ -30,6 +33,8 @@
             }
             else
             {
+                loggedIn = false;
+
                 // player is not fully logged in
                 logInButton.SetActive(true);
                 accountButton.SetActive(false);
@@ -43,7 +48,16 @@
         }
         public void OnLeaguePlayButtonPress()
         {
-            SceneManager.LoadScene("LeagueDashboard");
+            Debug.Log(loggedIn);
+            if (loggedIn)
+            {
+                SceneManager.LoadScene("LeagueDashboard");
+            }
+            else
+            {
+                SceneManager.LoadScene("LogIn");
+                LeagueManager.redirectLoginToLeague = true;
+            }
         }
         public void OnPracticeButtonPress()
         {
@@ -51,6 +65,7 @@
         }
         public void OnLogInButtonPress()
         {
+            LeagueManager.redirectLoginToLeague = false;
             SceneManager.LoadScene("LogIn");
         }
         public void OnAccountButtonPress()

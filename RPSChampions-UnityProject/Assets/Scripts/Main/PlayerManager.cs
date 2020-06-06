@@ -13,6 +13,7 @@ namespace ThirstyJoe.RPSChampions
         public static string OpponentId; // playfab ID of the opponent in quickmatch // TODO: save in game data
 
         private static PlayerStats playerStats;
+
         public static PlayerStats PlayerStats
         {
             get
@@ -55,19 +56,23 @@ namespace ThirstyJoe.RPSChampions
 
                     // update stats data in client
                     PlayerStatsData stats = new PlayerStatsData();
-                    stats.TotalWLD.Draws = result.Statistics[0].Value;
-                    stats.TotalWLD.Losses = result.Statistics[1].Value;
-                    stats.PaperWLD.Draws = result.Statistics[2].Value;
-                    stats.PaperWLD.Losses = result.Statistics[3].Value;
-                    stats.PaperWLD.Wins = result.Statistics[4].Value;
-                    stats.Rating = result.Statistics[5].Value;
-                    stats.RockWLD.Draws = result.Statistics[6].Value;
-                    stats.RockWLD.Losses = result.Statistics[7].Value;
-                    stats.RockWLD.Wins = result.Statistics[8].Value;
-                    stats.ScissorsWLD.Draws = result.Statistics[9].Value;
-                    stats.ScissorsWLD.Losses = result.Statistics[10].Value;
-                    stats.ScissorsWLD.Wins = result.Statistics[11].Value;
-                    stats.TotalWLD.Wins = result.Statistics[12].Value;
+                    if (result.Statistics.Count >= 13) // ensure stats have been initialized for this account
+                    {
+                        stats.TotalWLD.Draws = result.Statistics[0].Value;
+                        stats.TotalWLD.Losses = result.Statistics[1].Value;
+                        stats.PaperWLD.Draws = result.Statistics[2].Value;
+                        stats.PaperWLD.Losses = result.Statistics[3].Value;
+                        stats.PaperWLD.Wins = result.Statistics[4].Value;
+                        stats.Rating = result.Statistics[5].Value;
+                        stats.RockWLD.Draws = result.Statistics[6].Value;
+                        stats.RockWLD.Losses = result.Statistics[7].Value;
+                        stats.RockWLD.Wins = result.Statistics[8].Value;
+                        stats.ScissorsWLD.Draws = result.Statistics[9].Value;
+                        stats.ScissorsWLD.Losses = result.Statistics[10].Value;
+                        stats.ScissorsWLD.Wins = result.Statistics[11].Value;
+                        stats.TotalWLD.Wins = result.Statistics[12].Value;
+                    }
+
 
                     PlayerManager.PlayerStats.data = stats;
                 },

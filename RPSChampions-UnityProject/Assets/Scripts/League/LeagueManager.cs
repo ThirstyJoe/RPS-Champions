@@ -263,6 +263,7 @@ namespace ThirstyJoe.RPSChampions
     public class LeagueManager : Singleton<PlayerManager>
     {
         public static LeagueSettings leagueSettings;
+        public static bool redirectLoginToLeague = false;
         private static string leagueViewKey;
 
         public static void NewCustomLeague()

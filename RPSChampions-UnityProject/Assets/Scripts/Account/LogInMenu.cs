@@ -99,7 +99,10 @@ namespace ThirstyJoe.RPSChampions
             PlayerPrefs.SetString("email", result.InfoResultPayload.AccountInfo.PrivateInfo.Email);
 
 
-            SceneManager.LoadScene("MainMenu");
+            if (LeagueManager.redirectLoginToLeague)
+                SceneManager.LoadScene("LeagueDashboard");
+            else
+                SceneManager.LoadScene("MainMenu");
             PlayFabAuthenticator.Authenticated(result);
         }
 
