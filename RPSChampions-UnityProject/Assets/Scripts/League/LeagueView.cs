@@ -340,12 +340,16 @@ namespace ThirstyJoe.RPSChampions
             }
 
             // data for end of season rating adjustments
-            List<int> ratings = new List<int>();
+            List<int> ratingList = new List<int>();
+            List<int> scoreList = new List<int>();
             int rank = 0;
             if (league.Status == "Complete")
             {
                 foreach (LeaguePlayerStats player in league.PlayerList)
-                    ratings.Add(player.Rating);
+                {
+                    ratingList.Add(player.Rating);
+                    scoreList.Add(player.WLDScore);
+                }
             }
 
             // generate player list
@@ -366,7 +370,7 @@ namespace ThirstyJoe.RPSChampions
 
                 if (league.Status == "Complete")
                 {
-                    int points = CalculateRatingChange(ratings, rank);
+                    int points = CalculateRatingChange(ratingList, scoreList, rank);
                     tdButton.SetPointText(points);
                 }
             }
@@ -374,30 +378,31 @@ namespace ThirstyJoe.RPSChampions
             UpdateMatchList();
         }
 
-        private int CalculateRatingChange(List<int> ratings, int rank)
+        private int CalculateRatingChange(List<int> ratings, List<int> scores, int rank)
         {
             int index = rank - 1;
             int myRating = ratings[index];
+            int myScore = scores[index];
             float ratingChange = 0;
 
             for (int i = 0; i < ratings.Count; i++)
             {
                 if (i == index) continue;
-                ratingChange += CalculateRatingChangeFactor(myRating, ratings[i], index, i);
+                ratingChange += CalculateRatingChangeFactor(myRating, ratings[i], myScore, scores[i]);
             }
 
-            return (int)ratingChange;
+            return (int)Math.Round(ratingChange);
         }
 
         // using: https://www.youtube.com/watch?v=AsYfbmp0To0&feature=emb_title
-        private float CalculateRatingChangeFactor(int myRating, int oppRating, int myRank, int oppRank)
+        private float CalculateRatingChangeFactor(int myRating, int oppRating, int myScore, int oppScore)
         {
             float maxChange = 32F;
             float ELOrange = 400F;
             float expectedScore = 1F / (1F + (float)Math.Pow(10F, (oppRating - myRating) / ELOrange));
             float score = 0.5F;
-            if (oppRank < myRank) score = 0F;
-            if (oppRank > myRank) score = 1F;
+            if (myScore < oppScore) score = 0F;
+            if (myScore > oppScore) score = 1F;
             return maxChange * (score - expectedScore);
         }
         private void LeagueViewOpenUI()
@@ -484,12 +489,15 @@ namespace ThirstyJoe.RPSChampions
                     );
                     tdButton.SetupButton(buttonData, "MatchOverview", "", matchIndex++);
 
-                    int points = 0;
-                    if (match.Result == WLD.Draw)
-                        points = 1;
-                    if (match.Result == WLD.Win)
-                        points = 3;
-                    tdButton.SetPointText(points);
+                    if (match.Result != WLD.None)
+                    {
+                        int points = 0;
+                        if (match.Result == WLD.Draw)
+                            points = 1;
+                        if (match.Result == WLD.Win)
+                            points = 3;
+                        tdButton.SetPointText(points);
+                    }
                 }
             }
         }

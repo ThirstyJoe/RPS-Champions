@@ -52,6 +52,10 @@
             {
                 NegativePointText.text = value.ToString();
             }
+            else
+            {
+                NegativePointText.text = "+" + value.ToString();
+            }
         }
 
         public void SetLoadSceneName(string loadSceneName)
