@@ -41,6 +41,7 @@ namespace ThirstyJoe.RPSChampions
         [SerializeField] private GameObject HostSeasonOverButtonGroup;
         [SerializeField] private GameObject HostQuitConfirmationPanel;
         [SerializeField] private GameObject NonHostQuitConfirmationPanel;
+        [SerializeField] private GameObject LeagueCancelledAlertPanel;
 
         #endregion
 
@@ -191,7 +192,7 @@ namespace ThirstyJoe.RPSChampions
 
         private void ShowLeagueCancelledAlert()
         {
-
+            LeagueCancelledAlertPanel.SetActive(true);
         }
         private void JoinLeague()
         {
@@ -519,43 +520,106 @@ namespace ThirstyJoe.RPSChampions
         }
         public void OnQuitLeagueButtonPress()
         {
-            // TODO: add confirmation pop-up
-            // nonHostQuitConfirmationPanel.SetActive(true);
-
-            // temp
-            NonHostQuitLeague();
+            NonHostQuitConfirmationPanel.SetActive(true);
         }
 
         public void OnCancelLeagueButtonPress()
         {
-            // TODO: add confirmation pop-up
-            // hostQuitConfirmationPanel.SetActive(true);
+            HostQuitConfirmationPanel.SetActive(true);
         }
 
-        public void HostQuitLeague()
+        public void OnConfirmCancelLeague()
         {
-            // on confirmation...
-            // TODO: delete from all members league list
-            // TODO: delete from title data
-            // TODO: delete shared data
+            // on confirmation server will do the following...
+            // delete from all members league list
+            // delete from title data
+            // delete shared data
+            PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
+            {
+                FunctionName = "CancelLeague",
+                FunctionParameter = new
+                {
+                    leagueId = league.Key,
+                },
+                GeneratePlayStreamEvent = true,
+            },
+            result =>
+            {
+                // alert to anyone looking at this league that it has been cancelled
+                string leagueKey = TitleDescriptionButtonLinkData.LinkID;
+                var data = new object[] { league.Key };
+                PhotonNetwork.RaiseEvent(
+                    LeagueView.LEAGUE_CANCELLED_EVENT,      // .Code
+                    data,                                   // .CustomData
+                    RaiseEventOptions.Default,
+                    SendOptions.SendReliable
+                );
 
-            // return to previous menu
-            EventSystem.current.SetSelectedGameObject(prevUISelection);
-            SceneManager.UnloadSceneAsync("LeagueView");
+                Debug.Log("league cancelled");
+
+                // return to previous menu
+                EventSystem.current.SetSelectedGameObject(prevUISelection);
+                SceneManager.UnloadSceneAsync("LeagueView");
+            },
+            RPSCommon.OnPlayFabError
+            );
         }
 
-        public void NonHostQuitLeague()
+        public void OnConfirmQuitLeague()
         {
             // on confirmation...
+
             // TODO: delete from current league list
             // TODO: delete player from shared data
+            PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
+            {
+                FunctionName = "QuitLeague",
+                FunctionParameter = new
+                {
+                    leagueId = league.Key,
+                },
+                GeneratePlayStreamEvent = true,
+            },
+            result =>
+            {
+                // send event to update in league view
+                string leagueKey = TitleDescriptionButtonLinkData.LinkID;
+                var data = new object[] { league.Key };
+                PhotonNetwork.RaiseEvent(
+                    LeagueView.LEAGUE_UPDATE_EVENT,         // .Code
+                    data,                                   // .CustomData
+                    RaiseEventOptions.Default,
+                    SendOptions.SendReliable
+                );
 
-            // return to previous menu
-            EventSystem.current.SetSelectedGameObject(prevUISelection);
-            SceneManager.UnloadSceneAsync("LeagueView");
+                Debug.Log("quit league");
+
+                // return to previous menu
+                EventSystem.current.SetSelectedGameObject(prevUISelection);
+                SceneManager.UnloadSceneAsync("LeagueView");
+            },
+            RPSCommon.OnPlayFabError
+            );
         }
 
         public void OnExitLeagueButtonPress()
+        {
+            // return to previous menu
+            EventSystem.current.SetSelectedGameObject(prevUISelection);
+            SceneManager.UnloadSceneAsync("LeagueView");
+        }
+
+        public void OnCancelQuitLeague()
+        {
+            NonHostQuitConfirmationPanel.SetActive(false);
+        }
+
+        public void OnCancelCancelLeague()
+        {
+            HostQuitConfirmationPanel.SetActive(false);
+        }
+
+        public void OnConfirmCancelledLeagueAlert()
         {
             // return to previous menu
             EventSystem.current.SetSelectedGameObject(prevUISelection);
