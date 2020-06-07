@@ -77,6 +77,9 @@ namespace ThirstyJoe.RPSChampions
             },
            result =>
            {
+               // update player stats
+               PlayerManager.UpdatePlayerStats();
+
                // get Json object representing the host's schedule out of FunctionResult
                JsonObject jsonResult = (JsonObject)result.FunctionResult;
 

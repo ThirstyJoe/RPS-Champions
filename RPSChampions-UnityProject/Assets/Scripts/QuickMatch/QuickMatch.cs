@@ -728,6 +728,7 @@ namespace ThirstyJoe.RPSChampions
         private void DisconnectFromGame()
         {
             PhotonNetwork.Disconnect();
+            PlayerManager.UpdatePlayerStats();
             SceneManager.LoadScene("MainMenu");
         }
 

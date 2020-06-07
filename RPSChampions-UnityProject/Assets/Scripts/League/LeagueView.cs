@@ -256,6 +256,9 @@ namespace ThirstyJoe.RPSChampions
             },
             result =>
             {
+                // update player stats
+                PlayerManager.UpdatePlayerStats();
+
                 // get Json object representing the Game State out of FunctionResult
                 JsonObject jsonResult = (JsonObject)result.FunctionResult;
 
@@ -617,7 +620,6 @@ namespace ThirstyJoe.RPSChampions
             PhotonNetwork.Disconnect();
 
             // return to previous menu
-            Debug.Log(prevUISelection);
             EventSystem.current.SetSelectedGameObject(prevUISelection);
             SceneManager.UnloadSceneAsync("LeagueView");
         }
