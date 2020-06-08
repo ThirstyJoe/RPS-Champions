@@ -48,7 +48,6 @@
         }
         public void OnLeaguePlayButtonPress()
         {
-            Debug.Log(loggedIn);
             if (loggedIn)
             {
                 SceneManager.LoadScene("LeagueDashboard");

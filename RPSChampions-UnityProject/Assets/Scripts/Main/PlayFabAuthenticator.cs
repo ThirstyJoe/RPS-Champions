@@ -75,6 +75,13 @@ namespace ThirstyJoe.RPSChampions
             PlayerPrefs.SetString("playFabId", loginResult.PlayFabId);
             PlayerManager.PlayerName = PlayerPrefs.GetString("screenName");
 
+            // update display name (used by leaderboards)
+            PlayFabClientAPI.UpdateUserTitleDisplayName(new UpdateUserTitleDisplayNameRequest()
+            { DisplayName = PlayerPrefs.GetString("screenName") },
+                result => { Debug.Log("Updated display name"); },
+                RPSCommon.OnPlayFabError
+            );
+
             // move onto Photon Authentication
             RequestPhotonToken();
 

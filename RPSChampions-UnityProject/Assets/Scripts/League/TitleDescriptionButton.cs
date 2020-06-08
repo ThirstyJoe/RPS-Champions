@@ -19,6 +19,7 @@
         [SerializeField] private TextMeshProUGUI Description;
         [SerializeField] private TextMeshProUGUI PositivePointText;
         [SerializeField] private TextMeshProUGUI NegativePointText;
+        [SerializeField] private TextMeshProUGUI RankingText;
 
         private string LinkID;
         private int DataIndex; // index used to retrieve data from an Array
@@ -56,6 +57,12 @@
             {
                 NegativePointText.text = "+" + value.ToString();
             }
+        }
+
+
+        public void SetRankText(int value)
+        {
+            RankingText.text = value.ToString();
         }
 
         public void SetLoadSceneName(string loadSceneName)
