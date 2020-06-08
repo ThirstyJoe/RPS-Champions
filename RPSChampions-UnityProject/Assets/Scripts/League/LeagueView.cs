@@ -297,16 +297,25 @@ namespace ThirstyJoe.RPSChampions
                     );
 
                     // interpret schedule as object and save in league object
-                    Debug.Log(league.Status);
                     if (league.Status != "Open")
                     {
                         string scheduleJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "Schedule");
-                        Debug.Log(scheduleJSON);
+
                         if (scheduleJSON != "null")
                         {
-                            var matchDataArray = scheduleJSON.Split('"').Where((item, index) => index % 2 != 0);
+                            scheduleJSON = scheduleJSON.Trim(']');
+                            scheduleJSON = scheduleJSON.Trim('[');
+                            scheduleJSON = scheduleJSON.Replace("\"", string.Empty);
+                            var matchDataArray = scheduleJSON.Split(',');
+
                             foreach (string matchString in matchDataArray)
-                                league.Schedule.Add(new MatchBrief(matchString));
+                            {
+                                if (matchString == "null")
+                                    league.Schedule.Add(null);
+                                else
+                                    league.Schedule.Add(new MatchBrief(matchString));
+                            }
+
                         }
                     }
                 }
@@ -458,6 +467,12 @@ namespace ThirstyJoe.RPSChampions
                 int matchIndex = 0;
                 foreach (MatchBrief match in league.Schedule)
                 {
+                    if (match == null)
+                    { // skip bye round
+                        matchIndex++;
+                        continue;
+                    }
+
                     GameObject obj = Instantiate(PlayerButtonPrefab, MatchListContent.transform);
                     matchButtonList.Add(obj);
                     var tdButton = obj.GetComponent<TitleDescriptionButton>();
