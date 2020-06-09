@@ -266,6 +266,8 @@ namespace ThirstyJoe.RPSChampions
         public static bool redirectLoginToLeague = false;
         private static string leagueViewKey;
 
+        public static League league;
+
         public static void NewCustomLeague()
         {
             NewLeague(LeagueType.Custom);

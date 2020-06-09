@@ -8,10 +8,8 @@ namespace ThirstyJoe.RPSChampions
 
     public class AccountMenu : MonoBehaviour
     {
-        [SerializeField]
-        private TextMeshProUGUI screenName;
-        [SerializeField]
-        private TextMeshProUGUI statsText;
+        [SerializeField] private TextMeshProUGUI screenName;
+        [SerializeField] private TextMeshProUGUI statsText;
 
 
         private void Start()

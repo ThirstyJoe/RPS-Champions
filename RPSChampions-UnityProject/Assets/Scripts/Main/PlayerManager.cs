@@ -28,9 +28,9 @@ namespace ThirstyJoe.RPSChampions
             }
         }
 
-        public static void UpdatePlayerStats()
+        public static List<string> GetPlayerStatList()
         {
-            List<string> statNames = new List<string>() {
+            return new List<string>() {
                 "ScissorsWins",
                 "ScissorsDraws",
                 "ScissorsLosses",
@@ -45,40 +45,45 @@ namespace ThirstyJoe.RPSChampions
                 "Losses",
                 "Rating"
             };
+        }
 
+        public static PlayerStatsData ConstructPlayerStats(List<StatisticValue> statValues)
+        {
+            statValues.Sort(new StatComparer());
 
+            // update stats data in client
+            PlayerStatsData stats = new PlayerStatsData();
+            if (statValues.Count >= 13) // ensure stats have been initialized for this account
+            {
+                stats.TotalWLD.Draws = statValues[0].Value;
+                stats.TotalWLD.Losses = statValues[1].Value;
+                stats.PaperWLD.Draws = statValues[2].Value;
+                stats.PaperWLD.Losses = statValues[3].Value;
+                stats.PaperWLD.Wins = statValues[4].Value;
+                stats.Rating = statValues[5].Value;
+                stats.RockWLD.Draws = statValues[6].Value;
+                stats.RockWLD.Losses = statValues[7].Value;
+                stats.RockWLD.Wins = statValues[8].Value;
+                stats.ScissorsWLD.Draws = statValues[9].Value;
+                stats.ScissorsWLD.Losses = statValues[10].Value;
+                stats.ScissorsWLD.Wins = statValues[11].Value;
+                stats.TotalWLD.Wins = statValues[12].Value;
+            }
+            return stats;
+        }
+
+        public static void UpdatePlayerStats()
+        {
             PlayFabClientAPI.GetPlayerStatistics(
-                new GetPlayerStatisticsRequest { StatisticNames = statNames },
+                new GetPlayerStatisticsRequest { StatisticNames = GetPlayerStatList() },
                 result =>
                 {
-                    // for predictable ordering
-                    result.Statistics.Sort(new StatComparer());
-
-                    // update stats data in client
-                    PlayerStatsData stats = new PlayerStatsData();
-                    if (result.Statistics.Count >= 13) // ensure stats have been initialized for this account
-                    {
-                        stats.TotalWLD.Draws = result.Statistics[0].Value;
-                        stats.TotalWLD.Losses = result.Statistics[1].Value;
-                        stats.PaperWLD.Draws = result.Statistics[2].Value;
-                        stats.PaperWLD.Losses = result.Statistics[3].Value;
-                        stats.PaperWLD.Wins = result.Statistics[4].Value;
-                        stats.Rating = result.Statistics[5].Value;
-                        stats.RockWLD.Draws = result.Statistics[6].Value;
-                        stats.RockWLD.Losses = result.Statistics[7].Value;
-                        stats.RockWLD.Wins = result.Statistics[8].Value;
-                        stats.ScissorsWLD.Draws = result.Statistics[9].Value;
-                        stats.ScissorsWLD.Losses = result.Statistics[10].Value;
-                        stats.ScissorsWLD.Wins = result.Statistics[11].Value;
-                        stats.TotalWLD.Wins = result.Statistics[12].Value;
-                    }
-
-
-                    PlayerManager.PlayerStats.data = stats;
+                    PlayerManager.PlayerStats.data = ConstructPlayerStats(result.Statistics);
                 },
                 error => Debug.LogError(error.GenerateErrorReport())
             );
         }
+
         public class StatComparer : IComparer<StatisticValue>
         {
             public int Compare(StatisticValue first, StatisticValue second)

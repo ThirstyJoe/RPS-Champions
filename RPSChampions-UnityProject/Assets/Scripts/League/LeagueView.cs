@@ -55,8 +55,6 @@ namespace ThirstyJoe.RPSChampions
         // tracking previous selection, for when returning from this menu
         private GameObject prevUISelection;
 
-        // All the data for the league
-        private League league;
 
         #endregion
 
@@ -99,7 +97,7 @@ namespace ThirstyJoe.RPSChampions
 
             // make sure event is from the correct league
             string eventLeague = (string)data[0];
-            if (eventLeague != league.Key) return;
+            if (eventLeague != LeagueManager.league.Key) return;
 
             // switch to correct function
             switch (obj.Code)
@@ -133,7 +131,7 @@ namespace ThirstyJoe.RPSChampions
         public override void OnPlayerEnteredRoom(Player other)
         {
             Debug.LogFormat("OnPlayerEnteredRoom() {0}", other.NickName);
-            if (league.Status == "Open")
+            if (LeagueManager.league.Status == "Open")
                 UpdateLeagueView();
         }
 
@@ -287,7 +285,7 @@ namespace ThirstyJoe.RPSChampions
                     playerList.Reverse();
 
                     // create instance of league
-                    league = new League(
+                    LeagueManager.league = new League(
                         RPSCommon.InterpretCloudScriptData(jsonResult, "Status"),
                         RPSCommon.InterpretCloudScriptData(jsonResult, "Name"),
                         RPSCommon.InterpretCloudScriptData(jsonResult, "HostName"),
@@ -297,8 +295,9 @@ namespace ThirstyJoe.RPSChampions
                     );
 
                     // interpret schedule as object and save in league object
-                    if (league.Status != "Open")
+                    if (LeagueManager.league.Status != "Open")
                     {
+                        LeagueManager.league = null;
                         string scheduleJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "Schedule");
 
                         if (scheduleJSON != "null")
@@ -311,9 +310,9 @@ namespace ThirstyJoe.RPSChampions
                             foreach (string matchString in matchDataArray)
                             {
                                 if (matchString == "null")
-                                    league.Schedule.Add(null);
+                                    LeagueManager.league.Schedule.Add(null);
                                 else
-                                    league.Schedule.Add(new MatchBrief(matchString));
+                                    LeagueManager.league.Schedule.Add(new MatchBrief(matchString));
                             }
 
                         }
@@ -322,7 +321,7 @@ namespace ThirstyJoe.RPSChampions
 
                 // determine type of UI we need to set up, OPEN league or CLOSED
                 // Open means it is still recruiting, otherwise it has started or completed
-                if (league.Status == "Open")
+                if (LeagueManager.league.Status == "Open")
                     LeagueViewOpenUI();
                 else
                     LeagueViewClosedUI();
@@ -337,7 +336,7 @@ namespace ThirstyJoe.RPSChampions
 
         private void LeagueViewClosedUI()
         {
-            ClosedTitleText.text = league.Name;
+            ClosedTitleText.text = LeagueManager.league.Name;
             MatchListPanel.SetActive(true);
             PlayerListPanel.SetActive(false);
             StandingsListPanel.SetActive(true);
@@ -348,7 +347,7 @@ namespace ThirstyJoe.RPSChampions
             playerButtonList.Clear();
 
             // show buttons for end of season navigation
-            if (league.Status == "Complete")
+            if (LeagueManager.league.Status == "Complete")
             {
                 NonHostSeasonOverButtonGroup.SetActive(true);
             }
@@ -357,9 +356,9 @@ namespace ThirstyJoe.RPSChampions
             List<int> ratingList = new List<int>();
             List<int> scoreList = new List<int>();
             int rank = 0;
-            if (league.Status == "Complete")
+            if (LeagueManager.league.Status == "Complete")
             {
-                foreach (LeaguePlayerStats player in league.PlayerList)
+                foreach (LeaguePlayerStats player in LeagueManager.league.PlayerList)
                 {
                     ratingList.Add(player.Rating);
                     scoreList.Add(player.WLDScore);
@@ -367,7 +366,7 @@ namespace ThirstyJoe.RPSChampions
             }
 
             // generate player list
-            foreach (LeaguePlayerStats player in league.PlayerList)
+            foreach (LeaguePlayerStats player in LeagueManager.league.PlayerList)
             {
                 rank++;
 
@@ -376,13 +375,13 @@ namespace ThirstyJoe.RPSChampions
                 var tdButton = obj.GetComponent<TitleDescriptionButton>();
 
                 var buttonData = new TitleDescriptionButtonData(
-                    player.PlayerName, // TODO: PlayFabId might be better to use here for LinkID
+                    player.PlayerId,
                     player.PlayerName,
                     player.Wins.ToString() + " - " + player.Losses.ToString() + " - " + player.Draws.ToString()
                 );
                 tdButton.SetupButton(buttonData, "PlayerProfile");
 
-                if (league.Status == "Complete")
+                if (LeagueManager.league.Status == "Complete")
                 {
                     int points = CalculateRatingChange(ratingList, scoreList, rank);
                     tdButton.SetPointText(points);
@@ -426,28 +425,28 @@ namespace ThirstyJoe.RPSChampions
                 GameObject.Destroy(button);
             playerButtonList.Clear();
 
-            OpenTitleText.text = league.Name;
+            OpenTitleText.text = LeagueManager.league.Name;
             MatchListPanel.SetActive(false);
             PlayerListPanel.SetActive(true);
             StandingsListPanel.SetActive(false);
 
             // generate player list
-            foreach (LeaguePlayerStats player in league.PlayerList)
+            foreach (LeaguePlayerStats player in LeagueManager.league.PlayerList)
             {
                 GameObject obj = Instantiate(PlayerButtonPrefab, PlayerListContent.transform);
                 playerButtonList.Add(obj);
                 var tdButton = obj.GetComponent<TitleDescriptionButton>();
 
                 var buttonData = new TitleDescriptionButtonData(
-                    player.PlayerName,
+                    player.PlayerId,
                     player.PlayerName,
                     player.Rating.ToString()
                 );
-                tdButton.SetupButton(buttonData, "PlayerProfile");
+                tdButton.SetupButton(buttonData, "PlayerProfile", player.PlayerName);
             }
 
             // buttons for host or non host
-            if (league.Host == PlayerManager.PlayerName)
+            if (LeagueManager.league.Host == PlayerManager.PlayerName)
                 HostButtonGroup.SetActive(true);
             else
                 NonHostButtonGroup.SetActive(true);
@@ -462,10 +461,10 @@ namespace ThirstyJoe.RPSChampions
 
             CultureInfo culture = new CultureInfo("en-US");
             // generate match list
-            if (league.Schedule != null)
+            if (LeagueManager.league.Schedule != null)
             {
                 int matchIndex = 0;
-                foreach (MatchBrief match in league.Schedule)
+                foreach (MatchBrief match in LeagueManager.league.Schedule)
                 {
                     if (match == null)
                     { // skip bye round
@@ -503,7 +502,7 @@ namespace ThirstyJoe.RPSChampions
                     }
 
                     var buttonData = new TitleDescriptionButtonData(
-                        league.Key,
+                        LeagueManager.league.Key,
                         match.Opponent,
                         description
                     );
@@ -532,7 +531,7 @@ namespace ThirstyJoe.RPSChampions
         }
         public void OnStartSeasonButtonPress()
         {
-            league.StartSeason(UpdateMatchList);
+            LeagueManager.league.StartSeason(UpdateMatchList);
             LeagueViewClosedUI();
         }
         public void OnQuitLeagueButtonPress()
@@ -555,7 +554,7 @@ namespace ThirstyJoe.RPSChampions
                 FunctionName = "CancelLeague",
                 FunctionParameter = new
                 {
-                    leagueId = league.Key,
+                    leagueId = LeagueManager.league.Key,
                 },
                 GeneratePlayStreamEvent = true,
             },
@@ -581,7 +580,7 @@ namespace ThirstyJoe.RPSChampions
                 FunctionName = "QuitLeague",
                 FunctionParameter = new
                 {
-                    leagueId = league.Key,
+                    leagueId = LeagueManager.league.Key,
                 },
                 GeneratePlayStreamEvent = true,
             },
@@ -621,7 +620,7 @@ namespace ThirstyJoe.RPSChampions
         {
             // send event to update in league view
             string leagueKey = TitleDescriptionButtonLinkData.LinkID;
-            var data = new object[] { league.Key };
+            var data = new object[] { LeagueManager.league.Key };
             PhotonNetwork.RaiseEvent(
                 eventName,         // .Code
                 data,                                   // .CustomData

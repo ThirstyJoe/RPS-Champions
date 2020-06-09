@@ -2,6 +2,7 @@ namespace ThirstyJoe.RPSChampions
 {
     using System.Linq;
     using System;
+    using UnityEngine;
 
 
     [Serializable]
@@ -31,6 +32,15 @@ namespace ThirstyJoe.RPSChampions
 
         public int Total { get { return Wins + Losses + Draws; } }
 
+        public WinLoseDrawStats() { }
+
+        public WinLoseDrawStats(int wins, int losses, int draws)
+        {
+            Wins = wins;
+            Losses = losses;
+            Draws = draws;
+        }
+
         public string GetReadout(bool addKey = true)
         {
             const string seperation = " - ";
@@ -43,6 +53,32 @@ namespace ThirstyJoe.RPSChampions
         public int addWin() { return ++Wins; }
         public int addLoss() { return ++Losses; }
         public int addDraw() { return ++Draws; }
+    }
+
+    public class PlayerStatsFromServer
+    {
+        public int ScissorsWins;
+        public int ScissorsDraws;
+        public int ScissorsLosses;
+        public int RockWins;
+        public int RockDraws;
+        public int RockLosses;
+        public int PaperWins;
+        public int PaperDraws;
+        public int PaperLosses;
+        public int Wins;
+        public int Draws;
+        public int Losses;
+        public int Rating;
+
+        public string ToJSON()
+        {
+            return JsonUtility.ToJson(this);
+        }
+        public static PlayerStatsFromServer CreateFromJSON(string jsonString)
+        {
+            return JsonUtility.FromJson<PlayerStatsFromServer>(jsonString);
+        }
     }
 
     public class PlayerStatsData
@@ -59,6 +95,18 @@ namespace ThirstyJoe.RPSChampions
         public PlayerStatsData data = new PlayerStatsData();
         private string playerName;
 
+        public PlayerStats(PlayerStatsFromServer serverData, string name)
+        {
+            playerName = name;
+            data.TotalWLD = new WinLoseDrawStats(serverData.Wins, serverData.Losses, serverData.Draws);
+            data.RockWLD = new WinLoseDrawStats(serverData.RockWins, serverData.RockLosses, serverData.RockDraws);
+            data.PaperWLD = new WinLoseDrawStats(serverData.PaperWins, serverData.PaperLosses, serverData.PaperDraws);
+            data.ScissorsWLD = new WinLoseDrawStats(serverData.ScissorsWins, serverData.ScissorsLosses, serverData.ScissorsDraws);
+        }
+        public PlayerStats(PlayerStatsData _data)
+        {
+            data = _data;
+        }
         public PlayerStats()
         {
             playerName = RandomGuestName();
@@ -196,7 +244,7 @@ namespace ThirstyJoe.RPSChampions
         private string RandomGuestName()
         {
             var v = Enum.GetValues(typeof(GuestName));
-            var name = (GuestName)v.GetValue(new Random().Next(v.Length));
+            var name = (GuestName)v.GetValue(new System.Random().Next(v.Length));
             return name.ToString();
         }
     }
