@@ -98,6 +98,7 @@ namespace ThirstyJoe.RPSChampions
         public PlayerStats(PlayerStatsFromServer serverData, string name)
         {
             playerName = name;
+            data.Rating = serverData.Rating;
             data.TotalWLD = new WinLoseDrawStats(serverData.Wins, serverData.Losses, serverData.Draws);
             data.RockWLD = new WinLoseDrawStats(serverData.RockWins, serverData.RockLosses, serverData.RockDraws);
             data.PaperWLD = new WinLoseDrawStats(serverData.PaperWins, serverData.PaperLosses, serverData.PaperDraws);
@@ -227,18 +228,18 @@ namespace ThirstyJoe.RPSChampions
         public string GetReadout()
         {
             return
-                "Rating\t\t" + PlayerManager.PlayerStats.Rating + "\n\n" +
+                "Rating\t\t" + Rating + "\n\n" +
                 "Favors\t\t" + FavoriteWeapon + "\n\n" +
 
-                "Wins\t\t" + PlayerManager.PlayerStats.Wins + "\n" +
-                "Losses\t\t" + PlayerManager.PlayerStats.Losses + "\n" +
-                "Draws\t\t" + PlayerManager.PlayerStats.Draws + "\n" +
-                "Games\t\t" + PlayerManager.PlayerStats.TotalGames + "\n\n" +
+                "Wins\t\t" + Wins + "\n" +
+                "Losses\t\t" + Losses + "\n" +
+                "Draws\t\t" + Draws + "\n" +
+                "Games\t\t" + TotalGames + "\n\n" +
 
                 "Win Rates\n" +
-                "Rock\t\t" + String.Format("{0:p0}", PlayerManager.PlayerStats.RockWinRate) + "\n" +
-                "Paper\t\t" + String.Format("{0:p0}", PlayerManager.PlayerStats.PaperWinRate) + "\n" +
-                "Scissors\t" + String.Format("{0:p0}", PlayerManager.PlayerStats.ScissorsWinRate);
+                "Rock\t\t" + String.Format("{0:p0}", RockWinRate) + "\n" +
+                "Paper\t\t" + String.Format("{0:p0}", PaperWinRate) + "\n" +
+                "Scissors\t" + String.Format("{0:p0}", ScissorsWinRate);
         }
 
         private string RandomGuestName()

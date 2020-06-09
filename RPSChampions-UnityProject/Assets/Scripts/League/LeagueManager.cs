@@ -178,6 +178,7 @@ namespace ThirstyJoe.RPSChampions
         public League(string status, string name, string host,
                         LeagueSettings settings, string key, List<LeaguePlayerStats> playerList)
         {
+            Schedule = new List<MatchBrief>();
             Status = status;
             Name = name;
             Settings = settings;

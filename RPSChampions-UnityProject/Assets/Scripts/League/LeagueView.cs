@@ -297,7 +297,6 @@ namespace ThirstyJoe.RPSChampions
                     // interpret schedule as object and save in league object
                     if (LeagueManager.league.Status != "Open")
                     {
-                        LeagueManager.league = null;
                         string scheduleJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "Schedule");
 
                         if (scheduleJSON != "null")
@@ -379,7 +378,7 @@ namespace ThirstyJoe.RPSChampions
                     player.PlayerName,
                     player.Wins.ToString() + " - " + player.Losses.ToString() + " - " + player.Draws.ToString()
                 );
-                tdButton.SetupButton(buttonData, "PlayerProfile");
+                tdButton.SetupButton(buttonData, "PlayerProfile", player.PlayerName);
 
                 if (LeagueManager.league.Status == "Complete")
                 {

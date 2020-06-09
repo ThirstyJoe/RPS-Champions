@@ -22,6 +22,7 @@ namespace ThirstyJoe.RPSChampions
 
         private void RequestPlayerInfoFromServer()
         {
+            Debug.Log(TitleDescriptionButtonLinkData.LinkID);
             PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
             {
                 FunctionName = "GetPlayerStats",
@@ -55,17 +56,6 @@ namespace ThirstyJoe.RPSChampions
 
         public void UpdatePlayerUI(PlayerStats playerStats)
         {
-            LeaguePlayerStats leagueStats = new LeaguePlayerStats(null, null);
-            string currentPlayerId = TitleDescriptionButtonLinkData.LinkID;
-            foreach (var player in LeagueManager.league.PlayerList)
-            {
-                if (player.PlayerId == currentPlayerId)
-                {
-                    leagueStats = player;
-                    break;
-                }
-            }
-
             titleText.text = playerStats.PlayerName;
             if (LeagueManager.league == null || LeagueManager.league.Status == "Open")
             {
@@ -73,7 +63,18 @@ namespace ThirstyJoe.RPSChampions
             }
             else
             {
-                string leagueStatsText = LeagueManager.league.Name + "--- League Record\n" +
+                LeaguePlayerStats leagueStats = new LeaguePlayerStats(null, null);
+                string currentPlayerId = TitleDescriptionButtonLinkData.LinkID;
+                foreach (var player in LeagueManager.league.PlayerList)
+                {
+                    if (player.PlayerId == currentPlayerId)
+                    {
+                        leagueStats = player;
+                        break;
+                    }
+                }
+
+                string leagueStatsText = "League Record\n" + LeagueManager.league.Name + "\n" +
                             "Wins\t\t" + leagueStats.Wins.ToString() + "\n" +
                             "Losses\t\t" + leagueStats.Losses.ToString() + "\n" +
                             "Draws\t\t" + leagueStats.Draws.ToString() + "\n" +
