@@ -17,6 +17,7 @@ namespace ThirstyJoe.RPSChampions
             // interpret playerData
             object objValue;
             jsonResult.TryGetValue(dataName, out objValue);
+            if (objValue == null) return null;
             return (string)objValue;
         }
 

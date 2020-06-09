@@ -27,13 +27,13 @@ namespace ThirstyJoe.RPSChampions
             // request leaderboard from playfab
             PlayFabClientAPI.GetLeaderboard(new GetLeaderboardRequest()
             {
-                //MaxResultsCount = 999,
-                //StartPosition = 1,
+                MaxResultsCount = 100,
                 StatisticName = "Rating"
             },
             result =>
             {
                 int rank = 1;
+                Debug.Log(result.Leaderboard.Count);
                 foreach (var playerEntry in result.Leaderboard)
                 {
                     if (string.IsNullOrEmpty(playerEntry.DisplayName))

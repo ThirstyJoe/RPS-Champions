@@ -986,6 +986,7 @@ MonoBehaviour:
     type: 3}
   HostButtonGroup: {fileID: 229197536}
   NonHostButtonGroup: {fileID: 1467381722}
+  StartButton: {fileID: 1186100848}
   NonHostSeasonOverButtonGroup: {fileID: 473472522}
   HostSeasonOverButtonGroup: {fileID: 680369294}
   HostQuitConfirmationPanel: {fileID: 1811270426}
@@ -3913,7 +3914,7 @@ MonoBehaviour:
     m_HighlightedColor: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
     m_PressedColor: {r: 0.3254902, g: 0.3254902, b: 0.3254902, a: 1}
     m_SelectedColor: {r: 0.3254902, g: 0.3254902, b: 0.3254902, a: 1}
-    m_DisabledColor: {r: 0.3254902, g: 0.3254902, b: 0.3254902, a: 0.5019608}
+    m_DisabledColor: {r: 0.3254902, g: 0.3254902, b: 0.3254902, a: 0.3529412}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
   m_SpriteState:
@@ -3927,7 +3928,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 1186100849}
   m_OnClick:
     m_PersistentCalls:
@@ -4941,7 +4942,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1467381723
 RectTransform:
   m_ObjectHideFlags: 0

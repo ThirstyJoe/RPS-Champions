@@ -1,6 +1,6 @@
 namespace ThirstyJoe.RPSChampions
 {
-#region IMPORTS 
+    #region IMPORTS 
 
     using UnityEngine;
     using Photon.Pun;
@@ -16,9 +16,10 @@ namespace ThirstyJoe.RPSChampions
     using System;
     using System.Globalization;
     using PlayFab.Json;
+    using UnityEngine.UI;
 
 
-#endregion
+    #endregion
     public class LeagueView : MonoBehaviourPunCallbacks
     {
         #region EVENT DEFS
@@ -41,6 +42,7 @@ namespace ThirstyJoe.RPSChampions
         [SerializeField] private GameObject PlayerButtonPrefab;
         [SerializeField] private GameObject HostButtonGroup;
         [SerializeField] private GameObject NonHostButtonGroup;
+        [SerializeField] private UnityEngine.UI.Button StartButton;
         [SerializeField] private GameObject NonHostSeasonOverButtonGroup;
         [SerializeField] private GameObject HostSeasonOverButtonGroup;
         [SerializeField] private GameObject HostQuitConfirmationPanel;
@@ -180,8 +182,6 @@ namespace ThirstyJoe.RPSChampions
         #endregion
 
         #region CUSTOM PUBLIC 
-
-
 
         // called when returning from match overview
         public void UpdateLeagueView()
@@ -453,6 +453,8 @@ namespace ThirstyJoe.RPSChampions
                 HostButtonGroup.SetActive(true);
             else
                 NonHostButtonGroup.SetActive(true);
+
+            StartButton.interactable = LeagueManager.league.PlayerList.Count > 1;
         }
 
         public void UpdateMatchList()
@@ -534,7 +536,7 @@ namespace ThirstyJoe.RPSChampions
         }
         public void OnStartSeasonButtonPress()
         {
-            LeagueManager.league.StartSeason(UpdateMatchList);
+            LeagueManager.league.StartSeason(UpdateMatchList, ErrorCreatingLeague);
             LeagueViewClosedUI();
         }
         public void OnQuitLeagueButtonPress()
@@ -545,6 +547,12 @@ namespace ThirstyJoe.RPSChampions
         public void OnCancelLeagueButtonPress()
         {
             HostQuitConfirmationPanel.SetActive(true);
+        }
+
+        public void ErrorCreatingLeague()
+        {
+            // todo: alert pop up with error message
+            GetLeagueDataFromServer();
         }
 
         public void OnConfirmCancelLeague()

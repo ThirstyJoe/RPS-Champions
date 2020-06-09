@@ -178,7 +178,6 @@ namespace ThirstyJoe.RPSChampions
         public League(string status, string name, string host,
                         LeagueSettings settings, string key, List<LeaguePlayerStats> playerList)
         {
-            Schedule = new List<MatchBrief>();
             Status = status;
             Name = name;
             Settings = settings;
@@ -187,7 +186,7 @@ namespace ThirstyJoe.RPSChampions
             PlayerList = playerList;
         }
         public delegate void StartSeasonCallback();
-        public void StartSeason(StartSeasonCallback callback)
+        public void StartSeason(StartSeasonCallback callback, StartSeasonCallback errorCallback)
         {
             Status = "In Progress";
             PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
@@ -209,12 +208,22 @@ namespace ThirstyJoe.RPSChampions
                if (jsonResult == null)
                {
                    Debug.Log("schedule generation failed...");
+                   errorCallback();
                    return;
                }
 
                // data successfully received 
                // interpret data
+               string error = RPSCommon.InterpretCloudScriptData(jsonResult, "error");
+               if (error != null)
+               {
+                   Debug.Log(error);
+                   errorCallback();
+                   return;
+               }
+
                string scheduleJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "schedule");
+
                var matchDataArray = scheduleJSON.Split('"').Where((item, index) => index % 2 != 0);
                foreach (string matchString in matchDataArray)
                    Schedule.Add(new MatchBrief(matchString));
