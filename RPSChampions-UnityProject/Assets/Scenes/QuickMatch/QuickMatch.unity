@@ -1842,6 +1842,7 @@ MonoBehaviour:
   showWeaponPanel: {fileID: 780145585}
   OpponentQuitPanel: {fileID: 1843975638}
   DisconnectPanel: {fileID: 144881403}
+  WeaponToggleGroup: {fileID: 539172783}
   opponentWeaponChoice:
   - {fileID: 1741651444}
   - {fileID: 1177989420}

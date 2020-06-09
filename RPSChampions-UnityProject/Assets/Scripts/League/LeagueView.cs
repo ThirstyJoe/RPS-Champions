@@ -1,5 +1,7 @@
 namespace ThirstyJoe.RPSChampions
 {
+#region IMPORTS 
+
     using UnityEngine;
     using Photon.Pun;
     using TMPro;
@@ -15,6 +17,8 @@ namespace ThirstyJoe.RPSChampions
     using System.Globalization;
     using PlayFab.Json;
 
+
+#endregion
     public class LeagueView : MonoBehaviourPunCallbacks
     {
         #region EVENT DEFS
