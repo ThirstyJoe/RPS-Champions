@@ -19,10 +19,18 @@ namespace ThirstyJoe.RPSChampions
 
     public class LeagueSettings
     {
-        public string LeagueType;
+        public string LeagueType; // rated or not rated
+        public int MatchCount; // number of matches per player
+        public int RoundDuration; // time in seconds between rounds of play
         public LeagueSettings(LeagueType type)
         {
             LeagueType = type.ToString();
+        }
+        public LeagueSettings(LeagueType type, int matchCount, int roundDuration)
+        {
+            LeagueType = type.ToString();
+            MatchCount = matchCount;
+            RoundDuration = roundDuration;
         }
 
         public string ToJSON()
@@ -40,9 +48,16 @@ namespace ThirstyJoe.RPSChampions
     public class LeagueInfo
     {
         public string Status;
-        public string LeagueSettingsJSON;
+        public string Settings;
         public string Name;
         public string HostName;
+        public LeagueSettings LeagueSettings
+        {
+            get
+            {
+                return LeagueSettings.CreateFromJSON(Settings);
+            }
+        }
 
         public string ToJSON()
         {
@@ -286,6 +301,16 @@ namespace ThirstyJoe.RPSChampions
         {
             NewLeague(LeagueType.Rated);
         }
+
+        public static void SetMatchCount(int matchCount)
+        {
+            leagueSettings.MatchCount = matchCount;
+        }
+
+        public static void SetRoundDuration(int roundDuration)
+        {
+            leagueSettings.RoundDuration = roundDuration;
+        }
         public static void NewLeague(LeagueType leagueType)
         {
             leagueSettings = new LeagueSettings(leagueType);
@@ -326,10 +351,15 @@ namespace ThirstyJoe.RPSChampions
                         if (titleResult.Data.ContainsKey(key))
                         {
                             LeagueInfo leagueInfo = LeagueInfo.CreateFromJSON(titleResult.Data[key]);
+                            Debug.Log(leagueInfo);
+                            Debug.Log(leagueInfo.Name);
+                            Debug.Log(leagueInfo.Settings);
+                            Debug.Log(leagueInfo.LeagueSettings);
+                            Debug.Log(leagueInfo.LeagueSettings.LeagueType);
                             toRet.Add(new TitleDescriptionButtonData(
                                 key,
                                 leagueInfo.Name,
-                                leagueInfo.Status));
+                                leagueInfo.LeagueSettings.LeagueType + "\n" + leagueInfo.Status));
                         }
                     }
                     callback(toRet);
@@ -380,7 +410,7 @@ namespace ThirstyJoe.RPSChampions
                                 toRet.Add(new TitleDescriptionButtonData(
                                    key,
                                    leagueInfo.Name,
-                                   leagueInfo.Status));
+                                   leagueInfo.LeagueSettings.LeagueType + "\n" + leagueInfo.Status));
                             }
                         }
                     }
@@ -429,7 +459,8 @@ namespace ThirstyJoe.RPSChampions
                             toRet.Add(new TitleDescriptionButtonData(
                                 entry.Key,
                                 leagueInfo.Name,
-                                leagueInfo.Status));
+                                // TODO: show game settings instead of league status here
+                                leagueInfo.LeagueSettings.LeagueType + "\n" + leagueInfo.Status));
                         }
                     }
                     callback(toRet);

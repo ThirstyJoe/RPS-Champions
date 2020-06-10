@@ -9,12 +9,16 @@ namespace ThirstyJoe.RPSChampions
     using UnityEngine.SceneManagement;
     using UnityEngine.UI;
     using UnityEngine.EventSystems;
+    using System;
 
     public class NewLeague : MonoBehaviour
     {
         // alert
         [SerializeField] private GameObject alertPanel;
+        [SerializeField] private TextMeshProUGUI titleText;
         [SerializeField] private TextMeshProUGUI alertPanelText;
+        [SerializeField] private TMP_InputField matchCountInputField;
+        [SerializeField] private TMP_InputField roundDurationInputField;
 
 
         // input fields
@@ -26,6 +30,9 @@ namespace ThirstyJoe.RPSChampions
 
         private void Start()
         {
+            titleText.text = "New " + LeagueManager.leagueSettings.LeagueType + " League";
+            roundDurationInputField.text = "4";
+            matchCountInputField.text = "8";
             prevUISelection = EventSystem.current.currentSelectedGameObject;
         }
 
@@ -42,9 +49,8 @@ namespace ThirstyJoe.RPSChampions
         {
             SetAllButtonsInteractable(false);
 
-            // TODO: Save league settings in LeagueManager
-            // LeagueSettings leagueSettings = new LeagueSettings();
-            // LeagueManager.SetCurrentLeagueSettings(leagueSettings);
+            LeagueManager.SetMatchCount(Int32.Parse(matchCountInputField.text));
+            LeagueManager.SetRoundDuration(Int32.Parse(roundDurationInputField.text) * 3600); // 3600 is hours to seconds conversion
             LeaguePlayerStats leaguePlayerData = new LeaguePlayerStats(
                 PlayerManager.PlayerName,
                 PlayerPrefs.GetString("playFabId"));

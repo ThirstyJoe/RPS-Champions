@@ -302,7 +302,7 @@ namespace ThirstyJoe.RPSChampions
                     if (LeagueManager.league.Status != "Open")
                     {
                         string scheduleJSON = RPSCommon.InterpretCloudScriptData(jsonResult, "Schedule");
-
+                        Debug.Log(scheduleJSON);
                         if (scheduleJSON != "null")
                         {
                             scheduleJSON = scheduleJSON.Trim(']');
