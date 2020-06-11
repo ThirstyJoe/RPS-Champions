@@ -459,11 +459,7 @@ namespace ThirstyJoe.RPSChampions
 
         public void UpdateMatchList()
         {
-            // clear previous buttons
-            foreach (var button in matchButtonList)
-                GameObject.Destroy(button);
-            matchButtonList.Clear();
-
+            ClearButtonList(matchButtonList);
             CultureInfo culture = new CultureInfo("en-US");
             // generate match list
             if (LeagueManager.league.Schedule != null)
@@ -489,21 +485,29 @@ namespace ThirstyJoe.RPSChampions
                             weaponText = "Playing " + match.MyWeapon.ToString();
                         description =
                             weaponText + "\n" +
-                            RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("m", culture) + ", " +
-                            " " +
+                            RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("m", culture)
+                            + ",  " +
                             RPSCommon.UnixTimeToDateTime(match.DateTime).ToString("t", culture);
                     }
                     else
                     {
                         string weaponText = "No Selection";
                         if (match.MyWeapon != Weapon.None)
-                            weaponText = match.MyWeapon.ToString() + " VS " + match.OpponentWeapon.ToString();
+                        {
+                            weaponText = match.MyWeapon.ToString() +
+                                " VS " +
+                                match.OpponentWeapon.ToString();
+                        }
                         if (match.Result == WLD.Draw)
+                        {
                             description = weaponText + "\n" +
-                                          match.Result.ToString();
+                                match.Result.ToString();
+                        }
                         else
+                        {
                             description = weaponText + "\n" +
-                                          match.Result.ToString();
+                                match.Result.ToString();
+                        }
                     }
 
                     var buttonData = new TitleDescriptionButtonData(
@@ -524,6 +528,14 @@ namespace ThirstyJoe.RPSChampions
                     }
                 }
             }
+        }
+
+        private void ClearButtonList(List<GameObject> buttonList)
+        {
+            // clear previous buttons
+            foreach (var button in buttonList)
+                GameObject.Destroy(button);
+            buttonList.Clear();
         }
 
         #endregion
