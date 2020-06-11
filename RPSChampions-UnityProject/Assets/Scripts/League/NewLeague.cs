@@ -47,14 +47,19 @@ namespace ThirstyJoe.RPSChampions
         }
         public void OnCreateLeagueButtonPress()
         {
+            // Manage UI
             SetAllButtonsInteractable(false);
 
+            // Save input from league settings input fields
             LeagueManager.SetMatchCount(Int32.Parse(matchCountInputField.text));
-            LeagueManager.SetRoundDuration(Int32.Parse(roundDurationInputField.text) * 3600); // 3600 is hours to seconds conversion
+            // * 3600 is hours to seconds conversion
+            LeagueManager.SetRoundDuration(Int32.Parse(roundDurationInputField.text) * 3600);
             LeaguePlayerStats leaguePlayerData = new LeaguePlayerStats(
                 PlayerManager.PlayerName,
-                PlayerPrefs.GetString("playFabId"));
+                PlayerPrefs.GetString("playFabId")
+            );
 
+            // call to Playfab cloud script function called "CreateNewLeague"
             PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest()
             {
                 FunctionName = "CreateNewLeague",
@@ -82,10 +87,14 @@ namespace ThirstyJoe.RPSChampions
                 {
                     Debug.Log("New League created");
 
-                    TitleDescriptionButtonLinkData.LinkID = RPSCommon.InterpretCloudScriptData(jsonResult, "leagueKey");
+                    // save key for accessing the league from server
+                    TitleDescriptionButtonLinkData.LinkID =
+                        RPSCommon.InterpretCloudScriptData(jsonResult, "leagueKey");
 
+                    // reselect UI element from league dashboard
                     EventSystem.current.SetSelectedGameObject(prevUISelection);
 
+                    // Load league view for displaying new league
                     SceneManager.UnloadSceneAsync("NewLeague");
                     SceneManager.LoadScene("LeagueView", LoadSceneMode.Additive);
                 }
@@ -95,7 +104,8 @@ namespace ThirstyJoe.RPSChampions
                 Debug.Log(errorCallback.ErrorMessage + "error creating new League.");
 
                 // TODO: more specific error messages to help with league creation.
-                alertPanelText.text = "Oops! According to the server, The league could not be created.";
+                alertPanelText.text =
+                    "Oops! According to the server, The league could not be created.";
                 alertPanel.SetActive(true);
 
                 // let player interact again
