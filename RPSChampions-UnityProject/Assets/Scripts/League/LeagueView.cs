@@ -359,7 +359,8 @@ namespace ThirstyJoe.RPSChampions
             List<int> ratingList = new List<int>();
             List<int> scoreList = new List<int>();
             int rank = 0;
-            if (LeagueManager.league.Status == "Complete")
+            if (LeagueManager.league.Status == "Complete" && // league complete
+                LeagueManager.league.Settings.LeagueType == "Rated") // league is rated
             {
                 foreach (LeaguePlayerStats player in LeagueManager.league.PlayerList)
                 {
@@ -384,7 +385,8 @@ namespace ThirstyJoe.RPSChampions
                 );
                 tdButton.SetupButton(buttonData, "PlayerProfile", player.PlayerName);
 
-                if (LeagueManager.league.Status == "Complete")
+                if (LeagueManager.league.Status == "Complete" && // league complete
+                    LeagueManager.league.Settings.LeagueType == "Rated") // league is rated
                 {
                     int points = CalculateRatingChange(ratingList, scoreList, rank);
                     tdButton.SetPointText(points);
