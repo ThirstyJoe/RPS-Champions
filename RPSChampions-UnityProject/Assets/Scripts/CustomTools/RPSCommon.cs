@@ -12,12 +12,20 @@ namespace ThirstyJoe.RPSChampions
         public static string InterpretCloudScriptData(JsonObject jsonResult, string dataName)
         {
             if (jsonResult == null)
+            {
+                Debug.Log("NULL JsonObject");
                 return null;
+            }
 
             // interpret playerData
             object objValue;
             jsonResult.TryGetValue(dataName, out objValue);
-            if (objValue == null) return null;
+
+            if (objValue == null)
+            {
+                Debug.Log("NULL JsonObject value");
+                return null;
+            }
             return (string)objValue;
         }
 
