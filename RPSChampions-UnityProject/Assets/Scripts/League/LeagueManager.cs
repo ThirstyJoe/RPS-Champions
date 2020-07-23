@@ -362,6 +362,7 @@ namespace ThirstyJoe.RPSChampions
                                 leagueInfo.LeagueSettings.LeagueType + "\n" + leagueInfo.Status));
                         }
                     }
+                    toRet.Reverse(); // put most recent league at top
                     callback(toRet);
                 },
                 RPSCommon.OnPlayFabError
@@ -414,6 +415,7 @@ namespace ThirstyJoe.RPSChampions
                             }
                         }
                     }
+                    toRet.Reverse(); // put most recent league at top
                     callback(toRet);
                 },
                 RPSCommon.OnPlayFabError
@@ -463,6 +465,7 @@ namespace ThirstyJoe.RPSChampions
                                 leagueInfo.LeagueSettings.LeagueType + "\n" + leagueInfo.Status));
                         }
                     }
+                    toRet.Reverse(); // put most recent at league at top
                     callback(toRet);
                 },
                 RPSCommon.OnPlayFabError
