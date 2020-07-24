@@ -162,6 +162,7 @@ namespace ThirstyJoe.RPSChampions
 
                 opponentStatsText.text =
                     matchTurn.OpponentName + " League Stats" + "\n" +
+                    "Points\t  " + opponentStats.WLDScore + "\n" +
                     "Wins\t  " + opponentStats.Wins.ToString() + "\n" +
                     "Losses\t  " + opponentStats.Losses.ToString() + "\n" +
                     "Draws\t  " + opponentStats.Draws.ToString();

@@ -381,7 +381,10 @@ namespace ThirstyJoe.RPSChampions
                 var buttonData = new TitleDescriptionButtonData(
                     player.PlayerId,
                     player.PlayerName,
-                    player.Wins.ToString() + " - " + player.Losses.ToString() + " - " + player.Draws.ToString()
+                    player.WLDScore.ToString() + "\t" +
+                        player.Wins.ToString() + "-" +
+                        player.Losses.ToString() + "-" +
+                        player.Draws.ToString()
                 );
                 tdButton.SetupButton(buttonData, "PlayerProfile", player.PlayerName);
 
