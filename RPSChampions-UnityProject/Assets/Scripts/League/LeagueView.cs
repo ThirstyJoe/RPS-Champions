@@ -144,6 +144,8 @@ namespace ThirstyJoe.RPSChampions
         public override void OnPlayerLeftRoom(Player other)
         {
             Debug.LogFormat("OnPlayerLeftRoom() {0}", other.NickName);
+            if (LeagueManager.league.Status == "Open")
+                UpdateLeagueView();
         }
 
         public override void OnConnectedToMaster()
@@ -223,6 +225,7 @@ namespace ThirstyJoe.RPSChampions
                 // check if data exists
                 if (jsonResult == null)
                 {
+                    ShowLeagueCancelledAlert();
                     Debug.Log("server failed to return data");
                 }
                 else
@@ -267,6 +270,7 @@ namespace ThirstyJoe.RPSChampions
                 // check if data exists
                 if (jsonResult == null)
                 {
+                    ShowLeagueCancelledAlert();
                     Debug.Log("server failed to return data");
                 }
                 else
