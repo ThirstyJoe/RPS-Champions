@@ -351,15 +351,11 @@ namespace ThirstyJoe.RPSChampions
                         if (titleResult.Data.ContainsKey(key))
                         {
                             LeagueInfo leagueInfo = LeagueInfo.CreateFromJSON(titleResult.Data[key]);
-                            Debug.Log(leagueInfo);
-                            Debug.Log(leagueInfo.Name);
-                            Debug.Log(leagueInfo.Settings);
-                            Debug.Log(leagueInfo.LeagueSettings);
-                            Debug.Log(leagueInfo.LeagueSettings.LeagueType);
                             toRet.Add(new TitleDescriptionButtonData(
                                 key,
                                 leagueInfo.Name,
-                                leagueInfo.LeagueSettings.LeagueType + "\n" + leagueInfo.Status));
+                                leagueInfo.LeagueSettings.LeagueType + "\n" + leagueInfo.Status,
+                                leagueInfo.LeagueSettings.LeagueType == "Rated"));
                         }
                     }
                     toRet.Reverse(); // put most recent league at top
@@ -411,7 +407,8 @@ namespace ThirstyJoe.RPSChampions
                                 toRet.Add(new TitleDescriptionButtonData(
                                    key,
                                    leagueInfo.Name,
-                                   leagueInfo.LeagueSettings.LeagueType + "\n" + leagueInfo.Status));
+                                   leagueInfo.LeagueSettings.LeagueType + "\n" + leagueInfo.Status,
+                                   leagueInfo.LeagueSettings.LeagueType == "Rated"));
                             }
                         }
                     }
@@ -462,7 +459,8 @@ namespace ThirstyJoe.RPSChampions
                                 entry.Key,
                                 leagueInfo.Name,
                                 // TODO: show game settings instead of league status here
-                                leagueInfo.LeagueSettings.LeagueType + "\n" + leagueInfo.Status));
+                                leagueInfo.LeagueSettings.LeagueType + "\n" + leagueInfo.Status,
+                                leagueInfo.LeagueSettings.LeagueType == "Rated"));
                         }
                     }
                     toRet.Reverse(); // put most recent at league at top

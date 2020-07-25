@@ -515,6 +515,8 @@ MonoBehaviour:
   alertPanelText: {fileID: 1542928616}
   matchCountInputField: {fileID: 145186385}
   roundDurationInputField: {fileID: 1273386510}
+  matchCountGameObject: {fileID: 145186383}
+  roundDurationGameObject: {fileID: 1273386508}
   leagueNameInput: {fileID: 555227303}
 --- !u!4 &256998612
 Transform:

@@ -19,6 +19,8 @@ namespace ThirstyJoe.RPSChampions
         [SerializeField] private TextMeshProUGUI alertPanelText;
         [SerializeField] private TMP_InputField matchCountInputField;
         [SerializeField] private TMP_InputField roundDurationInputField;
+        [SerializeField] private GameObject matchCountGameObject;
+        [SerializeField] private GameObject roundDurationGameObject;
 
 
         // input fields
@@ -34,6 +36,10 @@ namespace ThirstyJoe.RPSChampions
             roundDurationInputField.text = "4";
             matchCountInputField.text = "8";
             prevUISelection = EventSystem.current.currentSelectedGameObject;
+
+            // hide match count and round duration input boxes if this is a rated match
+            matchCountGameObject.SetActive(false);
+            roundDurationGameObject.SetActive(false);
         }
 
         public void OnAlertConfirmButtonPress()

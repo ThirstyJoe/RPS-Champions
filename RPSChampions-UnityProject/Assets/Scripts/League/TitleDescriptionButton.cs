@@ -20,6 +20,7 @@
         [SerializeField] private TextMeshProUGUI PositivePointText;
         [SerializeField] private TextMeshProUGUI NegativePointText;
         [SerializeField] private TextMeshProUGUI RankingText;
+        [SerializeField] private GameObject RatedGameIcon;
 
         private string LinkID;
         private int DataIndex; // index used to retrieve data from an Array
@@ -41,6 +42,11 @@
         {
             Title.SetText(tdPair.Title);
             Description.SetText(tdPair.Description);
+        }
+
+        public void SetRatedGameIconOn()
+        {
+            RatedGameIcon.SetActive(true);
         }
 
         public void SetPointText(int value)
@@ -77,6 +83,9 @@
             Label = label;
             SetLoadSceneName(sceneName);
             SetText(tdPair);
+            Debug.Log(tdPair.ShowRatedIcon);
+            if (tdPair.ShowRatedIcon)
+                SetRatedGameIconOn();
         }
     }
 }

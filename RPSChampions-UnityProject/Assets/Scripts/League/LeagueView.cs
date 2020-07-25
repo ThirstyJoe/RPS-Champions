@@ -354,10 +354,10 @@ namespace ThirstyJoe.RPSChampions
             playerButtonList.Clear();
 
             // show buttons for end of season navigation
-            if (LeagueManager.league.Status == "Complete")
-            {
-                NonHostSeasonOverButtonGroup.SetActive(true);
-            }
+            //if (LeagueManager.league.Status == "Complete")
+            //{
+            //    NonHostSeasonOverButtonGroup.SetActive(true);
+            //}
 
             // data for end of season rating adjustments
             List<int> ratingList = new List<int>();
@@ -449,11 +449,17 @@ namespace ThirstyJoe.RPSChampions
                 playerButtonList.Add(obj);
                 var tdButton = obj.GetComponent<TitleDescriptionButton>();
 
+                // player description is blank if unrated, and shows rating in rated match
+                string playerDescription = "";
+                if (LeagueManager.league.Settings.LeagueType == "Rated")
+                    playerDescription = player.Rating.ToString();
+
                 var buttonData = new TitleDescriptionButtonData(
                     player.PlayerId,
                     player.PlayerName,
-                    player.Rating.ToString()
+                    playerDescription
                 );
+
                 tdButton.SetupButton(buttonData, "PlayerProfile", player.PlayerName);
             }
 
