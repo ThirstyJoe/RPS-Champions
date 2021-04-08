@@ -1,3 +1,2 @@
 # RPS-Champions
-Unity Mobile Game
-Competitive online turn-based game based on Rock Paper Scissors.
+Unity Mobile Game. Asynchronous online turn-based Rock Paper Scissors game.
