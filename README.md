@@ -1,2 +1,3 @@
 # RPS-Champions
-Competitive online RPS game (rock paper scissors)
+Unity Mobile Game
+Competitive online turn-based game based on Rock Paper Scissors.
